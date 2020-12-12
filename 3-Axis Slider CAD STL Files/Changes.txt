@@ -1,0 +1,9 @@
+144 Tooth base, larger hole for magnets.
+Upper Plate, larger square holes for better fit.
+Bearing parts replaced with parts from https://www.thingiverse.com/thing:4595217/files
+Bearing clamp, made space for hall sensor bigger.
+Sensor mount, made hole for hall sensor to get closer to magnet.
+Side - motor, made taller for video camera, made hole for hall sensor to get closer to magnet.
+Side - support, made taller for video camera.
+17 tooth gear, made hole larger for better fit.
+21 tooth gear, made hole larger for better fit.

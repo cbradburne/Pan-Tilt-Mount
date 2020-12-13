@@ -33,8 +33,14 @@ float in_min = 0;         // PS4 DualShock analogue stick Far Left
 float in_max = 255;       // PS4 DualShock analogue stick Far Right
 float out_min = -255;
 float out_max = 255;
+float scaleLX = 0.2;
+float scaleRX = 0.1;
+float scaleRY = 0.1;
 
 short shortVals[3] = {0, 0, 0};
+short LXtemp = 0;
+short RXtemp = 0;
+short RYtemp = 0;
 short LXShort = 0;
 short RXShort = 0;
 short RYShort = 0;
@@ -77,8 +83,9 @@ void loop() {
 
     /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-    if (magnitudeRX > INPUT_DEADZONE) {               // check if the controller is outside a circular dead zone
-      RXShort = RX;
+    if (magnitudeRX > INPUT_DEADZONE) {               // check if the controller is outside of the axis dead zone
+      RXtemp = map(RX, out_min, out_max, (scaleRX * out_min), (scaleRX * out_max));    // Scale output
+      RXShort += 0.2 * (RXtemp - RXShort);
     }
     else {
       RXShort = 0;                                    // if in DeadZone, send 0, Don't move
@@ -87,7 +94,8 @@ void loop() {
     /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
     if (magnitudeRY > INPUT_DEADZONE) {
-      RYShort = RY;
+      RYtemp = map(RY, out_min, out_max, (scaleRY * out_min), (scaleRY * out_max));
+      RYShort += 0.2 * (RYtemp - RYShort);
     }
     else {
       RYShort = 0;
@@ -96,7 +104,8 @@ void loop() {
     /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
     if (magnitudeLX > INPUT_DEADZONE) {
-      LXShort = LX;
+      LXtemp = map(LX, out_min, out_max, (scaleLX * out_min), (scaleLX * out_max));
+      LXShort += 0.2 * (LXtemp - LXShort);
     }
     else {
       LXShort = 0;
@@ -136,16 +145,16 @@ void loop() {
     if (PS4.getButtonClick(OPTIONS)) {
       sendCharArray((char *)";1");      //views execute
     }
-    if (PS4.getButtonClick(TRIANGLE)) {
+    if (PS4.getButtonClick(CROSS)) {
       sendCharArray((char *)"#");       //A save position
     }
     if (PS4.getButtonClick(CIRCLE)) {
       sendCharArray((char *)"C");       //B clear array
     }
-    if (PS4.getButtonClick(CROSS)) {
+    if (PS4.getButtonClick(SQUARE)) {
       sendCharArray((char *)"E");       //X edit position
     }
-    if (PS4.getButtonClick(SQUARE)) {
+    if (PS4.getButtonClick(TRIANGLE)) {
       sendCharArray((char *)"R");       //Y status
     }
   }

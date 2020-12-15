@@ -13,9 +13,6 @@ const float scaleSpeedFast = 1;
 const float scaleSpeedSlow = 0.02;
 
 short shortVals[3] = {0, 0, 0};
-short LXtemp = 0;
-short RXtemp = 0;
-short RYtemp = 0;
 short LXShort = 0;
 short RXShort = 0;
 short RYShort = 0;
@@ -56,7 +53,7 @@ void setup()
 }
 
 void PS4connect() {
-  PS4.begin("8c:2d:aa:49:78:46");
+  PS4.begin("8c:2d:aa:49:78:46");                       // **** insert your DualShock4 MAC address here ****
   while (!PS4.isConnected()){
     currentMillis = millis();
     if (currentMillis - previousMillis > LED_Interval) 
@@ -80,14 +77,14 @@ void loop() {
     }
     else {
 
-      float LX = (PS4.data.analog.stick.lx);            // Get left analog stick X value (0 to 255, Left to Right)
+      float LX = (PS4.data.analog.stick.lx);            // Get left analog stick X value
       float LY = (PS4.data.analog.stick.ly);            // Get left analog stick Y value
       float RX = (PS4.data.analog.stick.rx);            // Get right analog stick X value
       float RY = (PS4.data.analog.stick.ry);            // Get right analog stick Y value
 
       //RX = ((RX - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min));
 
-      LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255)
+      LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255, FF) 
       LY = map(LY, in_min, in_max, out_min, out_max);
       RX = map(RX, in_min, in_max, out_min, out_max);
       RY = map(RY, in_min, in_max, out_min, out_max);
@@ -98,9 +95,8 @@ void loop() {
 
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
      
-      if (magnitudeRX > INPUT_DEADZONE) {               // check if the controller is outside of the axis dead zone
-        //RXtemp = map(RX, out_min, out_max, (out_min), (out_max));    // Scale output
-        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {
+      if (magnitudeRX > INPUT_DEADZONE) {                                   // check if the controller is outside of the axis dead zone
+        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {                     // Scale output
           RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
         }
         else if (RX <= 0 || (scaleSpeed == scaleSpeedFast)) {
@@ -108,7 +104,7 @@ void loop() {
         }
       }
       else {
-        RXShort = 0;                                    // if in DeadZone, send 0, Don't move
+        RXShort = 0;                                                        // if in DeadZone, send 0, Don't move
       }
       
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -128,9 +124,7 @@ void loop() {
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeLX > INPUT_DEADZONE) {
-        //LXtemp = map(LX, out_min, out_max, (out_min), (out_max));
         if (LX > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          //LXShort = (scaleSpeed *4) * LXtemp;
           LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
         }
         else if (LX <= 0 || (scaleSpeed == scaleSpeedFast)) {

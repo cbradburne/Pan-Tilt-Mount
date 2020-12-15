@@ -65,12 +65,10 @@ void PS4connect() {
 }
 
 void loop() {
-  // Below has all accessible outputs from the controller
   if (!PS4.isConnected()) {
     PS4connect();
   }
-
-
+  
   if (PS4.isConnected()) {
     if (firstRun) {
       firstRun1();
@@ -151,37 +149,39 @@ void loop() {
         delay(20);
       }
 
+      /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
       if ( PS4.data.button.up && !buttonUP) {
-        sendCharArray((char *)"[");       //Up first element
+        sendCharArray((char *)"[");                   // Up - First element
         buttonUP = true;
       }
       if ( PS4.data.button.down && !buttonDOWN) {
-        sendCharArray((char *)"]");       //down last element
+        sendCharArray((char *)"]");                   // Down - Last element
         buttonDOWN = true;
       }
       if ( PS4.data.button.left && !buttonLEFT) {
-        sendCharArray((char *)"<");       //left step back
+        sendCharArray((char *)"<");                   // Left - Step back
         buttonLEFT = true;
       }
       if ( PS4.data.button.right && !buttonRIGHT) {
-        sendCharArray((char *)">");       //right step forwards
+        sendCharArray((char *)">");                   // Right - Step forwards
         buttonRIGHT = true;
       }
 
       if ( PS4.data.button.triangle && !buttonTRI) {
-        sendCharArray((char *)";1");      //Triangle - Execute moves array
+        sendCharArray((char *)";1");                  // Triangle - Execute moves array
         buttonTRI = true;
       }
       if ( PS4.data.button.circle && !buttonCIR) {
-        sendCharArray((char *)"E");       //Circle - Edit current position
+        sendCharArray((char *)"E");                   // Circle - Edit current position
         buttonCIR = true;
       }
       if ( PS4.data.button.cross && !buttonCRO) {
-        sendCharArray((char *)"#");       //Cross - Save current position as new keyframe
+        sendCharArray((char *)"#");                   // Cross - Save current position as new keyframe
         buttonCRO = true;
       }
       if ( PS4.data.button.square && !buttonSQU) {
-        sendCharArray((char *)"T");       //Square - Calculate intercept point of first 2 keyframes
+        sendCharArray((char *)"T");                   // Square - Calculate intercept point of first 2 keyframes
         buttonSQU = true;
       }
 
@@ -195,11 +195,11 @@ void loop() {
       }
 
       if ( PS4.data.button.share && !buttonSH) {
-        sendCharArray((char *)"A");                   //Share - Home Axis
+        sendCharArray((char *)"A");                   // Share - Home Axis
         buttonSH = true;
       }
       if ( PS4.data.button.options && !buttonOP) {
-        sendCharArray((char *)"C");                   //Option - Clear Array
+        sendCharArray((char *)"C");                   // Option - Clear Array
         buttonOP = true;
       }
 

@@ -1,5 +1,4 @@
 #include <PS4Controller.h>
-#include <elapsedMillis.h>
 
 #define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
 #define INPUT_DEADZONE 40
@@ -98,19 +97,10 @@ void loop() {
       float magnitudeLX = sqrt(LX * LX);                // Get magnitude of Left stick movement to test for DeadZone
 
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
-      /*
-          if (magnitudeRX > INPUT_DEADZONE) {               // check if the controller is outside of the axis dead zone
-            RXtemp = map(RX, out_min, out_max, (scaleRX * out_min), (scaleRX * out_max));    // Scale output
-            RXShort += 0.2 * (RXtemp - RXShort); //+=
-          }
-          else {
-            RXShort = 0;                                    // if in DeadZone, send 0, Don't move
-          }
-      */
+     
       if (magnitudeRX > INPUT_DEADZONE) {               // check if the controller is outside of the axis dead zone
         //RXtemp = map(RX, out_min, out_max, (out_min), (out_max));    // Scale output
         if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          //RXShort = (scaleSpeed *4) * RX;
           RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
         }
         else if (RX <= 0 || (scaleSpeed == scaleSpeedFast)) {
@@ -120,6 +110,7 @@ void loop() {
       else {
         RXShort = 0;                                    // if in DeadZone, send 0, Don't move
       }
+      
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeRY > INPUT_DEADZONE) {
@@ -166,7 +157,6 @@ void loop() {
         delay(20);
       }
 
-
       if ( PS4.data.button.up && !buttonUP) {
         sendCharArray((char *)"[");       //Up first element
         buttonUP = true;
@@ -211,15 +201,15 @@ void loop() {
       }
 
       if ( PS4.data.button.share && !buttonSH) {
-        sendCharArray((char *)"A");       //Share - Home Axis
+        sendCharArray((char *)"A");                   //Share - Home Axis
         buttonSH = true;
       }
       if ( PS4.data.button.options && !buttonOP) {
-        sendCharArray((char *)"C");       //Option - Clear Array
+        sendCharArray((char *)"C");                   //Option - Clear Array
         buttonOP = true;
       }
 
-      if ( !PS4.data.button.up && buttonUP)
+      if ( !PS4.data.button.up && buttonUP)           // Button Release flags
         buttonUP = false;
       if ( !PS4.data.button.down && buttonDOWN)
         buttonDOWN = false;
@@ -281,7 +271,6 @@ void sendCharArray(char *array) {
   int i = 0;
   while (array[i] != 0)
     Serial.write((uint8_t)array[i++]);    // Use with ESP32
-    //Serial.print((uint8_t)array[i++]);
     //Serial.write(array, sizeof(array));   // Non-ESP32
 }
 
@@ -313,5 +302,4 @@ void firstRun1() {
   PS4.setRumble(0, 0);
   PS4.sendToController();
   delay(250);
-
 }

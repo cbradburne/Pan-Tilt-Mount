@@ -1,6 +1,6 @@
 To use a PS4 DualShock controller with the Pan-Tilt-Mount in stand-alone mode, this is what you’ll need.
 
-ESP32 Dev Kit board
+ESP32 Dev Kit board - like this one https://www.amazon.co.uk/gp/product/B071JR9WS9
 DualShock 4 controller
 
 

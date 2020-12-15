@@ -42,15 +42,11 @@ bool buttonOP = false;
 
 bool firstRun = true;
 
-int r = 255;
-int g = 0;
-int b = 0;
+long previousMillis = 0;
+long currentMillis;
+const int LED_Interval = 250;
 
-//elapsedMillis Connectmillis;
-//unsigned int Connect_Interval = 250;
-elapsedMillis LEDmillis;
 #define LED 2
-unsigned int LED_Interval = 250;
 
 void setup()
 {
@@ -62,26 +58,14 @@ void setup()
 
 void PS4connect() {
   PS4.begin("8c:2d:aa:49:78:46");
-  if ( !PS4.isConnected() ) {
-    if (LEDmillis >= LED_Interval)
+  while (!PS4.isConnected()){
+    currentMillis = millis();
+    if (currentMillis - previousMillis > LED_Interval) 
     {
-      digitalWrite(LED, !(digitalRead(LED))); // toggle the LED state
-      LEDmillis = 0;                           // reset the counter to 0 so the counting starts over...
+      previousMillis = currentMillis;
+      digitalWrite(LED, !(digitalRead(LED)));    
     }
   }
-/*
-  for (int i = 0; i < 25; i++)
-  {
-    if ( !PS4.isConnected() ) {
-      delay ( 250 );
-      digitalWrite(LED, HIGH);
-      //Serial.print ( "." );
-      delay ( 250 );
-      digitalWrite(LED, LOW);
-    }
-  }
-  */
-  
 }
 
 void loop() {
@@ -125,9 +109,9 @@ void loop() {
       */
       if (magnitudeRX > INPUT_DEADZONE) {               // check if the controller is outside of the axis dead zone
         //RXtemp = map(RX, out_min, out_max, (out_min), (out_max));    // Scale output
-        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)){
+        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {
           //RXShort = (scaleSpeed *4) * RX;
-          RXShort = map(RX, 0, in_max, 15, (out_max*(scaleSpeed*4)));
+          RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
         }
         else if (RX <= 0 || (scaleSpeed == scaleSpeedFast)) {
           RXShort = scaleSpeed * RX;
@@ -139,8 +123,8 @@ void loop() {
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeRY > INPUT_DEADZONE) {
-        if (RY > 0 && (scaleSpeed == scaleSpeedSlow)){
-          RYShort = map(RY, 0, in_max, 15, (out_max*(scaleSpeed*4)));
+        if (RY > 0 && (scaleSpeed == scaleSpeedSlow)) {
+          RYShort = map(RY, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
         }
         else if (RY <= 0 || (scaleSpeed == scaleSpeedFast)) {
           RYShort = scaleSpeed * RY;
@@ -154,9 +138,9 @@ void loop() {
 
       if (magnitudeLX > INPUT_DEADZONE) {
         //LXtemp = map(LX, out_min, out_max, (out_min), (out_max));
-        if (LX > 0 && (scaleSpeed == scaleSpeedSlow)){
+        if (LX > 0 && (scaleSpeed == scaleSpeedSlow)) {
           //LXShort = (scaleSpeed *4) * LXtemp;
-          LXShort = map(LX, 0, in_max, 15, (out_max*(scaleSpeed*4)));
+          LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
         }
         else if (LX <= 0 || (scaleSpeed == scaleSpeedFast)) {
           LXShort = scaleSpeed * LX;
@@ -216,15 +200,6 @@ void loop() {
         sendCharArray((char *)"T");       //Square - Calculate intercept point of first 2 keyframes
         buttonSQU = true;
       }
-
-      /*
-        panSpeedFast = 20;
-        tiltSpeedFast = 15;
-        sliderSpeedFast = 20;
-        panSpeedSlow = 10;
-        tiltSpeedSlow = 7;
-        sliderSpeedSlow = 10;
-      */
 
       if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
         scaleSpeed = scaleSpeedSlow;
@@ -306,8 +281,8 @@ void sendCharArray(char *array) {
   int i = 0;
   while (array[i] != 0)
     Serial.write((uint8_t)array[i++]);    // Use with ESP32
-  //Serial.print((uint8_t)array[i++]);
-  //Serial.write(array, sizeof(array)); // Non-ESP32
+    //Serial.print((uint8_t)array[i++]);
+    //Serial.write(array, sizeof(array));   // Non-ESP32
 }
 
 void firstRun1() {

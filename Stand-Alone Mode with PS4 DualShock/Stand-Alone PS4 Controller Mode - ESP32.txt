@@ -1,0 +1,21 @@
+To use a PS4 DualShock controller with the Pan-Tilt-Mount in stand-alone mode, this is what you’ll need.
+
+ESP32 Dev Kit board
+DualShock 4 controller
+
+
+Wiring:
+
+NANO  --  12vPSU  --  ESP32
+
+GND---------GND---------GND
+
+Vin---------12v---------Vin
+
+TX----------------------RX0
+
+RX----------------------TX0
+
+
+
+Note: When programming either board, you must disconnect the link between TX and RX. Also, when programming the ESP32 via Arduino IDE, when uploading the program and the IDE says "Connecting", press and hold the "BOOT" button on the ESP32 until the upload starts.

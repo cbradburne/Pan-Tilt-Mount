@@ -104,7 +104,7 @@ void PS4connect() {
 
 void initPanTilt(void) {
   EEPROM.begin(EEPROM_SIZE);
-  Serial.begin(BAUD_RATE);
+  //Serial.begin(BAUD_RATE);
   pinMode(LED, OUTPUT);
   pinMode(PIN_MS1, OUTPUT);
   pinMode(PIN_MS2, OUTPUT);
@@ -162,13 +162,13 @@ float boundFloat(float value, float lower, float upper) {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 void serialFlush(void) {
   while (Serial.available() > 0) {
     char c = Serial.read();
   }
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void enableSteppers(void) {
@@ -1051,47 +1051,10 @@ void scaleKeyframeSpeed(float scaleFactor) {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 void serialData(void) {
   char instruction = Serial.read();
-  if (instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED) {
-    printi(F("Number 4 read correctly!! :) "));
-    /*int count = 0;
-    while (Serial.available() < 6) { //Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
-      delayMicroseconds(200);
-      count++;
-      if (count > 100) {
-        serialFlush();//Clear the serial buffer
-        break;
-      }
-    }
-    int sliderStepSpeed = (Serial.read() << 8) + Serial.read();
-    int panStepSpeed = (Serial.read() << 8) + Serial.read();
-    int tiltStepSpeed = (Serial.read() << 8) + Serial.read();
-
-*/
-    stepper_slider.setSpeed(sliderStepSpeed);
-    stepper_pan.setSpeed(panStepSpeed);
-    stepper_tilt.setSpeed(tiltStepSpeed);
-    stepper_slider.runSpeed();
-    stepper_pan.runSpeed();
-    stepper_tilt.runSpeed();
-  }
-
-  delay(2); //wait to make sure all data in the serial message has arived
-  memset(&stringText[0], 0, sizeof(stringText)); //clear the array
-  while (Serial.available()) { //set elemetns of stringText to the serial values sent
-    char digit = Serial.read(); //read in a char
-    strncat(stringText, &digit, 1); //add digit to the end of the array
-  }
-  serialFlush();//Clear any excess data in the serial buffer
-  int serialCommandValueInt = atoi(stringText); //converts stringText to an int
-  float serialCommandValueFloat = atof(stringText); //converts stringText to a float
-  if (instruction == '+') { //The Bluetooth module sends a message starting with "+CONNECTING" which should be discarded.
-    delay(100); //wait to make sure all data in the serial message has arived
-    serialFlush();//Clear any excess data in the serial buffer
-    return;
-  }
+  
   switch (instruction) {
     case INSTRUCTION_SCALE_SPEED: {
         scaleKeyframeSpeed(serialCommandValueFloat);
@@ -1202,7 +1165,7 @@ void serialData(void) {
       }
       break;
     case INSTRUCTION_STEP_BACKWARD: {
-        moveToIndex(current_keyframe_index - 1);
+        moveToIndex(current_keyframe_index - 1);        //INSTRUCTION_STEP_BACKWARD:
         printi(F("Index: "), current_keyframe_index, F("\n"));
       }
       break;
@@ -1294,7 +1257,7 @@ void serialData(void) {
       printi("\nFAIL!\n\n");
   }
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void firstRun1() {
@@ -1327,7 +1290,7 @@ void firstRun1() {
   delay(250);
 }
 
-void runRemote() {
+void runRemote(void) {
   if (!PS4.isConnected()) {
     PS4connect();
   }
@@ -1409,60 +1372,91 @@ void runRemote() {
         oldShortVal1 = shortVals[1];      // Store as old values
         oldShortVal2 = shortVals[2];      // Store as old values
 
+        stepper_slider.setSpeed(shortVals[0]);
+        stepper_pan.setSpeed(shortVals[1]);
+        stepper_tilt.setSpeed(shortVals[2]);
+        stepper_slider.runSpeed();
+        stepper_pan.runSpeed();
+        stepper_tilt.runSpeed();
+
         delay(20);
       }
 
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if ( PS4.data.button.up && !buttonUP) {
-        //sendCharArray((char *)"[");                   // Up - First element
+        gotoFirstKeyframe();                            // Up - First element
+        //INSTRUCTION_JUMP_TO_START
         buttonUP = true;
       }
       if ( PS4.data.button.down && !buttonDOWN) {
-        //sendCharArray((char *)"]");                   // Down - Last element
+        gotoLastKeyframe();                             // Down - Last element
+        //INSTRUCTION_JUMP_TO_END
         buttonDOWN = true;
       }
       if ( PS4.data.button.left && !buttonLEFT) {
-        //sendCharArray((char *)"<");                   // Left - Step back
+        moveToIndex(current_keyframe_index - 1);        // Left - Step back
+        //INSTRUCTION_STEP_BACKWARD
         buttonLEFT = true;
       }
       if ( PS4.data.button.right && !buttonRIGHT) {
-        //sendCharArray((char *)">");                   // Right - Step forwards
+        moveToIndex(current_keyframe_index + 1);        // Right - Step forwards
+        //INSTRUCTION_STEP_FORWARD
         buttonRIGHT = true;
       }
 
       if ( PS4.data.button.triangle && !buttonTRI) {
-        //sendCharArray((char *)";1");                  // Triangle - Execute moves array
+        executeMoves(1);                                // Triangle - Execute moves array
+        //INSTRUCTION_EXECUTE_MOVES        
         buttonTRI = true;
       }
       if ( PS4.data.button.circle && !buttonCIR) {
-        //sendCharArray((char *)"E");                   // Circle - Edit current position
+        editKeyframe();                                 // Circle - Edit current position
+        //INSTRUCTION_EDIT_ARRAY
         buttonCIR = true;
       }
       if ( PS4.data.button.cross && !buttonCRO) {
-        //sendCharArray((char *)"#");                   // Cross - Save current position as new keyframe
+        addPosition();                                  // Cross - Save current position as new keyframe
+        //INSTRUCTION_ADD_POSITION
         buttonCRO = true;
       }
       if ( PS4.data.button.square && !buttonSQU) {
-        //sendCharArray((char *)"T");                   // Square - Calculate intercept point of first 2 keyframes
+        if (calculateTargetCoordinate()) {              // Square - Calculate intercept point of first 2 keyframes
+          printi("Target:\tx: ", intercept.x, 3, "\t");
+          printi("y: ", intercept.y, 3, "\t");
+          printi("z: ", intercept.z, 3, "mm\n");
+        }
+        //INSTRUCTION_CALCULATE_TARGET_POINT
         buttonSQU = true;
       }
 
       if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
-        //scaleSpeed = scaleSpeedSlow;
+        scaleSpeed = scaleSpeedSlow;
         buttonL1 = true;
       }
       if ( PS4.data.button.r1 && !buttonR1) {         // R1 - Set fast speed
-        //scaleSpeed = scaleSpeedFast;
+        scaleSpeed = scaleSpeedFast;
         buttonR1 = true;
       }
 
       if ( PS4.data.button.share && !buttonSH) {
-        //sendCharArray((char *)"A");                   // Share - Home Axis
+        printi(F("Homing\n"));                        // Share - Home Axis
+        if (findHome()) {
+          printi(F("Complete\n"));
+        }
+        else {
+          stepper_pan.setCurrentPosition(0);
+          stepper_tilt.setCurrentPosition(0);
+          stepper_slider.setCurrentPosition(0);
+          setTargetPositions(0, 0, 0);
+          printi(F("Error homing\n"));
+        }
+        //INSTRUCTION_AUTO_HOME
         buttonSH = true;
       }
       if ( PS4.data.button.options && !buttonOP) {
-        //sendCharArray((char *)"C");                   // Option - Clear Array
+        clearKeyframes();                             // Option - Clear Array
+        //INSTRUCTION_CLEAR_ARRAY
         buttonOP = true;
       }
 
@@ -1499,7 +1493,7 @@ void runRemote() {
 
 void mainLoop(void) {
   while (1) {
-    if (Serial.available()) serialData();
+    //if (Serial.available()) serialData();
     multi_stepper.run();
     runRemote();
   }

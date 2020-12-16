@@ -104,7 +104,7 @@ void PS4connect() {
 
 void initPanTilt(void) {
   EEPROM.begin(EEPROM_SIZE);
-  //Serial.begin(BAUD_RATE);
+  Serial.begin(BAUD_RATE);
   pinMode(LED, OUTPUT);
   pinMode(PIN_MS1, OUTPUT);
   pinMode(PIN_MS2, OUTPUT);
@@ -1387,37 +1387,44 @@ void runRemote(void) {
       if ( PS4.data.button.up && !buttonUP) {
         gotoFirstKeyframe();                            // Up - First element
         //INSTRUCTION_JUMP_TO_START
+        printi("Up\n");
         buttonUP = true;
       }
       if ( PS4.data.button.down && !buttonDOWN) {
         gotoLastKeyframe();                             // Down - Last element
         //INSTRUCTION_JUMP_TO_END
+        printi("Down\n");
         buttonDOWN = true;
       }
       if ( PS4.data.button.left && !buttonLEFT) {
         moveToIndex(current_keyframe_index - 1);        // Left - Step back
         //INSTRUCTION_STEP_BACKWARD
+        printi("Left\n");
         buttonLEFT = true;
       }
       if ( PS4.data.button.right && !buttonRIGHT) {
         moveToIndex(current_keyframe_index + 1);        // Right - Step forwards
         //INSTRUCTION_STEP_FORWARD
+        printi("Right\n");
         buttonRIGHT = true;
       }
 
       if ( PS4.data.button.triangle && !buttonTRI) {
         executeMoves(1);                                // Triangle - Execute moves array
-        //INSTRUCTION_EXECUTE_MOVES        
+        //INSTRUCTION_EXECUTE_MOVES    
+        printi("Triangle\n");    
         buttonTRI = true;
       }
       if ( PS4.data.button.circle && !buttonCIR) {
         editKeyframe();                                 // Circle - Edit current position
         //INSTRUCTION_EDIT_ARRAY
+        printi("Circle\n");
         buttonCIR = true;
       }
       if ( PS4.data.button.cross && !buttonCRO) {
         addPosition();                                  // Cross - Save current position as new keyframe
         //INSTRUCTION_ADD_POSITION
+        printi("Cross\n");
         buttonCRO = true;
       }
       if ( PS4.data.button.square && !buttonSQU) {
@@ -1432,10 +1439,12 @@ void runRemote(void) {
 
       if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
         scaleSpeed = scaleSpeedSlow;
+        printi("L1\n");
         buttonL1 = true;
       }
       if ( PS4.data.button.r1 && !buttonR1) {         // R1 - Set fast speed
         scaleSpeed = scaleSpeedFast;
+        printi("R1\n");
         buttonR1 = true;
       }
 
@@ -1457,6 +1466,7 @@ void runRemote(void) {
       if ( PS4.data.button.options && !buttonOP) {
         clearKeyframes();                             // Option - Clear Array
         //INSTRUCTION_CLEAR_ARRAY
+        printi("Option\n");
         buttonOP = true;
       }
 

@@ -1055,7 +1055,6 @@ void scaleKeyframeSpeed(float scaleFactor) {
 void serialData(void) {
   char instruction = Serial.read();
     
-    
     delay(2); //wait to make sure all data in the serial message has arived 
     memset(&stringText[0], 0, sizeof(stringText)); //clear the array
     while(Serial.available()){//set elemetns of stringText to the serial values sent

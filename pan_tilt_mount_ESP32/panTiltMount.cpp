@@ -3,6 +3,7 @@
 #include <AccelStepper.h> //Library to control the stepper motors http://www.airspayce.com/mikem/arduino/AccelStepper/index.html
 #include <MultiStepper.h> //Library to control multiple coordinated stepper motors http://www.airspayce.com/mikem/arduino/AccelStepper/classMultiStepper.html#details
 #include <EEPROM.h> //To be able to save values when powered off
+#include <PS4Controller.h>
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -14,6 +15,9 @@ AccelStepper stepper_slider = AccelStepper(1, PIN_STEP_SLIDER, PIN_DIRECTION_SLI
 MultiStepper multi_stepper;
 
 #define EEPROM_SIZE 86
+#define LED 2
+#define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
+#define INPUT_DEADZONE 60
 
 KeyframeElement keyframe_array[KEYFRAME_ARRAY_LENGTH];
 
@@ -44,11 +48,64 @@ int slider_accel_increment_us = 3500;
 byte acceleration_enable_state = 0;
 FloatCoordinate intercept;
 
+float in_min = -127;          // PS4 DualShock analogue stick Far Left
+float in_max = 127;           // PS4 DualShock analogue stick Far Right
+float out_min = -255;
+float out_max = 255;
+
+float scaleSpeed = 1;
+const float scaleSpeedFast = 1;
+const float scaleSpeedSlow = 0.02;
+
+short shortVals[3] = {0, 0, 0};
+short LXShort = 0;
+short RXShort = 0;
+short RYShort = 0;
+short oldShortVal0 = 0;
+short oldShortVal1 = 0;
+short oldShortVal2 = 0;
+
+bool buttonUP = false;
+bool buttonDOWN = false;
+bool buttonLEFT = false;
+bool buttonRIGHT = false;
+
+bool buttonTRI = false;
+bool buttonCIR = false;
+bool buttonCRO = false;
+bool buttonSQU = false;
+
+bool buttonL1 = false;
+bool buttonR1 = false;
+
+bool buttonSH = false;
+bool buttonOP = false;
+
+bool firstRun = true;
+
+long previousMillis = 0;
+long currentMillis;
+const int LED_Interval = 250;
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+void PS4connect() {
+  PS4.begin("8c:2d:aa:49:78:46");                       // **** insert your DualShock4 MAC address here ****
+  while (!PS4.isConnected()) {
+    currentMillis = millis();
+    if (currentMillis - previousMillis > LED_Interval)
+    {
+      previousMillis = currentMillis;
+      digitalWrite(LED, !(digitalRead(LED)));
+    }
+  }
+}
 
 void initPanTilt(void) {
   EEPROM.begin(EEPROM_SIZE);
   Serial.begin(BAUD_RATE);
+  pinMode(LED, OUTPUT);
   pinMode(PIN_MS1, OUTPUT);
   pinMode(PIN_MS2, OUTPUT);
   pinMode(PIN_ENABLE, OUTPUT);
@@ -89,6 +146,7 @@ void initPanTilt(void) {
   //            printi(F("Error homing\n"));
   //        }
   //    }
+  PS4connect();
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -998,7 +1056,7 @@ void serialData(void) {
   char instruction = Serial.read();
   if (instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED) {
     printi(F("Number 4 read correctly!! :) "));
-    int count = 0;
+    /*int count = 0;
     while (Serial.available() < 6) { //Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
       delayMicroseconds(200);
       count++;
@@ -1011,6 +1069,7 @@ void serialData(void) {
     int panStepSpeed = (Serial.read() << 8) + Serial.read();
     int tiltStepSpeed = (Serial.read() << 8) + Serial.read();
 
+*/
     stepper_slider.setSpeed(sliderStepSpeed);
     stepper_pan.setSpeed(panStepSpeed);
     stepper_tilt.setSpeed(tiltStepSpeed);
@@ -1238,10 +1297,211 @@ void serialData(void) {
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+void firstRun1() {
+  digitalWrite(LED, LOW);
+  firstRun = false;
+  PS4.setLed(255, 0, 0);
+  PS4.setFlashRate(0, 0);
+  PS4.setRumble(0, 0);
+  PS4.sendToController();
+  delay(250);
+  PS4.setLed(0, 0, 0);
+  PS4.setFlashRate(0, 0);
+  PS4.setRumble(0, 0);
+  PS4.sendToController();
+  delay(250);
+  PS4.setLed(255, 0, 0);
+  PS4.setFlashRate(0, 0);
+  PS4.setRumble(0, 0);
+  PS4.sendToController();
+  delay(250);
+  PS4.setLed(0, 0, 0);
+  PS4.setFlashRate(0, 0);
+  PS4.setRumble(0, 0);
+  PS4.sendToController();
+  delay(250);
+  PS4.setLed(0, 0, 255);
+  PS4.setFlashRate(0, 0);
+  PS4.setRumble(0, 0);
+  PS4.sendToController();
+  delay(250);
+}
+
+void runRemote() {
+  if (!PS4.isConnected()) {
+    PS4connect();
+  }
+
+  if (PS4.isConnected()) {
+    if (firstRun) {
+      firstRun1();
+    }
+    else {
+
+      float LX = (PS4.data.analog.stick.lx);            // Get left analog stick X value
+      float LY = (PS4.data.analog.stick.ly);            // Get left analog stick Y value
+      float RX = (PS4.data.analog.stick.rx);            // Get right analog stick X value
+      float RY = (PS4.data.analog.stick.ry);            // Get right analog stick Y value
+
+      //RX = ((RX - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min));
+
+      LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255, FF)
+      LY = map(LY, in_min, in_max, out_min, out_max);
+      RX = map(RX, in_min, in_max, out_min, out_max);
+      RY = map(RY, in_min, in_max, out_min, out_max);
+
+      float magnitudeRX = sqrt(RX * RX);                // Get magnitude of Right stick movement to test for DeadZone
+      float magnitudeRY = sqrt(RY * RY);                // Get magnitude of Right stick movement to test for DeadZone
+      float magnitudeLX = sqrt(LX * LX);                // Get magnitude of Left stick movement to test for DeadZone
+
+      /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+      if (magnitudeRX > INPUT_DEADZONE) {                                   // check if the controller is outside of the axis dead zone
+        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {                     // Scale output
+          RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
+        }
+        else if (RX <= 0 || (scaleSpeed == scaleSpeedFast)) {
+          RXShort = scaleSpeed * RX;
+        }
+      }
+      else {
+        RXShort = 0;                                                        // if in DeadZone, send 0, Don't move
+      }
+
+      /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+      if (magnitudeRY > INPUT_DEADZONE) {
+        if (RY > 0 && (scaleSpeed == scaleSpeedSlow)) {
+          RYShort = map(RY, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
+        }
+        else if (RY <= 0 || (scaleSpeed == scaleSpeedFast)) {
+          RYShort = scaleSpeed * RY;
+        }
+      }
+      else {
+        RYShort = 0;
+      }
+
+      /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+      if (magnitudeLX > INPUT_DEADZONE) {
+        if (LX > 0 && (scaleSpeed == scaleSpeedSlow)) {
+          LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
+        }
+        else if (LX <= 0 || (scaleSpeed == scaleSpeedFast)) {
+          LXShort = scaleSpeed * LX;
+        }
+      }
+      else {
+        LXShort = 0;
+      }
+
+      /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+      shortVals[0] = LXShort;
+      shortVals[1] = RXShort;
+      shortVals[2] = RYShort;
+
+      if (shortVals[0] != oldShortVal0 || shortVals[1] != oldShortVal1 || shortVals[2] != oldShortVal2) {   // IF input has changed
+        //sendSliderPanTiltStepSpeed(INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED, shortVals);                     // Send the combned values
+
+        oldShortVal0 = shortVals[0];      // Store as old values
+        oldShortVal1 = shortVals[1];      // Store as old values
+        oldShortVal2 = shortVals[2];      // Store as old values
+
+        delay(20);
+      }
+
+      /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+      if ( PS4.data.button.up && !buttonUP) {
+        //sendCharArray((char *)"[");                   // Up - First element
+        buttonUP = true;
+      }
+      if ( PS4.data.button.down && !buttonDOWN) {
+        //sendCharArray((char *)"]");                   // Down - Last element
+        buttonDOWN = true;
+      }
+      if ( PS4.data.button.left && !buttonLEFT) {
+        //sendCharArray((char *)"<");                   // Left - Step back
+        buttonLEFT = true;
+      }
+      if ( PS4.data.button.right && !buttonRIGHT) {
+        //sendCharArray((char *)">");                   // Right - Step forwards
+        buttonRIGHT = true;
+      }
+
+      if ( PS4.data.button.triangle && !buttonTRI) {
+        //sendCharArray((char *)";1");                  // Triangle - Execute moves array
+        buttonTRI = true;
+      }
+      if ( PS4.data.button.circle && !buttonCIR) {
+        //sendCharArray((char *)"E");                   // Circle - Edit current position
+        buttonCIR = true;
+      }
+      if ( PS4.data.button.cross && !buttonCRO) {
+        //sendCharArray((char *)"#");                   // Cross - Save current position as new keyframe
+        buttonCRO = true;
+      }
+      if ( PS4.data.button.square && !buttonSQU) {
+        //sendCharArray((char *)"T");                   // Square - Calculate intercept point of first 2 keyframes
+        buttonSQU = true;
+      }
+
+      if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
+        //scaleSpeed = scaleSpeedSlow;
+        buttonL1 = true;
+      }
+      if ( PS4.data.button.r1 && !buttonR1) {         // R1 - Set fast speed
+        //scaleSpeed = scaleSpeedFast;
+        buttonR1 = true;
+      }
+
+      if ( PS4.data.button.share && !buttonSH) {
+        //sendCharArray((char *)"A");                   // Share - Home Axis
+        buttonSH = true;
+      }
+      if ( PS4.data.button.options && !buttonOP) {
+        //sendCharArray((char *)"C");                   // Option - Clear Array
+        buttonOP = true;
+      }
+
+      if ( !PS4.data.button.up && buttonUP)           // Button Release flags
+        buttonUP = false;
+      if ( !PS4.data.button.down && buttonDOWN)
+        buttonDOWN = false;
+      if ( !PS4.data.button.left && buttonLEFT)
+        buttonLEFT = false;
+      if ( !PS4.data.button.right && buttonRIGHT)
+        buttonRIGHT = false;
+
+      if ( !PS4.data.button.triangle && buttonTRI)
+        buttonTRI = false;
+      if ( !PS4.data.button.circle && buttonCIR)
+        buttonCIR = false;
+      if ( !PS4.data.button.cross && buttonCRO)
+        buttonCRO = false;
+      if ( !PS4.data.button.square && buttonSQU)
+        buttonSQU = false;
+
+      if ( !PS4.data.button.l1 && buttonL1)
+        buttonL1 = false;
+      if ( !PS4.data.button.r1 && buttonR1)
+        buttonR1 = false;
+
+      if ( !PS4.data.button.share && buttonSH)
+        buttonSH = false;
+      if ( !PS4.data.button.options && buttonOP)
+        buttonOP = false;
+    }
+  }
+}
+
 void mainLoop(void) {
   while (1) {
     if (Serial.available()) serialData();
     multi_stepper.run();
+    runRemote();
   }
 }
 

@@ -162,13 +162,13 @@ float boundFloat(float value, float lower, float upper) {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/*
+
 void serialFlush(void) {
   while (Serial.available() > 0) {
     char c = Serial.read();
   }
 }
-*/
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void enableSteppers(void) {
@@ -1051,9 +1051,25 @@ void scaleKeyframeSpeed(float scaleFactor) {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/*
+
 void serialData(void) {
   char instruction = Serial.read();
+    
+    
+    delay(2); //wait to make sure all data in the serial message has arived 
+    memset(&stringText[0], 0, sizeof(stringText)); //clear the array
+    while(Serial.available()){//set elemetns of stringText to the serial values sent
+        char digit = Serial.read(); //read in a char
+        strncat(stringText, &digit, 1); //add digit to the end of the array
+    }
+    serialFlush();//Clear any excess data in the serial buffer
+    int serialCommandValueInt = atoi(stringText); //converts stringText to an int
+    float serialCommandValueFloat = atof(stringText); //converts stringText to a float
+    if(instruction == '+'){//The Bluetooth module sends a message starting with "+CONNECTING" which should be discarded.
+        delay(100); //wait to make sure all data in the serial message has arived 
+        serialFlush();//Clear any excess data in the serial buffer
+        return;
+    }
   
   switch (instruction) {
     case INSTRUCTION_SCALE_SPEED: {
@@ -1257,7 +1273,6 @@ void serialData(void) {
       printi("\nFAIL!\n\n");
   }
 }
-*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void firstRun1() {
@@ -1378,7 +1393,9 @@ void runRemote(void) {
         stepper_slider.runSpeed();
         stepper_pan.runSpeed();
         stepper_tilt.runSpeed();
-
+        printi("Slider - ", shortVals[0], "\n");
+        printi("Pan    - ", shortVals[1], "\n");
+        printi("Tilt   - ", shortVals[2], "\n");
         delay(20);
       }
 
@@ -1503,7 +1520,7 @@ void runRemote(void) {
 
 void mainLoop(void) {
   while (1) {
-    //if (Serial.available()) serialData();
+    if (Serial.available()) serialData();
     multi_stepper.run();
     runRemote();
   }

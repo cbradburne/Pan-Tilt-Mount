@@ -1,7 +1,39 @@
+/*
+  Code adapted from isaac879 by Colin Bradburne
+  
+  To use a PS4 DualShock controller with the Pan-Tilt-Mount in stand-alone mode, this is what you’ll need.
+
+  ESP32 Dev Kit board - like this one https://www.amazon.co.uk/gp/product/B071JR9WS9
+  DualShock 4 controller
+
+  You'll need to get your DualShock4's Bluetooth MAC Address.
+  To get the MAC address use the program "SixaxisPairTool", https://dancingpixelstudios.com/sixaxis-controller/sixaxispairtool/.
+  I've included the file as thier website seems to be down at the moment.
+
+  I was able to use it on a Mac via a virtual machine running Windows 10 on Parallels Deskptop.
+  Make sure you connect your DualShock4 to your computer via USB and not by BlueTooth.
+
+  Wiring:
+
+  NANO  --  12vPSU  --  ESP32
+
+  GND---------GND---------GND
+  Vin---------12v---------Vin
+  TX----------------------RX0
+  RX----------------------TX0
+
+  Note: When programming either board, you must disconnect the link between TX and RX.
+  Also, when programming the ESP32 via Arduino IDE, and when the IDE says "Connecting", press and hold the "BOOT" button on the ESP32 until the upload starts.
+
+  When trying to connect your DualShock4 to your ESP32, press the PS button and if it doesn't connect keep trying, it can be a little temperamental :)
+*/
+
 #include <PS4Controller.h>
 
 #define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
 #define INPUT_DEADZONE 40
+
+bool DEBUG = false;
 
 float in_min = -127;          // PS4 DualShock analogue stick Far Left
 float in_max = 127;           // PS4 DualShock analogue stick Far Right
@@ -49,17 +81,16 @@ void setup()
   pinMode(LED, OUTPUT);
   Serial.begin(57600);
   PS4connect();
-  //Serial.println("Ready.");
 }
 
 void PS4connect() {
   PS4.begin("8c:2d:aa:49:78:46");                       // **** insert your DualShock4 MAC address here ****
-  while (!PS4.isConnected()){
+  while (!PS4.isConnected()) {
     currentMillis = millis();
-    if (currentMillis - previousMillis > LED_Interval) 
+    if (currentMillis - previousMillis > LED_Interval)
     {
       previousMillis = currentMillis;
-      digitalWrite(LED, !(digitalRead(LED)));    
+      digitalWrite(LED, !(digitalRead(LED)));
     }
   }
 }
@@ -68,7 +99,7 @@ void loop() {
   if (!PS4.isConnected()) {
     PS4connect();
   }
-  
+
   if (PS4.isConnected()) {
     if (firstRun) {
       firstRun1();
@@ -82,7 +113,7 @@ void loop() {
 
       //RX = ((RX - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min));
 
-      LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255, FF) 
+      LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255, FF)
       LY = map(LY, in_min, in_max, out_min, out_max);
       RX = map(RX, in_min, in_max, out_min, out_max);
       RY = map(RY, in_min, in_max, out_min, out_max);
@@ -92,7 +123,7 @@ void loop() {
       float magnitudeLX = sqrt(LX * LX);                // Get magnitude of Left stick movement to test for DeadZone
 
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
-     
+
       if (magnitudeRX > INPUT_DEADZONE) {                                   // check if the controller is outside of the axis dead zone
         if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {                     // Scale output
           RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
@@ -104,7 +135,7 @@ void loop() {
       else {
         RXShort = 0;                                                        // if in DeadZone, send 0, Don't move
       }
-      
+
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeRY > INPUT_DEADZONE) {
@@ -235,28 +266,29 @@ void loop() {
 }
 
 void sendSliderPanTiltStepSpeed(int command, short * arr) {
-  byte data[7];                         //Data array to send
+  byte data[7];                           // Data array to send
 
   data[0] = command;
-  data[1] = (arr[0] >> 4);              //Gets the most significant byte
-  data[2] = (arr[0] & 0xF);             //Gets the second most significant byte
+  data[1] = (arr[0] >> 4);                // Gets the most significant byte
+  data[2] = (arr[0] & 0xF);               // Gets the second most significant byte
   data[3] = (arr[1] >> 4);
   data[4] = (arr[1] & 0xF);
   data[5] = (arr[2] >> 4);
-  data[6] = (arr[2] & 0xF);             //Gets the least significant byte
+  data[6] = (arr[2] & 0xF);               // Gets the least significant byte
 
-  Serial.write(data, sizeof(data));     //Send the command and the 6 bytes of data
-  /*
-    //                            FOR TESTING
-      Serial.print(data[0], HEX);
-      Serial.print(data[1], HEX);
-      Serial.print(data[2], HEX);
-      Serial.print(data[3], HEX);
-      Serial.print(data[4], HEX);
-      Serial.print(data[5], HEX);
-      Serial.println(data[6], HEX);
-  */
-  //return 0;
+  if ( DEBUG ) {
+    Serial.print(data[0], HEX);
+    Serial.print(data[1], HEX);
+    Serial.print(data[2], HEX);
+    Serial.print(data[3], HEX);
+    Serial.print(data[4], HEX);
+    Serial.print(data[5], HEX);
+    Serial.println(data[6], HEX);
+  }
+  else {
+    Serial.write(data, sizeof(data));     // Send the command and the 6 bytes of data
+  }
+  //return 0;                             // Non-ESP32
 }
 
 void sendCharArray(char *array) {
@@ -265,7 +297,7 @@ void sendCharArray(char *array) {
   int i = 0;
   while (array[i] != 0)
     Serial.write((uint8_t)array[i++]);    // Use with ESP32
-    //Serial.write(array, sizeof(array));   // Non-ESP32
+  //Serial.write(array, sizeof(array));   // Non-ESP32
 }
 
 void firstRun1() {
@@ -296,4 +328,7 @@ void firstRun1() {
   PS4.setRumble(0, 0);
   PS4.sendToController();
   delay(250);
+  if ( DEBUG ) {
+    Serial.println("Controller Connected.");
+  }
 }

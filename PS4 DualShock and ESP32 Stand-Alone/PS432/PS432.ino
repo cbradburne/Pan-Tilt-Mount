@@ -111,7 +111,7 @@ void loop() {
       float RX = (PS4.data.analog.stick.rx);            // Get right analog stick X value
       float RY = (PS4.data.analog.stick.ry);            // Get right analog stick Y value
 
-      //RX = ((RX - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min));
+      //RX = ((RX - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min));       // Note: "map" alternative
 
       LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255, FF)
       LY = map(LY, in_min, in_max, out_min, out_max);

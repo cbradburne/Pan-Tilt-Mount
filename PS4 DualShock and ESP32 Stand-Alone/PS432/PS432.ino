@@ -1,10 +1,13 @@
 /*
   Code adapted from isaac879 by Colin Bradburne
-  
+
   To use a PS4 DualShock controller with the Pan-Tilt-Mount in stand-alone mode, this is what you’ll need.
 
   ESP32 Dev Kit board - like this one https://www.amazon.co.uk/gp/product/B071JR9WS9
   DualShock 4 controller
+
+  install ESP32 boards into Arduino IDE, follow this guide:
+  https://www.hackster.io/abdularbi17/how-to-install-esp32-board-in-arduino-ide-1cd571
 
   You'll need to get your DualShock4's Bluetooth MAC Address.
   To get the MAC address use the program "SixaxisPairTool", https://dancingpixelstudios.com/sixaxis-controller/sixaxispairtool/.
@@ -23,7 +26,7 @@
   RX----------------------TX0
 
   Note: When programming either board, you must disconnect the link between TX and RX.
-  Also, when programming the ESP32 via Arduino IDE, and when the IDE says "Connecting", press and hold the "BOOT" button on the ESP32 until the upload starts.
+  Also, when programming the ESP32 via Arduino IDE, and the IDE says "Connecting", press and hold the "BOOT" button on the ESP32 until the upload starts.
 
   When trying to connect your DualShock4 to your ESP32, press the PS button and if it doesn't connect keep trying, it can be a little temperamental :)
 */
@@ -34,6 +37,22 @@
 #define INPUT_DEADZONE 40
 
 bool DEBUG = false;
+
+int rN = 0;                   // Normal colours (when connected)
+int gN = 0;
+int bN = 255;
+
+int rS = 0;                   // Colours when 'Set Keyframe' complete
+int gS = 255;
+int bS = 0;
+
+int rC = 255;                 // Colours when 'Clear All Keyframes' complete
+int gC = 255;
+int bC = 0;
+
+int rT = 150;                 // Colours when 'Tangent' complete
+int gT = 150;
+int bT = 0;
 
 float in_min = -127;          // PS4 DualShock analogue stick Far Left
 float in_max = 127;           // PS4 DualShock analogue stick Far Right
@@ -73,6 +92,7 @@ bool firstRun = true;
 long previousMillis = 0;
 long currentMillis;
 const int LED_Interval = 250;
+char instruction = '0';
 
 #define LED 2
 
@@ -84,7 +104,7 @@ void setup()
 }
 
 void PS4connect() {
-  PS4.begin("8c:2d:aa:49:78:46");                       // **** insert your DualShock4 MAC address here ****
+  PS4.begin("e8:9e:b4:a9:3b:74");                   //("8c:2d:aa:49:78:46");          // **** insert your DualShock4 MAC address here ****
   while (!PS4.isConnected()) {
     currentMillis = millis();
     if (currentMillis - previousMillis > LED_Interval)
@@ -140,7 +160,7 @@ void loop() {
 
       if (magnitudeRY > INPUT_DEADZONE) {
         if (RY > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          RYShort = map(RY, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
+          RYShort = map(RY, 0, in_max, 15, (out_max * (scaleSpeed * 4)));   // Compensate for no movement between 00 & 0F
         }
         else if (RY <= 0 || (scaleSpeed == scaleSpeedFast)) {
           RYShort = scaleSpeed * RY;
@@ -154,7 +174,7 @@ void loop() {
 
       if (magnitudeLX > INPUT_DEADZONE) {
         if (LX > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
+          LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));   // Compensate for no movement between 00 & 0F
         }
         else if (LX <= 0 || (scaleSpeed == scaleSpeedFast)) {
           LXShort = scaleSpeed * LX;
@@ -218,10 +238,16 @@ void loop() {
 
       if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
         scaleSpeed = scaleSpeedSlow;
+        if ( DEBUG ) {
+          Serial.println("L1");
+        }
         buttonL1 = true;
       }
       if ( PS4.data.button.r1 && !buttonR1) {         // R1 - Set fast speed
         scaleSpeed = scaleSpeedFast;
+        if ( DEBUG ) {
+          Serial.println("R1");
+        }
         buttonR1 = true;
       }
 
@@ -261,6 +287,65 @@ void loop() {
         buttonSH = false;
       if ( !PS4.data.button.options && buttonOP)
         buttonOP = false;
+    }
+    if (Serial.available() > 0) {
+      instruction = Serial.read();
+    }
+    switch (instruction) {
+      case 'a': {                             // Set Keyframe
+          PS4.setLed(rS, gS, bS);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rN, gN, bN);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rS, gS, bS);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rN, gN, bN);
+          PS4.sendToController();
+          if ( DEBUG ) {
+            Serial.println("Key Frame Set");
+          }
+          instruction = '0';
+        }
+        break;
+      case 'b': {                             // Clear All Keyframes
+          PS4.setLed(rC, gC, bC);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rN, gN, bN);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rC, gC, bC);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rN, gN, bN);
+          PS4.sendToController();
+          if ( DEBUG ) {
+            Serial.println("Clear All Key Frame");
+          }
+          instruction = '0';
+        }
+        break;
+      case 'c': {                             // Set first 2 keyframes to tangent point
+          PS4.setLed(rT, gT, bT);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rN, gN, bN);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rT, gT, bT);
+          PS4.sendToController();
+          delay(100);
+          PS4.setLed(rN, gN, bN);
+          PS4.sendToController();
+          if ( DEBUG ) {
+            Serial.println("Calculate Tangent from first 2 Key Frames");
+          }
+          instruction = '0';
+        }
+        break;
     }
   }
 }
@@ -304,31 +389,22 @@ void firstRun1() {
   digitalWrite(LED, LOW);
   firstRun = false;
   PS4.setLed(255, 0, 0);
-  PS4.setFlashRate(0, 0);
-  PS4.setRumble(0, 0);
   PS4.sendToController();
-  delay(250);
+  delay(100);
   PS4.setLed(0, 0, 0);
-  PS4.setFlashRate(0, 0);
-  PS4.setRumble(0, 0);
   PS4.sendToController();
-  delay(250);
+  delay(100);
   PS4.setLed(255, 0, 0);
-  PS4.setFlashRate(0, 0);
-  PS4.setRumble(0, 0);
   PS4.sendToController();
-  delay(250);
+  delay(100);
   PS4.setLed(0, 0, 0);
-  PS4.setFlashRate(0, 0);
-  PS4.setRumble(0, 0);
   PS4.sendToController();
-  delay(250);
-  PS4.setLed(0, 0, 255);
-  PS4.setFlashRate(0, 0);
-  PS4.setRumble(0, 0);
+  delay(100);
+  PS4.setLed(rN, gN, bN);
   PS4.sendToController();
-  delay(250);
+  delay(300);
   if ( DEBUG ) {
+    Serial.println("\n\n");
     Serial.println("Controller Connected.");
   }
 }

@@ -288,6 +288,7 @@ void loop() {
       if ( !PS4.data.button.options && buttonOP)
         buttonOP = false;
     }
+    /*                                        // Experimental - Flash if Nano received data
     if (Serial.available() > 0) {
       instruction = Serial.read();
     }
@@ -347,6 +348,7 @@ void loop() {
         }
         break;
     }
+    */
   }
 }
 

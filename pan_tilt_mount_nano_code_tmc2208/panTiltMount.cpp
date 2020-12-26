@@ -837,7 +837,7 @@ void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //From the first two keyframes the intercept of where the camera is directed is calculated.
-//The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It wuld be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
+//The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It would be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
 //The intercept of the vectorand plane are then calculated to give the X, Y, Z coordinates of the point the camera was pointed at in both keyframes. (The second keyframe will ignore the tilt value and calculate it based on the first keyframes vector.)
 
 bool calculateTargetCoordinate(void){ 
@@ -874,7 +874,7 @@ bool calculateTargetCoordinate(void){
         intercept.y = m1 * intercept.x + c1;
     }
     else{
-        if(m1 == m2){                                   //  If the angle of the slope of both lines are the same they are parallel and cannot intercept.
+        if(m1 == m2){                                                                   //  If the angle of the slope of both lines are the same they are parallel and cannot intercept.
             printi(F("Positions do not intersect."));
             return false;
         }

@@ -1073,10 +1073,10 @@ void serialData(void) {
             short panStepSpeed = (Serial.read() << 8) + Serial.read();
             short tiltStepSpeed = (Serial.read() << 8) + Serial.read();
 
-            printi(F("4 , "));
-            printi(sliderStepSpeed, F(" , "));
-            printi(panStepSpeed, F(" , "));
-            printi(tiltStepSpeed, F("\n"));
+            //printi(F("4 , "));
+            //printi(sliderStepSpeed, F(" , "));
+            //printi(panStepSpeed, F(" , "));
+            //printi(tiltStepSpeed, F("\n"));
 
             stepper_slider.setSpeed(sliderStepSpeed);
             stepper_pan.setSpeed(panStepSpeed);
@@ -1226,8 +1226,7 @@ void serialData(void) {
       }
       break;
     case INSTRUCTION_EDIT_ARRAY: {
-        //editKeyframe();
-        panDegrees(5);
+        editKeyframe();
       }
       break;
     case INSTRUCTION_ADD_DELAY: {
@@ -1251,7 +1250,7 @@ void serialData(void) {
       }
       break;
     case INSTRUCTION_PAN_DEGREES: {
-        //panDegrees(serialCommandValueFloat);
+        panDegrees(serialCommandValueFloat);
       }
       break;
     case INSTRUCTION_TILT_DEGREES: {
@@ -1270,29 +1269,29 @@ void serialData(void) {
         printi(F("Max pan speed: "), serialCommandValueFloat, 1, "º/s.\n");
         pan_max_speed = serialCommandValueFloat;
         stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
+        printi(F("Max pan speed set as: "), stepper_pan.maxSpeed(), 1, "\n");
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED: {
         printi(F("Max tilt speed: "), serialCommandValueFloat, 1, "º/s.\n");
         tilt_max_speed = serialCommandValueFloat;
         stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
+        printi(F("Max tilt speed set as: "), stepper_tilt.maxSpeed(), 1, "\n");
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
         printi(F("Max slider speed: "), serialCommandValueFloat, 1, "mm/s.\n");
         slider_max_speed = serialCommandValueFloat;
         stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
+        printi(F("Max slider speed set as: "), stepper_slider.maxSpeed(), 1, "\n");
       }
       break;
     case INSTRUCTION_CALCULATE_TARGET_POINT: {
-      /*
         if (calculateTargetCoordinate()) {
           printi("Target:\tx: ", intercept.x, 3, "\t");
           printi("y: ", intercept.y, 3, "\t");
           printi("z: ", intercept.z, 3, "mm\n");
         }
-      */
-        panDegrees(45);
       }
       break;
     case INSTRUCTION_ORIBIT_POINT: {

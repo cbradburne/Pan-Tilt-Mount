@@ -23,6 +23,6 @@ TX----------------------RX0
 RX----------------------TX0
 
 Note: When programming either board, you must disconnect the link between TX and RX. 
-Also, when programming the ESP32 via Arduino IDE, and when the IDE says "Connecting", press and hold the "BOOT" button on the ESP32 until the upload starts.
+Also, when programming the ESP32 via Arduino IDE, and when the IDE says "Connecting", sometimes you might need to press and hold the "BOOT" button on the ESP32 until the upload starts.
 
-When trying to connect your DualShock4 to your ESP32, press the PS button and if it doesn't connect keep trying, it can be a little temperamental :)
+When connecting your DualShock4 to your ESP32, make sure your PS4 is turned off (unplug the mains) and press the PS button on the controller. Keep trying if it doesn't connect first time.

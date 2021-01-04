@@ -48,51 +48,53 @@ int slider_accel_increment_us = 3500;
 byte acceleration_enable_state = 0;
 FloatCoordinate intercept;
 
+bool motorRunning = false;
+
 /*
-float in_min = -127;          // PS4 DualShock analogue stick Far Left
-float in_max = 127;           // PS4 DualShock analogue stick Far Right
-float out_min = -255;
-float out_max = 255;
+  float in_min = -127;          // PS4 DualShock analogue stick Far Left
+  float in_max = 127;           // PS4 DualShock analogue stick Far Right
+  float out_min = -255;
+  float out_max = 255;
 
-float scaleSpeed = 1;
-const float scaleSpeedFast = 1;
-const float scaleSpeedSlow = 0.02;
+  float scaleSpeed = 1;
+  const float scaleSpeedFast = 1;
+  const float scaleSpeedSlow = 0.02;
 
-short shortVals[3] = {0, 0, 0};
-short LXShort = 0;
-short RXShort = 0;
-short RYShort = 0;
-short oldShortVal0 = 0;
-short oldShortVal1 = 0;
-short oldShortVal2 = 0;
+  short shortVals[3] = {0, 0, 0};
+  short LXShort = 0;
+  short RXShort = 0;
+  short RYShort = 0;
+  short oldShortVal0 = 0;
+  short oldShortVal1 = 0;
+  short oldShortVal2 = 0;
 
-bool buttonUP = false;
-bool buttonDOWN = false;
-bool buttonLEFT = false;
-bool buttonRIGHT = false;
+  bool buttonUP = false;
+  bool buttonDOWN = false;
+  bool buttonLEFT = false;
+  bool buttonRIGHT = false;
 
-bool buttonTRI = false;
-bool buttonCIR = false;
-bool buttonCRO = false;
-bool buttonSQU = false;
+  bool buttonTRI = false;
+  bool buttonCIR = false;
+  bool buttonCRO = false;
+  bool buttonSQU = false;
 
-bool buttonL1 = false;
-bool buttonR1 = false;
+  bool buttonL1 = false;
+  bool buttonR1 = false;
 
-bool buttonSH = false;
-bool buttonOP = false;
+  bool buttonSH = false;
+  bool buttonOP = false;
 
-bool firstRun = true;
+  bool firstRun = true;
 
-long previousMillis = 0;
-long currentMillis;
-const int LED_Interval = 250;
+  long previousMillis = 0;
+  long currentMillis;
+  const int LED_Interval = 250;
 
 */
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*
-void PS4connect() {
+  void PS4connect() {
   PS4.begin("8c:2d:aa:49:78:46");                       // **** insert your DualShock4 MAC address here ****
   while (!PS4.isConnected()) {
     currentMillis = millis();
@@ -102,7 +104,7 @@ void PS4connect() {
       digitalWrite(LED, !(digitalRead(LED)));
     }
   }
-}
+  }
 */
 
 void initPanTilt(void) {
@@ -149,8 +151,8 @@ void initPanTilt(void) {
   //            printi(F("Error homing\n"));
   //        }
   //    }
-  
-  
+
+
   //PS4connect();
 }
 
@@ -520,129 +522,308 @@ void clearKeyframes(void) {
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void moveToIndex(int index) {
+  //COLS Accel
+  printi(F("C Index: "), index, F("\n"));
+  printi(F("C keyframe_elements: "), keyframe_elements, F("\n"));
+
   if (index < keyframe_elements && index >= 0) {
+    printi(F("C Inside the IF.\n"));
     target_position[0] = keyframe_array[index].panStepCount;
     target_position[1] = keyframe_array[index].tiltStepCount;
     target_position[2] = keyframe_array[index].sliderStepCount;
+
+    float panInitialSpeed = stepper_pan.maxSpeed();
+    float tiltInitialSpeed = stepper_tilt.maxSpeed();
+    float sliderInitialSpeed = stepper_slider.maxSpeed();
+
+    multi_stepper.moveTo(target_position); //Sets new target positions //sets speeds
+
     stepper_pan.setMaxSpeed(keyframe_array[index].panSpeed);
     stepper_tilt.setMaxSpeed(keyframe_array[index].tiltSpeed);
     stepper_slider.setMaxSpeed(keyframe_array[index].sliderSpeed);
 
-    if (acceleration_enable_state == 0) { //If accelerations are not enabled just move directly to the target position.
-      multi_stepper.moveTo(target_position); //Sets new target positions
-      multi_stepper.runSpeedToPosition(); //Moves and blocks until complete
-      delay(keyframe_array[index].msDelay);
-      current_keyframe_index = index;
-      return;
-    }
+    printi(F("C panMaxSpeed   : "), keyframe_array[index].panSpeed, 3, F("\n"));
+    printi(F("C tiltMaxSpeed  : "), keyframe_array[index].tiltSpeed, 3, F("\n"));
+    printi(F("C sliderMaxSpeed: "), keyframe_array[index].sliderSpeed, 3, F("\n"));
+    /*
+      float panDeltaSpeed = stepper_pan.speed() - panInitialSpeed;
+      float tiltDeltaSpeed = stepper_tilt.speed() - tiltInitialSpeed;
+      float sliderDeltaSpeed = stepper_slider.speed() - sliderInitialSpeed;
 
-    float panInitialSpeed = stepper_pan.speed();
-    float tiltInitialSpeed = stepper_tilt.speed();
-    float sliderInitialSpeed = stepper_slider.speed();
+      float panAccel = stepper_pan.speed() / (pan_accel_increment_us * 0.0001);   //  Equation is arbitrary and was deterined through empirical testing. The acceleration value does NOT correspond to mm/s/s
+      float tiltAccel = stepper_tilt.speed() / (tilt_accel_increment_us * 0.0001);
+      float sliderAccel = stepper_slider.speed() / (slider_accel_increment_us * 0.0001);
+    */
+    float accelMultiplier = 0.01;
 
-    if (index >= 1) {
-      if (keyframe_array[index - 1].msDelay != 0) {
-        panInitialSpeed = 0;
-        tiltInitialSpeed = 0;
-        sliderInitialSpeed = 0;
-      }
-    }
-
-    multi_stepper.moveTo(target_position); //Sets new target positions //sets speeds
-
-    float panDeltaSpeed = stepper_pan.speed() - panInitialSpeed;
-    float tiltDeltaSpeed = stepper_tilt.speed() - tiltInitialSpeed;
-    float sliderDeltaSpeed = stepper_slider.speed() - sliderInitialSpeed;
-
-    float panAccel = stepper_pan.speed() / (pan_accel_increment_us * 0.0001); //Equation is arbitrary and was deterined through empirical testing. The acceleration value does NOT correspond to mm/s/s
-    float tiltAccel = stepper_tilt.speed() / (tilt_accel_increment_us * 0.0001);
-    float sliderAccel = stepper_slider.speed() / (slider_accel_increment_us * 0.0001);
+    unsigned long last_us = 0;
+    //long totalDist = 0;
+    //long diffDist = 0;
 
     long panDist = 0;
     long tiltDist = 0;
     long sliderDist = 0;
+    long totalPanStepDiff = 0;
+    long totalTiltStepDiff = 0;
+    long totalSliderStepDiff = 0;
+    float sliderRange = 0;
 
-    if (panAccel != 0) {
-      panDist = pow(stepper_pan.speed(), 2) / (5 * panAccel); //Equation is arbitrary and was deterined through empirical testing.
-    }
-    if (tiltAccel != 0) {
-      tiltDist = pow(stepper_tilt.speed(), 2) / (5 * tiltAccel); //Equation is arbitrary and was deterined through empirical testing.
-    }
-    if (sliderAccel != 0) {
-      sliderDist = pow(stepper_slider.speed(), 2) / (5 * sliderAccel); //Equation is arbitrary and was deterined through empirical testing.
-    }
-
-    if (index + 1 < keyframe_elements) { //makes sure there is a valid next keyframe
-      if (keyframe_array[index].msDelay == 0) {
-        long panStepDiff = keyframe_array[index + 1].panStepCount - keyframe_array[index].panStepCount; //Change in position from current target position to the next.
-        long tiltStepDiff = keyframe_array[index + 1].tiltStepCount - keyframe_array[index].tiltStepCount;
-        long sliderStepDiff = keyframe_array[index + 1].sliderStepCount - keyframe_array[index].sliderStepCount;
-        if ((panStepDiff == 0 && stepper_pan.speed() != 0) || (panStepDiff > 0 && stepper_pan.speed() < 0) || (panStepDiff < 0 && stepper_pan.speed() > 0)) { //if stopping or changing direction
-          target_position[0] = keyframe_array[index].panStepCount - panDist; //Set the target position slightly before the actual target to allow for the distance traveled while decelerating.
+    printi(F("C sliderInitialSpeed : "), sliderInitialSpeed, 3, F("\n"));
+    //printi(F("C sliderDeltaSpeed   : "), sliderDeltaSpeed, 3, F("\n"));
+    /*
+        if (panAccel != 0) {
+          panDist = pow(stepper_pan.speed(), 2) / (5 * panAccel);                 //  Equation is arbitrary and was deterined through empirical testing.
         }
-        if ((tiltStepDiff == 0 && stepper_tilt.speed() != 0) || (tiltStepDiff > 0 && stepper_tilt.speed() < 0) || (tiltStepDiff < 0 && stepper_tilt.speed() > 0)) { //if stopping or changing direction
-          target_position[1] = keyframe_array[index].tiltStepCount - tiltDist;
+        if (tiltAccel != 0) {
+          tiltDist = pow(stepper_tilt.speed(), 2) / (5 * tiltAccel);              //  Equation is arbitrary and was deterined through empirical testing.
+        }
+        if (sliderAccel != 0) {
+          sliderDist = pow(stepper_slider.speed(), 2) / (5 * sliderAccel);        //  Equation is arbitrary and was deterined through empirical testing.
+        }
+    */
+    if (index + 1 < keyframe_elements) {
+      totalPanStepDiff = keyframe_array[index + 1].panStepCount - keyframe_array[index].panStepCount;                                                                         //Change in position from current target position to the next.
+      totalTiltStepDiff = keyframe_array[index + 1].tiltStepCount - keyframe_array[index].tiltStepCount;
+      totalSliderStepDiff = keyframe_array[index + 1].sliderStepCount - keyframe_array[index].sliderStepCount;
+      /*
+        if ((panStepDiff == 0 && stepper_pan.speed() != 0) || (panStepDiff > 0 && stepper_pan.speed() < 0) || (panStepDiff < 0 && stepper_pan.speed() > 0)) {                   //if stopping or changing direction
+        target_position[0] = keyframe_array[index].panStepCount - panDist;                                                                                                    //Set the target position slightly before the actual target to allow for the distance traveled while decelerating.
+        }
+        if ((tiltStepDiff == 0 && stepper_tilt.speed() != 0) || (tiltStepDiff > 0 && stepper_tilt.speed() < 0) || (tiltStepDiff < 0 && stepper_tilt.speed() > 0)) {             //if stopping or changing direction
+        target_position[1] = keyframe_array[index].tiltStepCount - tiltDist;
         }
         if ((sliderStepDiff == 0 && stepper_slider.speed() != 0) || (sliderStepDiff > 0 && stepper_slider.speed() < 0) || (sliderStepDiff < 0 && stepper_slider.speed() > 0)) { //if stopping or changing direction
-          target_position[2] = keyframe_array[index].sliderStepCount - sliderDist;//If changing dir
+        target_position[2] = keyframe_array[index].sliderStepCount - sliderDist;                                                                                              //If changing dir
         }
-      }
+      */
+    }
+    if (target_position[2] > stepper_slider.currentPosition()) {
+      sliderRange = target_position[2] - stepper_slider.currentPosition();
+    }
+    else {
+      sliderRange = stepper_slider.currentPosition() - target_position[2];
     }
 
-    if (index > 0) {
-      long panStepDiffPrev = keyframe_array[index].panStepCount - keyframe_array[index - 1].panStepCount; //Change in position from the privious target to the current target position.
-      long tiltStepDiffPrev = keyframe_array[index].tiltStepCount - keyframe_array[index - 1].tiltStepCount;
-      long sliderStepDiffPrev = keyframe_array[index].sliderStepCount - keyframe_array[index - 1].sliderStepCount;
-      if (panStepDiffPrev == 0 && panDeltaSpeed == 0) { //Movement stopping
-        panDeltaSpeed = -(2 * stepper_pan.speed()); //Making it negative ramps the speed down in the acceleration portion of the movement. The multiplication factor is arbitrary and was deterined through empirical testing.
+    stepper_pan.setMaxSpeed(accelMultiplier * panInitialSpeed);
+    stepper_tilt.setMaxSpeed(accelMultiplier * tiltInitialSpeed);
+    stepper_slider.setMaxSpeed(accelMultiplier * sliderInitialSpeed);
+
+    while (stepper_pan.currentPosition() != target_position[0] || stepper_tilt.currentPosition() != target_position[1] || stepper_slider.currentPosition() != target_position[2]) {
+      unsigned long usTime = millis();
+      if (!motorRunning) {
+        stepper_pan.setMaxSpeed(accelMultiplier * panInitialSpeed);
+        stepper_tilt.setMaxSpeed(accelMultiplier * tiltInitialSpeed);
+        stepper_slider.setMaxSpeed(accelMultiplier * sliderInitialSpeed);
+        multi_stepper.moveTo(target_position);
+        printi(F("C Start moving\n"));
+        motorRunning = true;
+        multi_stepper.run();
+        unsigned long usTime = millis();
       }
-      if (tiltStepDiffPrev == 0 && tiltDeltaSpeed == 0) { //Movement stopping
-        tiltDeltaSpeed = -(2 * stepper_tilt.speed());
-      }
-      if (sliderStepDiffPrev == 0 && sliderDeltaSpeed == 0) { //Movement stopping
-        sliderDeltaSpeed = -(2 * stepper_slider.speed());
-      }
+      else if (motorRunning && ((usTime - pan_accel_increment_us) >= last_us)) {
+        last_us = millis();
+        if (target_position[2] > stepper_slider.currentPosition()) {
+      sliderRange = target_position[2] - stepper_slider.currentPosition();
     }
-
-    multi_stepper.moveTo(target_position); //Sets new target positions and calculates new speeds.
-
-    if (stepper_pan.currentPosition() != target_position[0] || stepper_tilt.currentPosition() != target_position[1] || stepper_slider.currentPosition() != target_position[2]) { //Prevents issues caused when the motor target positions and speeds not being updated becuase they have not changed.
-      //Impliments the acceleration/deceleration. This implimentation feels pretty bad and should probably be updated but it works well enough so I'm not going to...
-      float panInc = 0;
-      float tiltInc = 0;
-      float sliderInc = 0;
-      unsigned long pan_last_us = 0;
-      unsigned long tilt_last_us = 0;
-      unsigned long slider_last_us = 0;
-
-      while (((panInc < 1) || (tiltInc < 1) || (sliderInc < 1)) && multi_stepper.run()) {
-        unsigned long usTime = micros();
-
-        if (usTime - pan_accel_increment_us >= pan_last_us) {
-          panInc = (panInc < 1) ? (panInc + 0.01) : 1;
-          pan_last_us = micros();
-          stepper_pan.setSpeed(panInitialSpeed + (panDeltaSpeed * panInc));
-        }
-
-        if (usTime - tilt_accel_increment_us >= tilt_last_us) {
-          tiltInc = (tiltInc < 1) ? (tiltInc + 0.01) : 1;
-          tilt_last_us = micros();
-          stepper_tilt.setSpeed(tiltInitialSpeed + (tiltDeltaSpeed * tiltInc));
-        }
-
-        if (usTime - slider_accel_increment_us >= slider_last_us) {
-          sliderInc = (sliderInc < 1) ? (sliderInc + 0.01) : 1;
-          slider_last_us = micros();
-          stepper_slider.setSpeed(sliderInitialSpeed + (sliderDeltaSpeed * sliderInc));
-        }
-      }
-
-      multi_stepper.moveTo(target_position); //Sets all speeds to reach the target
-      multi_stepper.runSpeedToPosition(); //Moves and blocks until complete
+    else {
+      sliderRange = stepper_slider.currentPosition() - target_position[2];
     }
-    delay(keyframe_array[index].msDelay);
+        printi(F("C target_position[2] : "), target_position[2], F("\n"));
+        printi(F("C slider.currentPos(): "), stepper_slider.currentPosition(), F("\n"));
+        printi(F("C totalSliderStepDiff: "), totalSliderStepDiff, F("\n"));
+        printi(F("C keyframeStepCount  : "), keyframe_array[index].sliderStepCount, F("\n"));
+        float currentDiff = stepper_slider.currentPosition() - keyframe_array[index + 1].sliderStepCount;
+        printi(F("C currentDiff: "), currentDiff, 3, F("\n\n"));
+
+        if (sliderRange >= (totalSliderStepDiff / 2)) {
+          printi(F("C Made it inside + ;) \n"));
+          if (accelMultiplier < 1) {
+            accelMultiplier += 0.01;
+            printi(F("C last_us        : "), last_us, F("\n"));
+            printi(F("C accelMultiplier: "), accelMultiplier, 3, F("\n"));
+            printi(F("C pan maxSpeed   : "), stepper_pan.maxSpeed(), 3, F("\n\n"));
+            //stepper_pan.setSpeed(panInitialSpeed + (panDeltaSpeed * panInc));
+            stepper_pan.setMaxSpeed(accelMultiplier * panInitialSpeed);
+            stepper_tilt.setMaxSpeed(accelMultiplier * tiltInitialSpeed);
+            stepper_slider.setMaxSpeed(accelMultiplier * sliderInitialSpeed);
+            multi_stepper.moveTo(target_position);
+            //}
+            multi_stepper.run();
+          }
+          multi_stepper.run();
+        }
+        else if (sliderRange < (totalSliderStepDiff / 2)) {
+          printi(F("C Made it inside - ;) \n"));
+          if (accelMultiplier > 0) {
+            accelMultiplier -= 0.01;
+            printi(F("C last_us        : "), last_us, F("\n"));
+            printi(F("C accelMultiplier: "), accelMultiplier, 3, F("\n"));
+            printi(F("C pan maxSpeed   : "), stepper_pan.maxSpeed(), 3, F("\n\n"));
+            //stepper_pan.setSpeed(panInitialSpeed + (panDeltaSpeed * panInc));
+            stepper_pan.setMaxSpeed(accelMultiplier * panInitialSpeed);
+            stepper_tilt.setMaxSpeed(accelMultiplier * tiltInitialSpeed);
+            stepper_slider.setMaxSpeed(accelMultiplier * sliderInitialSpeed);
+            multi_stepper.moveTo(target_position);
+            //}
+            multi_stepper.run();
+          }
+          multi_stepper.run();
+        }
+        else {
+          multi_stepper.run();
+        }
+        multi_stepper.run();
+      }
+      multi_stepper.run();
+    }
+    //multi_stepper.moveTo(target_position);
     current_keyframe_index = index;
+    motorRunning = false;
+
+    multi_stepper.run();
   }
+
+
+
+
+
+
+
+  /*
+
+
+
+
+    if (index < keyframe_elements && index >= 0) {
+      target_position[0] = keyframe_array[index].panStepCount;
+      target_position[1] = keyframe_array[index].tiltStepCount;
+      target_position[2] = keyframe_array[index].sliderStepCount;
+      stepper_pan.setMaxSpeed(keyframe_array[index].panSpeed);
+      stepper_tilt.setMaxSpeed(keyframe_array[index].tiltSpeed);
+      stepper_slider.setMaxSpeed(keyframe_array[index].sliderSpeed);
+
+      float panInitialSpeed = stepper_pan.speed();
+      float tiltInitialSpeed = stepper_tilt.speed();
+      float sliderInitialSpeed = stepper_slider.speed();
+
+      if (index >= 1) {
+        if (keyframe_array[index - 1].msDelay != 0) {
+          panInitialSpeed = 0;
+          tiltInitialSpeed = 0;
+          sliderInitialSpeed = 0;
+        }
+      }
+
+      multi_stepper.moveTo(target_position); //Sets new target positions //sets speeds
+
+      float panDeltaSpeed = stepper_pan.speed() - panInitialSpeed;
+      float tiltDeltaSpeed = stepper_tilt.speed() - tiltInitialSpeed;
+      float sliderDeltaSpeed = stepper_slider.speed() - sliderInitialSpeed;
+
+      float panAccel = stepper_pan.speed() / (pan_accel_increment_us * 0.01); //Equation is arbitrary and was deterined through empirical testing. The acceleration value does NOT correspond to mm/s/s
+      float tiltAccel = stepper_tilt.speed() / (tilt_accel_increment_us * 0.01);
+      float sliderAccel = stepper_slider.speed() / (slider_accel_increment_us * 0.01);
+
+      long panDist = 0;
+      long tiltDist = 0;
+      long sliderDist = 0;
+
+      printi(F("C sliderInitialSpeed : "), sliderInitialSpeed, 3, F("\n"));
+      printi(F("C sliderDeltaSpeed   : "), sliderDeltaSpeed, 3, F("\n"));
+      printi(F("C sliderAccel        : "), sliderAccel, 3, F("\n"));
+
+      if (panAccel != 0) {
+        panDist = pow(stepper_pan.speed(), 2) / (5 * panAccel);           //Equation is arbitrary and was deterined through empirical testing.
+      }
+      if (tiltAccel != 0) {
+        tiltDist = pow(stepper_tilt.speed(), 2) / (5 * tiltAccel);        //Equation is arbitrary and was deterined through empirical testing.
+      }
+      if (sliderAccel != 0) {
+        sliderDist = pow(stepper_slider.speed(), 2) / (5 * sliderAccel); //Equation is arbitrary and was deterined through empirical testing.
+      }
+
+      if (index + 1 < keyframe_elements) {                        //makes sure there is a valid next keyframe
+        if (keyframe_array[index].msDelay == 0) {
+          long panStepDiff = keyframe_array[index + 1].panStepCount - keyframe_array[index].panStepCount;                                                                         //Change in position from current target position to the next.
+          long tiltStepDiff = keyframe_array[index + 1].tiltStepCount - keyframe_array[index].tiltStepCount;
+          long sliderStepDiff = keyframe_array[index + 1].sliderStepCount - keyframe_array[index].sliderStepCount;
+          if ((panStepDiff == 0 && stepper_pan.speed() != 0) || (panStepDiff > 0 && stepper_pan.speed() < 0) || (panStepDiff < 0 && stepper_pan.speed() > 0)) {                   //if stopping or changing direction
+            target_position[0] = keyframe_array[index].panStepCount - panDist;                                                                                                    //Set the target position slightly before the actual target to allow for the distance traveled while decelerating.
+          }
+          if ((tiltStepDiff == 0 && stepper_tilt.speed() != 0) || (tiltStepDiff > 0 && stepper_tilt.speed() < 0) || (tiltStepDiff < 0 && stepper_tilt.speed() > 0)) {             //if stopping or changing direction
+            target_position[1] = keyframe_array[index].tiltStepCount - tiltDist;
+          }
+          if ((sliderStepDiff == 0 && stepper_slider.speed() != 0) || (sliderStepDiff > 0 && stepper_slider.speed() < 0) || (sliderStepDiff < 0 && stepper_slider.speed() > 0)) { //if stopping or changing direction
+            target_position[2] = keyframe_array[index].sliderStepCount - sliderDist;                                                                                              //If changing dir
+          }
+        }
+      }
+
+      if (index > 0) {
+        long panStepDiffPrev = keyframe_array[index].panStepCount - keyframe_array[index - 1].panStepCount;           //Change in position from the privious target to the current target position.
+        long tiltStepDiffPrev = keyframe_array[index].tiltStepCount - keyframe_array[index - 1].tiltStepCount;
+        long sliderStepDiffPrev = keyframe_array[index].sliderStepCount - keyframe_array[index - 1].sliderStepCount;
+        if (panStepDiffPrev == 0 && panDeltaSpeed == 0) {                         //Movement stopping
+          panDeltaSpeed = -(2 * stepper_pan.speed());                                                                 //Making it negative ramps the speed down in the acceleration portion of the movement. The multiplication factor is arbitrary and was deterined through empirical testing.
+        }
+        if (tiltStepDiffPrev == 0 && tiltDeltaSpeed == 0) {                       //Movement stopping
+          tiltDeltaSpeed = -(2 * stepper_tilt.speed());
+        }
+        if (sliderStepDiffPrev == 0 && sliderDeltaSpeed == 0) {                   //Movement stopping
+          sliderDeltaSpeed = -(2 * stepper_slider.speed());
+        }
+      }
+
+      multi_stepper.moveTo(target_position); //Sets new target positions and calculates new speeds.
+      multi_stepper.run();
+
+      if (stepper_pan.currentPosition() != target_position[0] || stepper_tilt.currentPosition() != target_position[1] || stepper_slider.currentPosition() != target_position[2]) { //Prevents issues caused when the motor target positions and speeds not being updated becuase they have not changed.
+        //Impliments the acceleration/deceleration. This implimentation feels pretty bad and should probably be updated but it works well enough so I'm not going to...
+        float panInc = 0;
+        float tiltInc = 0;
+        float sliderInc = 0;
+        unsigned long pan_last_us = 0;
+        unsigned long tilt_last_us = 0;
+        unsigned long slider_last_us = 0;
+
+        while (((panInc < 1) || (tiltInc < 1) || (sliderInc < 1)) && multi_stepper.run()) {
+          unsigned long usTime = millis();
+
+          if (usTime - pan_accel_increment_us >= pan_last_us) {
+            panInc = (panInc < 1) ? (panInc + 0.05) : 1;
+            pan_last_us = millis();
+            stepper_pan.setMaxSpeed(panInitialSpeed + (panDeltaSpeed * panInc));
+          }
+
+          if (usTime - tilt_accel_increment_us >= tilt_last_us) {
+            tiltInc = (tiltInc < 1) ? (tiltInc + 0.05) : 1;
+            tilt_last_us = millis();
+            stepper_tilt.setMaxSpeed(tiltInitialSpeed + (tiltDeltaSpeed * tiltInc));
+          }
+
+          if (usTime - slider_accel_increment_us >= slider_last_us) {
+            sliderInc = (sliderInc < 1) ? (sliderInc + 0.05) : 1;
+            slider_last_us = millis();
+            stepper_slider.setMaxSpeed(sliderInitialSpeed + (sliderDeltaSpeed * sliderInc));
+            printi(F("C sliderMaxSpeed    : "), stepper_slider.maxSpeed(), 3, F("\n"));
+          }
+
+          multi_stepper.moveTo(target_position);
+          multi_stepper.run();
+        }
+        //printi(F("Pan    Speed: "), stepper_pan.speed(), 4, F("\n"));
+        //printi(F("Tilt   Speed: "), stepper_tilt.speed(), 4, F("\n"));
+        //printi(F("Slider Speed: "), stepper_slider.speed(), 4, F("\n\n"));
+        multi_stepper.moveTo(target_position);    //Sets all speeds to reach the target
+        multi_stepper.run();                      //Moves and blocks until complete
+      }
+      printi(F("C panDist    : "), panDist, F("\n\n"));
+      printi(F("C tiltDist   : "), tiltDist, F("\n\n"));
+      printi(F("C sliderDist : "), sliderDist, F("\n\n"));
+      delay(keyframe_array[index].msDelay);
+      current_keyframe_index = index;
+    }
+  */
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1059,48 +1240,48 @@ void scaleKeyframeSpeed(float scaleFactor) {
 
 void serialData(void) {
   char instruction = Serial.read();
-  if(instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED){
-        int count = 0;
-        while(Serial.available() < 6){                        //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
-                delayMicroseconds(200); 
-                count++;
-                if(count > 100){
-                    serialFlush();                            //  Clear the serial buffer
-                    break;   
-                }
-            }
-            short sliderStepSpeed = (Serial.read() << 8) + Serial.read();
-            short panStepSpeed = (Serial.read() << 8) + Serial.read();
-            short tiltStepSpeed = (Serial.read() << 8) + Serial.read();
+  if (instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED) {
+    int count = 0;
+    while (Serial.available() < 6) {                      //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
+      delayMicroseconds(200);
+      count++;
+      if (count > 100) {
+        serialFlush();                            //  Clear the serial buffer
+        break;
+      }
+    }
+    short sliderStepSpeed = (Serial.read() << 8) + Serial.read();
+    short panStepSpeed = (Serial.read() << 8) + Serial.read();
+    short tiltStepSpeed = (Serial.read() << 8) + Serial.read();
 
-            //printi(F("4 , "));
-            //printi(sliderStepSpeed, F(" , "));
-            //printi(panStepSpeed, F(" , "));
-            //printi(tiltStepSpeed, F("\n"));
+    //printi(F("4 , "));
+    //printi(sliderStepSpeed, F(" , "));
+    //printi(panStepSpeed, F(" , "));
+    //printi(tiltStepSpeed, F("\n"));
 
-            stepper_slider.setSpeed(sliderStepSpeed);
-            stepper_pan.setSpeed(panStepSpeed);
-            stepper_tilt.setSpeed(tiltStepSpeed);
-            stepper_slider.runSpeed();
-            stepper_pan.runSpeed();
-            stepper_tilt.runSpeed();
-    }
-    
-    delay(2);                                               //wait to make sure all data in the serial message has arived 
-    memset(&stringText[0], 0, sizeof(stringText));          //clear the array
-    while(Serial.available()){                              //set elemetns of stringText to the serial values sent
-        char digit = Serial.read();                         //read in a char
-        strncat(stringText, &digit, 1);                     //add digit to the end of the array
-    }
-    serialFlush();                                          //Clear any excess data in the serial buffer
-    int serialCommandValueInt = atoi(stringText);           //converts stringText to an int
-    float serialCommandValueFloat = atof(stringText);       //converts stringText to a float
-    if(instruction == '+'){                                 //The Bluetooth module sends a message starting with "+CONNECTING" which should be discarded.
-        delay(100);                                         //wait to make sure all data in the serial message has arived 
-        serialFlush();                                      //Clear any excess data in the serial buffer
-        return;
-    }
-  
+    stepper_slider.setSpeed(sliderStepSpeed);
+    stepper_pan.setSpeed(panStepSpeed);
+    stepper_tilt.setSpeed(tiltStepSpeed);
+    stepper_slider.runSpeed();
+    stepper_pan.runSpeed();
+    stepper_tilt.runSpeed();
+  }
+
+  delay(2);                                               //wait to make sure all data in the serial message has arived
+  memset(&stringText[0], 0, sizeof(stringText));          //clear the array
+  while (Serial.available()) {                            //set elemetns of stringText to the serial values sent
+    char digit = Serial.read();                         //read in a char
+    strncat(stringText, &digit, 1);                     //add digit to the end of the array
+  }
+  serialFlush();                                          //Clear any excess data in the serial buffer
+  int serialCommandValueInt = atoi(stringText);           //converts stringText to an int
+  float serialCommandValueFloat = atof(stringText);       //converts stringText to a float
+  if (instruction == '+') {                               //The Bluetooth module sends a message starting with "+CONNECTING" which should be discarded.
+    delay(100);                                         //wait to make sure all data in the serial message has arived
+    serialFlush();                                      //Clear any excess data in the serial buffer
+    return;
+  }
+
   switch (instruction) {
     case INSTRUCTION_SCALE_SPEED: {
         scaleKeyframeSpeed(serialCommandValueFloat);
@@ -1300,17 +1481,17 @@ void serialData(void) {
         }
       }
       break;
-    /*
-    default:
-      printi("FAIL!\n\n");
-      printi(instruction);
-      printi("\nFAIL!\n\n");
-    */
+      /*
+        default:
+        printi("FAIL!\n\n");
+        printi(instruction);
+        printi("\nFAIL!\n\n");
+      */
   }
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*
-void firstRun1() {
+  void firstRun1() {
   digitalWrite(LED, LOW);
   firstRun = false;
   PS4.setLed(255, 0, 0);
@@ -1338,11 +1519,11 @@ void firstRun1() {
   PS4.setRumble(0, 0);
   PS4.sendToController();
   delay(250);
-}
+  }
 */
 
 /*
-void runRemote(void) {
+  void runRemote(void) {
   if (!PS4.isConnected()) {
     PS4connect();
   }
@@ -1465,8 +1646,8 @@ void runRemote(void) {
 
       if ( PS4.data.button.triangle && !buttonTRI) {
         executeMoves(1);                                // Triangle - Execute moves array
-        //INSTRUCTION_EXECUTE_MOVES    
-        printi("Triangle\n");    
+        //INSTRUCTION_EXECUTE_MOVES
+        printi("Triangle\n");
         buttonTRI = true;
       }
       if ( PS4.data.button.circle && !buttonCIR) {
@@ -1553,7 +1734,7 @@ void runRemote(void) {
         buttonOP = false;
     }
   }
-}
+  }
 */
 
 void mainLoop(void) {

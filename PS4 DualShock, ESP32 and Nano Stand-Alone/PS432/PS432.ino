@@ -356,12 +356,12 @@ void sendSliderPanTiltStepSpeed(int command, short * arr) {
   byte data[7];                           // Data array to send
 
   data[0] = command;
-  data[1] = (arr[0] >> 4);                // Gets the most significant byte
-  data[2] = (arr[0] & 0xF);               // Gets the second most significant byte
-  data[3] = (arr[1] >> 4);
-  data[4] = (arr[1] & 0xF);
-  data[5] = (arr[2] >> 4);
-  data[6] = (arr[2] & 0xF);               // Gets the least significant byte
+  data[1] = (arr[0] >> 8);                // Gets the most significant byte
+  data[2] = (arr[0] & 0xFF);               // Gets the second most significant byte
+  data[3] = (arr[1] >> 8);
+  data[4] = (arr[1] & 0xFF);
+  data[5] = (arr[2] >> 8);
+  data[6] = (arr[2] & 0xFF);               // Gets the least significant byte
 
   if ( DEBUG ) {
     Serial.print(data[0], HEX);

@@ -36,7 +36,7 @@
 #include <PS4Controller.h>
 
 #define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
-#define INPUT_DEADZONE 40
+#define INPUT_DEADZONE 20
 
 bool DEBUG = false;
 
@@ -56,14 +56,10 @@ int rT = 150;                 // Colours when 'Tangent' complete
 int gT = 150;
 int bT = 0;
 
-float in_min = -127;          // PS4 DualShock analogue stick Far Left
+float in_min = -128;          // PS4 DualShock analogue stick Far Left
 float in_max = 127;           // PS4 DualShock analogue stick Far Right
-float out_min = -255;
+float out_min = -254;
 float out_max = 255;
-
-float scaleSpeed = 1;
-const float scaleSpeedFast = 1;
-const float scaleSpeedSlow = 0.02;
 
 short shortVals[3] = {0, 0, 0};
 short LXShort = 0;
@@ -128,64 +124,46 @@ void loop() {
     }
     else {
 
-      float LX = (PS4.data.analog.stick.lx);            // Get left analog stick X value
-      float LY = (PS4.data.analog.stick.ly);            // Get left analog stick Y value
-      float RX = (PS4.data.analog.stick.rx);            // Get right analog stick X value
-      float RY = (PS4.data.analog.stick.ry);            // Get right analog stick Y value
+      int LX = (PS4.data.analog.stick.lx);            // Get left analog stick X value
+      int LY = (PS4.data.analog.stick.ly);            // Get left analog stick Y value
+      int RX = (PS4.data.analog.stick.rx);            // Get right analog stick X value
+      int RY = (PS4.data.analog.stick.ry);            // Get right analog stick Y value
 
-      //RX = ((RX - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min));       // Note: "map" alternative
-
-      LX = map(LX, in_min, in_max, out_min, out_max);   // Map DualShock values to (-255 to 255, FF)
-      LY = map(LY, in_min, in_max, out_min, out_max);
-      RX = map(RX, in_min, in_max, out_min, out_max);
-      RY = map(RY, in_min, in_max, out_min, out_max);
-
-      float magnitudeRX = sqrt(RX * RX);                // Get magnitude of Right stick movement to test for DeadZone
-      float magnitudeRY = sqrt(RY * RY);                // Get magnitude of Right stick movement to test for DeadZone
-      float magnitudeLX = sqrt(LX * LX);                // Get magnitude of Left stick movement to test for DeadZone
+      int magnitudeRX = abs(RX);                          // Get magnitude of movement to test for DeadZone
+      int magnitudeRY = abs(RY);
+      int magnitudeLX = abs(LX);
 
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-      if (magnitudeRX > INPUT_DEADZONE) {                                   // check if the controller is outside of the axis dead zone
-        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {                     // Scale output
-          RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
-        }
-        else if (RX <= 0 || (scaleSpeed == scaleSpeedFast)) {
-          RXShort = scaleSpeed * RX;
-        }
+      if (RX > INPUT_DEADZONE) {                                            // check if the controller is outside of the axis dead zone
+        RXShort = map(RX, INPUT_DEADZONE, in_max, 0, out_max);
+      }
+      else if (RX < (-INPUT_DEADZONE)) {
+        RXShort = map(RX, in_min, -INPUT_DEADZONE, out_min, 0);
       }
       else {
         RXShort = 0;                                                        // if in DeadZone, send 0, Don't move
       }
 
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-      if (magnitudeRY > INPUT_DEADZONE) {
-        if (RY > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          RYShort = map(RY, 0, in_max, 15, (out_max * (scaleSpeed * 4)));   // Compensate for no movement between 00 & 0F
-        }
-        else if (RY <= 0 || (scaleSpeed == scaleSpeedFast)) {
-          RYShort = scaleSpeed * RY;
-        }
+      if (RY > INPUT_DEADZONE) {                                            // check if the controller is outside of the axis dead zone
+        RYShort = map(RY, INPUT_DEADZONE, in_max, 0, out_max);
+      }
+      else if (RY < (-INPUT_DEADZONE)) {
+        RYShort = map(RY, in_min, -INPUT_DEADZONE, out_min, 0);
       }
       else {
-        RYShort = 0;
+        RYShort = 0;                                                        // if in DeadZone, send 0, Don't move
       }
-
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-      if (magnitudeLX > INPUT_DEADZONE) {
-        if (LX > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));   // Compensate for no movement between 00 & 0F
-        }
-        else if (LX <= 0 || (scaleSpeed == scaleSpeedFast)) {
-          LXShort = scaleSpeed * LX;
-        }
+      if (LX > INPUT_DEADZONE) {                                            // check if the controller is outside of the axis dead zone
+        LXShort = map(LX, INPUT_DEADZONE, in_max, 0, out_max);
+      }
+      else if (LX < (-INPUT_DEADZONE)) {
+        LXShort = map(LX, in_min, -INPUT_DEADZONE, out_min, 0);
       }
       else {
-        LXShort = 0;
+        LXShort = 0;                                                        // if in DeadZone, send 0, Don't move
       }
-
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       shortVals[0] = LXShort;
@@ -194,6 +172,12 @@ void loop() {
 
       if (shortVals[0] != oldShortVal0 || shortVals[1] != oldShortVal1 || shortVals[2] != oldShortVal2) {   // IF input has changed
         sendSliderPanTiltStepSpeed(INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED, shortVals);                     // Send the combned values
+
+        if ( DEBUG ) {
+          Serial.print(magnitudeLX);
+          Serial.print(" - ");
+          Serial.println(LX);
+        }
 
         oldShortVal0 = shortVals[0];      // Store as old values
         oldShortVal1 = shortVals[1];      // Store as old values
@@ -234,21 +218,27 @@ void loop() {
         buttonCRO = true;
       }
       if ( PS4.data.button.square && !buttonSQU) {
-        sendCharArray((char *)"T");                   // Square - Calculate intercept point of first 2 keyframes
+        sendCharArray((char *)"C");                   // Square - Clear Array
         buttonSQU = true;
       }
 
       if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
-        scaleSpeed = scaleSpeedSlow;
-        sendCharArray((char *)"l");
+        sendCharArray((char *)"s5");
+        delay(20);
+        sendCharArray((char *)"S5");
+        delay(20);
+        sendCharArray((char *)"X10");
         if ( DEBUG ) {
           Serial.println("L1");
         }
         buttonL1 = true;
       }
       if ( PS4.data.button.r1 && !buttonR1) {         // R1 - Set fast speed
-        scaleSpeed = scaleSpeedFast;
-        sendCharArray((char *)"L");
+        sendCharArray((char *)"s20");
+        delay(20);
+        sendCharArray((char *)"S20");
+        delay(20);
+        sendCharArray((char *)"X40");
         if ( DEBUG ) {
           Serial.println("R1");
         }
@@ -256,11 +246,11 @@ void loop() {
       }
 
       if ( PS4.data.button.share && !buttonSH) {
-        sendCharArray((char *)"A");                   // Share - Home Axis
+        sendCharArray((char *)"@");                   // Share - Orbit point
         buttonSH = true;
       }
       if ( PS4.data.button.options && !buttonOP) {
-        sendCharArray((char *)"C");                   // Option - Clear Array
+        sendCharArray((char *)"T");                   // Option - Calculate intercept point of first 2 keyframe
         buttonOP = true;
       }
 
@@ -293,10 +283,10 @@ void loop() {
         buttonOP = false;
     }
     /*                                        // Experimental - Flash if Nano received data
-    if (Serial.available() > 0) {
+      if (Serial.available() > 0) {
       instruction = Serial.read();
-    }
-    switch (instruction) {
+      }
+      switch (instruction) {
       case 'a': {                             // Set Keyframe
           PS4.setLed(rS, gS, bS);
           PS4.sendToController();
@@ -351,7 +341,7 @@ void loop() {
           instruction = '0';
         }
         break;
-    }
+      }
     */
   }
 }
@@ -360,12 +350,12 @@ void sendSliderPanTiltStepSpeed(int command, short * arr) {
   byte data[7];                           // Data array to send
 
   data[0] = command;
-  data[1] = (arr[0] >> 4);                // Gets the most significant byte
-  data[2] = (arr[0] & 0xF);               // Gets the second most significant byte
-  data[3] = (arr[1] >> 4);
-  data[4] = (arr[1] & 0xF);
-  data[5] = (arr[2] >> 4);
-  data[6] = (arr[2] & 0xF);               // Gets the least significant byte
+  data[1] = (arr[0] >> 8);                // Gets the most significant byte
+  data[2] = (arr[0] & 0xFF);               // Gets the second most significant byte
+  data[3] = (arr[1] >> 8);
+  data[4] = (arr[1] & 0xFF);
+  data[5] = (arr[2] >> 8);
+  data[6] = (arr[2] & 0xFF);               // Gets the least significant byte
 
   if ( DEBUG ) {
     Serial.print(data[0], HEX);

@@ -34,8 +34,8 @@ float pan_max_speed = 18;                       //  degrees/second. Note: Gets s
 float tilt_max_speed = 10;                      //  degrees/second.
 float slider_max_speed = 20;                    //  mm/second
 long target_position[3];                        //  Array to store stepper motor step counts
-float degrees_per_picture = 0.5;                //                  Note: Gets set from the saved EEPROM value on startup. 
-unsigned long delay_ms_between_pictures = 1000; //                  Note: Gets set from the saved EEPROM value on startup. 
+//float degrees_per_picture = 0.5;                //                  Note: Gets set from the saved EEPROM value on startup. 
+//unsigned long delay_ms_between_pictures = 1000; //                  Note: Gets set from the saved EEPROM value on startup. 
 int pan_accel_increment_us = 4000;
 int tilt_accel_increment_us = 3000; 
 int slider_accel_increment_us = 3500; 
@@ -58,8 +58,8 @@ void initPanTilt(void){
     pinMode(PIN_PAN_HALL, INPUT_PULLUP);
     pinMode(PIN_TILT_HALL, INPUT_PULLUP);
     pinMode(PIN_SLIDER_HALL, INPUT_PULLUP);
-    pinMode(PIN_SHUTTER_TRIGGER, OUTPUT);
-    digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
+    //pinMode(PIN_SHUTTER_TRIGGER, OUTPUT);
+    //digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
     setEEPROMVariables();
     setStepMode(step_mode); //steping mode
     stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
@@ -258,10 +258,10 @@ void debugReport(void){
     printi(F("Tilt max speed: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()), 3, F("º/s\n"));
     printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n"));        
     //printi(F("Battery: "), getBatteryPercentage(), 3, F("%\n"));
-    printi(F("Battery: "), getBatteryVoltage(), 3, F("V\n"));
+    //printi(F("Battery: "), getBatteryVoltage(), 3, F("V\n"));
 //    printi(F("Homing mode: "), homing_mode);    
-    printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
-    printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, F("ms\n"));   
+    //printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
+    //printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, F("ms\n"));   
     printi(F(VERSION_NUMBER));
     printEEPROM();
     printKeyframeElements();
@@ -278,7 +278,7 @@ int setTargetPositions(float panDeg, float tiltDeg, float sliderMillimetre){
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 bool findHome(void){
     bool panHomeFlag = false;
     bool tiltHomeFlag = false;
@@ -376,19 +376,19 @@ bool findHome(void){
         return false;
     }
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 float getBatteryVoltage(void){                                          //  TODO: Calibrate the values for your battery
     return mapNumber(analogRead(PIN_INPUT_VOLTAGE), 0, 1007, 0, 12.6);  //  1007 = 12.6V
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 float getBatteryPercentage(void){                                                 //  TODO: Calibrate the values for your battery
     return boundFloat(mapNumber(getBatteryVoltage(), 9, 12.6, 0, 100), 0, 100);   //  780 = 9V = 0%, 1023 = 12.6V = 100%
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 float panStepsToDegrees(long steps){
@@ -670,8 +670,8 @@ void saveEEPROM(void){
     EEPROM.put(EEPROM_ADDRESS_INVERT_PAN, invert_pan);
     EEPROM.put(EEPROM_ADDRESS_INVERT_TILT, invert_tilt);    
     EEPROM.put(EEPROM_ADDRESS_INVERT_SLIDER, invert_slider);      
-    EEPROM.put(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-    EEPROM.put(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
+    //EEPROM.put(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
+    //EEPROM.put(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
     EEPROM.put(EEPROM_ADDRESS_ACCELERATION_ENABLE, acceleration_enable_state);
     EEPROM.put(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, pan_accel_increment_us);
     EEPROM.put(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, tilt_accel_increment_us);
@@ -723,8 +723,8 @@ void setEEPROMVariables(void){
     EEPROM.get(EEPROM_ADDRESS_SLIDER_MAX_SPEED, slider_max_speed);
     EEPROM.get(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
     EEPROM.get(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
-    EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-    EEPROM.get(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
+    //EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
+    //EEPROM.get(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
     EEPROM.get(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, pan_accel_increment_us);
     EEPROM.get(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, tilt_accel_increment_us);
     EEPROM.get(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY, slider_accel_increment_us);        
@@ -748,15 +748,15 @@ void setHoming(byte homingType){
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 void triggerCameraShutter(void){
     digitalWrite(PIN_SHUTTER_TRIGGER, HIGH);
     delay(SHUTTER_DELAY);
     digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 void panoramiclapseInterpolation(float panStartAngle, float tiltStartAngle, float sliderStartPos, float panStopAngle, float tiltStopAngle, float sliderStopPos, float degPerPic, unsigned long msDelay){
     if(degPerPic == 0) return;
     if(msDelay > SHUTTER_DELAY){
@@ -780,9 +780,9 @@ void panoramiclapseInterpolation(float panStartAngle, float tiltStartAngle, floa
         delay(msDelay / 2);
     }
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 void panoramiclapse(float degPerPic, unsigned long msDelay, int repeat){   
     if(keyframe_elements < 2){ 
         printi(F("Not enough keyframes\n"));
@@ -795,9 +795,9 @@ void panoramiclapse(float degPerPic, unsigned long msDelay, int repeat){
         }
     }
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
+/*
 void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
     if(msDelay > SHUTTER_DELAY){
         msDelay = msDelay - SHUTTER_DELAY;
@@ -834,7 +834,7 @@ void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
         delay(halfDelay);
     }
 }
-
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //From the first two keyframes the intercept of where the camera is directed is calculated.
 //The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It would be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
@@ -905,6 +905,226 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){           
     float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
     float ySqared = pow(targetPoint.y, 2);    
     float sliderTravel = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
+    int numberOfIncrements = abs(sliderTravel);
+    float increment = sliderTravel / numberOfIncrements;                                //  size of interpolation increments in mm
+    
+    for(int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++){
+        for(int i = 0; i <= numberOfIncrements; i++){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        x = targetPoint.x - sliderEndPos;
+        panAngle = radsToDeg(atan2(targetPoint.y, x));
+        tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+        setTargetPositions(panAngle, tiltAngle, sliderEndPos);
+        multi_stepper.runSpeedToPosition();                                             //  blocking move to the next position
+
+        for(int i = numberOfIncrements; (i >= 0 && repeat > 0); i--){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        if(repeat > 0){
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position 
+        }     
+    }
+}
+
+void interpolateTargetPoint2(FloatCoordinate targetPoint, int repeat){                   //  The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
+    if(keyframe_elements < 2){ 
+        printi(F("Not enough keyframes recorded\n"));
+        return;                                                                         //  check there are posions to move to
+    }
+
+    float sliderStartPos = sliderStepsToMillimetres(keyframe_array[2].sliderStepCount); //  slider start position
+    float sliderEndPos = sliderStepsToMillimetres(keyframe_array[3].sliderStepCount);
+    float panAngle = 0;
+    float tiltAngle = 0;
+    float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[2].sliderStepCount);
+    float ySqared = pow(targetPoint.y, 2);    
+    float sliderTravel = sliderStepsToMillimetres(keyframe_array[3].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
+    int numberOfIncrements = abs(sliderTravel);
+    float increment = sliderTravel / numberOfIncrements;                                //  size of interpolation increments in mm
+    
+    for(int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++){
+        for(int i = 0; i <= numberOfIncrements; i++){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        x = targetPoint.x - sliderEndPos;
+        panAngle = radsToDeg(atan2(targetPoint.y, x));
+        tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+        setTargetPositions(panAngle, tiltAngle, sliderEndPos);
+        multi_stepper.runSpeedToPosition();                                             //  blocking move to the next position
+
+        for(int i = numberOfIncrements; (i >= 0 && repeat > 0); i--){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        if(repeat > 0){
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position 
+        }     
+    }
+}
+
+void interpolateTargetPoint3(FloatCoordinate targetPoint, int repeat){                   //  The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
+    if(keyframe_elements < 2){ 
+        printi(F("Not enough keyframes recorded\n"));
+        return;                                                                         //  check there are posions to move to
+    }
+
+    float sliderStartPos = sliderStepsToMillimetres(keyframe_array[4].sliderStepCount); //  slider start position
+    float sliderEndPos = sliderStepsToMillimetres(keyframe_array[5].sliderStepCount);
+    float panAngle = 0;
+    float tiltAngle = 0;
+    float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[4].sliderStepCount);
+    float ySqared = pow(targetPoint.y, 2);    
+    float sliderTravel = sliderStepsToMillimetres(keyframe_array[5].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
+    int numberOfIncrements = abs(sliderTravel);
+    float increment = sliderTravel / numberOfIncrements;                                //  size of interpolation increments in mm
+    
+    for(int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++){
+        for(int i = 0; i <= numberOfIncrements; i++){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        x = targetPoint.x - sliderEndPos;
+        panAngle = radsToDeg(atan2(targetPoint.y, x));
+        tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+        setTargetPositions(panAngle, tiltAngle, sliderEndPos);
+        multi_stepper.runSpeedToPosition();                                             //  blocking move to the next position
+
+        for(int i = numberOfIncrements; (i >= 0 && repeat > 0); i--){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        if(repeat > 0){
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position 
+        }     
+    }
+}
+
+void interpolateTargetPoint4(FloatCoordinate targetPoint, int repeat){                   //  The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
+    if(keyframe_elements < 2){ 
+        printi(F("Not enough keyframes recorded\n"));
+        return;                                                                         //  check there are posions to move to
+    }
+
+    float sliderStartPos = sliderStepsToMillimetres(keyframe_array[6].sliderStepCount); //  slider start position
+    float sliderEndPos = sliderStepsToMillimetres(keyframe_array[7].sliderStepCount);
+    float panAngle = 0;
+    float tiltAngle = 0;
+    float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[6].sliderStepCount);
+    float ySqared = pow(targetPoint.y, 2);    
+    float sliderTravel = sliderStepsToMillimetres(keyframe_array[7].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
+    int numberOfIncrements = abs(sliderTravel);
+    float increment = sliderTravel / numberOfIncrements;                                //  size of interpolation increments in mm
+    
+    for(int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++){
+        for(int i = 0; i <= numberOfIncrements; i++){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        x = targetPoint.x - sliderEndPos;
+        panAngle = radsToDeg(atan2(targetPoint.y, x));
+        tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+        setTargetPositions(panAngle, tiltAngle, sliderEndPos);
+        multi_stepper.runSpeedToPosition();                                             //  blocking move to the next position
+
+        for(int i = numberOfIncrements; (i >= 0 && repeat > 0); i--){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        if(repeat > 0){
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position 
+        }     
+    }
+}
+
+void interpolateTargetPoint5(FloatCoordinate targetPoint, int repeat){                   //  The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
+    if(keyframe_elements < 2){ 
+        printi(F("Not enough keyframes recorded\n"));
+        return;                                                                         //  check there are posions to move to
+    }
+
+    float sliderStartPos = sliderStepsToMillimetres(keyframe_array[8].sliderStepCount); //  slider start position
+    float sliderEndPos = sliderStepsToMillimetres(keyframe_array[9].sliderStepCount);
+    float panAngle = 0;
+    float tiltAngle = 0;
+    float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[8].sliderStepCount);
+    float ySqared = pow(targetPoint.y, 2);    
+    float sliderTravel = sliderStepsToMillimetres(keyframe_array[9].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
+    int numberOfIncrements = abs(sliderTravel);
+    float increment = sliderTravel / numberOfIncrements;                                //  size of interpolation increments in mm
+    
+    for(int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++){
+        for(int i = 0; i <= numberOfIncrements; i++){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        x = targetPoint.x - sliderEndPos;
+        panAngle = radsToDeg(atan2(targetPoint.y, x));
+        tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+        setTargetPositions(panAngle, tiltAngle, sliderEndPos);
+        multi_stepper.runSpeedToPosition();                                             //  blocking move to the next position
+
+        for(int i = numberOfIncrements; (i >= 0 && repeat > 0); i--){
+            x = targetPoint.x - (sliderStartPos + increment * i);
+            panAngle = radsToDeg(atan2(targetPoint.y, x));
+            tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position
+        }
+        if(repeat > 0){
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos);
+            multi_stepper.runSpeedToPosition();                                         //  blocking move to the next position 
+        }     
+    }
+}
+
+void interpolateTargetPoint6(FloatCoordinate targetPoint, int repeat){                   //  The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
+    if(keyframe_elements < 2){ 
+        printi(F("Not enough keyframes recorded\n"));
+        return;                                                                         //  check there are posions to move to
+    }
+
+    float sliderStartPos = sliderStepsToMillimetres(keyframe_array[10].sliderStepCount); //  slider start position
+    float sliderEndPos = sliderStepsToMillimetres(keyframe_array[11].sliderStepCount);
+    float panAngle = 0;
+    float tiltAngle = 0;
+    float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[10].sliderStepCount);
+    float ySqared = pow(targetPoint.y, 2);    
+    float sliderTravel = sliderStepsToMillimetres(keyframe_array[11].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
     int numberOfIncrements = abs(sliderTravel);
     float increment = sliderTravel / numberOfIncrements;                                //  size of interpolation increments in mm
     
@@ -1033,38 +1253,39 @@ void serialData(void){
             sliderMoveTo(serialCommandValueFloat);
         }
         break;
-        case INSTRUCTION_DELAY_BETWEEN_PICTURES:{
-            delay_ms_between_pictures = serialCommandValueFloat;
-            printi(F("Delay between pics: "), delay_ms_between_pictures, F("ms\n"));
-        }
-        break;
-        case INSTRUCTION_ANGLE_BETWEEN_PICTURES:{
-            degrees_per_picture = serialCommandValueFloat;
-            printi(F("Degs per pic: "), degrees_per_picture, 3, F("º\n"));
-        }
-        break;     
-        case INSTRUCTION_PANORAMICLAPSE:{
+        //case INSTRUCTION_DELAY_BETWEEN_PICTURES:{
+            //delay_ms_between_pictures = serialCommandValueFloat;
+            //printi(F("Delay between pics: "), delay_ms_between_pictures, F("ms\n"));
+        //}
+        //break;
+        //case INSTRUCTION_ANGLE_BETWEEN_PICTURES:{
+            //degrees_per_picture = serialCommandValueFloat;
+            //printi(F("Degs per pic: "), degrees_per_picture, 3, F("º\n"));
+        //}
+        //break;     
+        //case INSTRUCTION_PANORAMICLAPSE:{
             //printi(F("Panorama\n"));
             //panoramiclapse(degrees_per_picture, delay_ms_between_pictures, 1);
             //printi(F("Finished\n"));
             //stepper_pan.setMaxSpeed(panDegreesToSteps(20));
             //stepper_tilt.setMaxSpeed(tiltDegreesToSteps(20));
-            stepper_slider.setMaxSpeed(sliderMillimetresToSteps(100));
-        }
-        break;
-        case INSTRUCTION_TIMELAPSE:{
+            //stepper_slider.setMaxSpeed(sliderMillimetresToSteps(100));
+        //}
+        //break;
+        //case INSTRUCTION_TIMELAPSE:{
             //printi(F("Timelapse with "), serialCommandValueInt, F(" pics\n"));
             //printi(F(""), delay_ms_between_pictures, F("ms between pics\n"));
             //timelapse(serialCommandValueInt, delay_ms_between_pictures);
             //printi(F("Finished\n"));
-            stepper_slider.setMaxSpeed(sliderMillimetresToSteps(20));
-        }
-        break;
-        case INSTRUCTION_TRIGGER_SHUTTER:{
-            triggerCameraShutter();
-        }
-        break;
-        case INSTRUCTION_AUTO_HOME:{
+            //stepper_slider.setMaxSpeed(sliderMillimetresToSteps(20));
+        //}
+        //break;
+        //case INSTRUCTION_TRIGGER_SHUTTER:{
+            //triggerCameraShutter();
+        //}
+        //break;
+        //case INSTRUCTION_AUTO_HOME:{
+          /*
             printi(F("Homing\n"));
             if(findHome()){
                 printi(F("Complete\n"));
@@ -1076,12 +1297,13 @@ void serialData(void){
                 setTargetPositions(0, 0, 0);
                 printi(F("Error homing\n"));
             }
-        }
+            */
+        //}
         break;
-        case INSTRUCTION_SET_HOMING:{
-            setHoming(serialCommandValueInt);
-        }
-        break;
+        //case INSTRUCTION_SET_HOMING:{
+        //    setHoming(serialCommandValueInt);
+        //}
+        //break;
         case INSTRUCTION_SET_PAN_HALL_OFFSET:{
             hall_pan_offset_degrees = serialCommandValueFloat;
             printi(F("Pan offset: "), hall_pan_offset_degrees, 3, F("º\n"));

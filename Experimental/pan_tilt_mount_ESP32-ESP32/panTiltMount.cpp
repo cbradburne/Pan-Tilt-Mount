@@ -21,6 +21,8 @@ MultiStepper multi_stepper;
 
 KeyframeElement keyframe_array[KEYFRAME_ARRAY_LENGTH];
 
+bool DEBUG = false;
+
 int keyframe_elements = 0;
 int current_keyframe_index = -1;
 char stringText[MAX_STRING_LENGTH + 1];
@@ -196,24 +198,18 @@ void enableSteppers(void) {
 void setStepMode(int newMode) { //Step modes for the TMC2208
   float stepRatio = (float)newMode / (float)step_mode; //Ratio between the new step mode and the previously set one.
   if (newMode == HALF_STEP) {
-    //PORTB |=   B00001000; //MS1 high
-    //PORTB &= ~(B00000100); //MS2 low
     digitalWrite(PIN_MS1, HIGH);
     digitalWrite(PIN_MS2, LOW);
   }
   else if (newMode == QUARTER_STEP) {
-    //PORTB |=   B00000100; //MS2 high
-    //PORTB &= ~(B00001000); //MS1 low
     digitalWrite(PIN_MS1, LOW);
     digitalWrite(PIN_MS2, HIGH);
   }
   else if (newMode == EIGHTH_STEP) {
-    //PORTB &= ~(B00001100); //MS1 and MS2 low
     digitalWrite(PIN_MS1, LOW);
     digitalWrite(PIN_MS2, LOW);
   }
   else if (newMode == SIXTEENTH_STEP) {
-    //PORTB |= B00001100; //MS1 and MS2 high
     digitalWrite(PIN_MS1, HIGH);
     digitalWrite(PIN_MS2, HIGH);
   }
@@ -1253,12 +1249,17 @@ void serialData(void) {
     short sliderStepSpeed = (Serial.read() << 8) + Serial.read();
     short panStepSpeed = (Serial.read() << 8) + Serial.read();
     short tiltStepSpeed = (Serial.read() << 8) + Serial.read();
+    
+    if ( DEBUG ) {
+      printi(sliderStepSpeed, F(" , "));
+      printi(panStepSpeed, F(" , "));
+      printi(tiltStepSpeed, F("\n"));
+    }
 
-    //printi(F("4 , "));
-    //printi(sliderStepSpeed, F(" , "));
-    //printi(panStepSpeed, F(" , "));
-    //printi(tiltStepSpeed, F("\n"));
-
+    sliderStepSpeed = map(sliderStepSpeed, -255, 255, -stepper_slider.maxSpeed(), stepper_slider.maxSpeed());
+    panStepSpeed = map(panStepSpeed, -255, 255, -stepper_pan.maxSpeed(), stepper_pan.maxSpeed());
+    tiltStepSpeed = map(tiltStepSpeed, -255, 255, -stepper_tilt.maxSpeed(), stepper_tilt.maxSpeed());
+    
     stepper_slider.setSpeed(sliderStepSpeed);
     stepper_pan.setSpeed(panStepSpeed);
     stepper_tilt.setSpeed(tiltStepSpeed);
@@ -1481,12 +1482,6 @@ void serialData(void) {
         }
       }
       break;
-      /*
-        default:
-        printi("FAIL!\n\n");
-        printi(instruction);
-        printi("\nFAIL!\n\n");
-      */
   }
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/

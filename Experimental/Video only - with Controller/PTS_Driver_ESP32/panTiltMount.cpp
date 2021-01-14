@@ -3,7 +3,6 @@
 #include <AccelStepper.h> //Library to control the stepper motors http://www.airspayce.com/mikem/arduino/AccelStepper/index.html
 #include <MultiStepper.h> //Library to control multiple coordinated stepper motors http://www.airspayce.com/mikem/arduino/AccelStepper/classMultiStepper.html#details
 #include <EEPROM.h> //To be able to save values when powered off
-//#include <PS4Controller.h>
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -16,9 +15,9 @@ MultiStepper multi_stepper;
 
 #define EEPROM_SIZE 98
 
-KeyframeElement keyframe_array[KEYFRAME_ARRAY_LENGTH];
+KeyframeElement keyframe_array[5];
 
-bool DEBUG = false;
+bool DEBUG = true;
 
 int keyframe_elements = 0;
 int current_keyframe_index = -1;
@@ -39,8 +38,10 @@ float pan_max_speed = 18; //degrees/second. Note: Gets set from the saved EEPROM
 float tilt_max_speed = 10; //degrees/second.
 float slider_max_speed = 20; //mm/second
 long target_position[3]; //Array to store stepper motor step counts
+long start_position[3];
 float degrees_per_picture = 0.5; //Note: Gets set from the saved EEPROM value on startup.
-unsigned long delay_ms_between_pictures = 1000; //Note: Gets set from the saved EEPROM value on startup.
+//unsigned long delay_ms_between_pictures = 1000; //Note: Gets set from the saved EEPROM value on startup.
+float delay_ms_between_pictures = 1000; //Note: Gets set from the saved EEPROM value on startup.
 float pan_accel_increment_us = 4000;
 float tilt_accel_increment_us = 3000;
 float slider_accel_increment_us = 3500;
@@ -49,10 +50,13 @@ FloatCoordinate intercept;
 
 bool motorRunning = false;
 
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
 void initPanTilt(void) {
   EEPROM.begin(EEPROM_SIZE);
   Serial.begin(BAUD_RATE);
-  //pinMode(LED, OUTPUT);
   pinMode(PIN_MS1, OUTPUT);
   pinMode(PIN_MS2, OUTPUT);
   pinMode(PIN_ENABLE, OUTPUT);
@@ -65,8 +69,6 @@ void initPanTilt(void) {
   pinMode(PIN_PAN_HALL, INPUT_PULLUP);
   pinMode(PIN_TILT_HALL, INPUT_PULLUP);
   pinMode(PIN_SLIDER_HALL, INPUT_PULLUP);
-  //pinMode(PIN_SHUTTER_TRIGGER, OUTPUT);
-  //digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
   setEEPROMVariables();
   setStepMode(step_mode); //steping mode
   stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
@@ -84,7 +86,9 @@ void initPanTilt(void) {
   digitalWrite(PIN_ENABLE, LOW); //Enable the stepper drivers
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float boundFloat(float value, float lower, float upper) {
   if (value < lower) {
@@ -96,7 +100,9 @@ float boundFloat(float value, float lower, float upper) {
   return value;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void serialFlush(void) {
   while (Serial.available() > 0) {
@@ -104,7 +110,9 @@ void serialFlush(void) {
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void enableSteppers(void) {
   if (enable_state == false) {
@@ -119,7 +127,9 @@ void enableSteppers(void) {
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void setStepMode(int newMode) { //Step modes for the TMC2208
   float stepRatio = (float)newMode / (float)step_mode; //Ratio between the new step mode and the previously set one.
@@ -157,10 +167,11 @@ void setStepMode(int newMode) { //Step modes for the TMC2208
   stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
   step_mode = newMode;
   printi(F("Set to "), step_mode, F(" step mode.\n"));
-  clearKeyframes();
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void panDegrees(float angle) {
   target_position[0] = panDegreesToSteps(angle);
@@ -173,7 +184,9 @@ void panDegrees(float angle) {
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void tiltDegrees(float angle) {
   target_position[1] = tiltDegreesToSteps(angle);
@@ -186,31 +199,41 @@ void tiltDegrees(float angle) {
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float panDegreesToSteps(float angle) {
   return pan_steps_per_degree * angle;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float tiltDegreesToSteps(float angle) {
   return tilt_steps_per_degree * angle;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 long sliderMillimetresToSteps(float mm) {
   return round(mm * slider_steps_per_millimetre);
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float sliderStepsToMillimetres(long steps) {
   return (float)steps / slider_steps_per_millimetre;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void sliderMoveTo(float mm) {
   target_position[2] = sliderMillimetresToSteps(mm);
@@ -223,7 +246,9 @@ void sliderMoveTo(float mm) {
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void printKeyframeElements(void) {
   printi(F("Keyframe index: "), current_keyframe_index, F("\n"));
@@ -240,12 +265,12 @@ void printKeyframeElements(void) {
   printi(F("\n"));
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+
 void debugReport(void) {
-  //    printi(F("Status\n"));
-  printi(F("Status\nEnable state: "), enable_state);
-  //    printi(F("Step Mode: "), step_mode);
+  //printi(F("Status\nEnable state: "), enable_state);
   printi(F("Pan angle: "), panStepsToDegrees(stepper_pan.currentPosition()), 3, F("º\n"));
   printi(F("Tilt angle: "), tiltStepsToDegrees(stepper_tilt.currentPosition()), 3, F("º\n"));
   printi(F("Slider position: "), sliderStepsToMillimetres(stepper_slider.currentPosition()), 3, F("mm\n"));
@@ -254,19 +279,17 @@ void debugReport(void) {
   printi(F("Slider max steps/s: "), stepper_slider.maxSpeed());
   printi(F("Pan max speed: "), panStepsToDegrees(stepper_pan.maxSpeed()), 3, F("º/s\n"));
   printi(F("Tilt max speed: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()), 3, F("º/s\n"));
-  printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n"));
-  //printi(F("Battery: "), getBatteryPercentage(), 3, F("%\n"));
-  //printi(F("Battery: "), getBatteryVoltage(), 3, F("V\n"));
-  //    printi(F("Homing mode: "), homing_mode);
-  printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
-  printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, F("ms\n"));
-  printi(F(VERSION_NUMBER));
+  printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n\n"));
+  //printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
+  //printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, 3, F("ms\n"));
+  //printi(F(VERSION_NUMBER));
   printEEPROM();
-  printKeyframeElements();
-  //    printi(F("\n"));
+  //printKeyframeElements();
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 int setTargetPositions(float panDeg, float tiltDeg, float sliderMillimetre) {
   target_position[0] = panDegreesToSteps(panDeg);
@@ -275,143 +298,41 @@ int setTargetPositions(float panDeg, float tiltDeg, float sliderMillimetre) {
   multi_stepper.moveTo(target_position);
 }
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-bool findHome(void) {
-  bool panHomeFlag = false;
-  bool tiltHomeFlag = false;
-  bool sliderHomeFlag = false;
-  int panHomingDir = -1;
-  int tiltHomingDir = -1;
-
-  target_position[0] = stepper_pan.currentPosition();
-  target_position[1] = stepper_tilt.currentPosition();
-  target_position[2] = stepper_slider.currentPosition();
-
-  if (homing_mode == 0) { //No homing
-    return false;
-  }
-
-  if (homing_mode == 1 || homing_mode == 3) { //Home the slider
-    while (digitalRead(PIN_SLIDER_HALL) == 0) { //Move off the hall
-      target_position[2] = target_position[2] + sliderMillimetresToSteps(0.1);
-      multi_stepper.moveTo(target_position);
-      multi_stepper.runSpeedToPosition();
-    }
-    setTargetPositions(panStepsToDegrees(target_position[0]), tiltStepsToDegrees(target_position[1]), -1000);//1000 is about the length of the slider
-    while (multi_stepper.run()) {
-      if (digitalRead(PIN_SLIDER_HALL) == 0) {
-        stepper_slider.setCurrentPosition(0);//set step count to 0
-        setTargetPositions(panStepsToDegrees(target_position[0]), tiltStepsToDegrees(target_position[1]), 0);
-        sliderHomeFlag = true;
-      }
-    }
-  }
-
-  long sliderPos = sliderStepsToMillimetres(stepper_slider.currentPosition());
-
-  if (homing_mode == 2 || homing_mode == 3) { //Home pan and tilt
-    while (digitalRead(PIN_PAN_HALL) == 0 || digitalRead(PIN_TILT_HALL) == 0) { //If already on a Hall sensor move off
-      target_position[0] = target_position[0] + panDegreesToSteps(!digitalRead(PIN_PAN_HALL));//increment by 1 degree
-      target_position[1] = target_position[1] + tiltDegreesToSteps(!digitalRead(PIN_TILT_HALL));//increment by 1 degree
-      if (target_position[0] > panDegreesToSteps(360) && target_position[1] > tiltDegreesToSteps(360)) { //If both axis have done more than a full rotation there must be an issue...
-        return false;
-      }
-      multi_stepper.moveTo(target_position);
-      multi_stepper.runSpeedToPosition();
-    }
-    stepper_pan.setCurrentPosition(0);//set step count to 0
-    stepper_tilt.setCurrentPosition(0);//set step count to 0
-
-    setTargetPositions(-45, -45, sliderPos);
-    while (multi_stepper.run()) {
-      if (digitalRead(PIN_PAN_HALL) == 0) {
-        stepper_pan.setCurrentPosition(0);//set step count to 0
-        setTargetPositions(0, -45 * !tiltHomeFlag, sliderPos);
-        panHomeFlag = true;
-        panHomingDir = 1;
-      }
-      if (digitalRead(PIN_TILT_HALL) == 0) {
-        stepper_tilt.setCurrentPosition(0);
-        setTargetPositions(-45 * !panHomeFlag, 0, sliderPos);
-        tiltHomeFlag = true;
-        tiltHomingDir = 1;
-      }
-    }
-
-    setTargetPositions(360 * !panHomeFlag, 360 * !tiltHomeFlag, sliderPos);//full rotation on both axis so it must pass the home position
-    while (multi_stepper.run()) {
-      if (digitalRead(PIN_PAN_HALL) == 0) {
-        stepper_pan.setCurrentPosition(0);//set step count to 0
-        setTargetPositions(0, 360 * !tiltHomeFlag, sliderPos);
-        panHomeFlag = true;
-      }
-      if (digitalRead(PIN_TILT_HALL)  == 0) {
-        stepper_tilt.setCurrentPosition(0);
-        setTargetPositions(360 * !panHomeFlag, 0, sliderPos);
-        tiltHomeFlag = true;
-      }
-    }
-  }
-
-  if (panHomeFlag && tiltHomeFlag && (homing_mode == 2 || homing_mode == 3)) {
-    setTargetPositions(hall_pan_offset_degrees * panHomingDir, hall_tilt_offset_degrees * tiltHomingDir, sliderPos);
-    multi_stepper.runSpeedToPosition();
-    stepper_pan.setCurrentPosition(0);//set step count to 0
-    stepper_tilt.setCurrentPosition(0);//set step count to 0
-    setTargetPositions(0, 0, sliderPos);
-    if (homing_mode == 3 && sliderHomeFlag == false) {
-      return false;
-    }
-    else {
-      return true;
-    }
-  }
-  else if (sliderHomeFlag) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/*
-  float getBatteryVoltage(void){ //TODO: Calibrate the values for your battery
-    return mapNumber(analogRead(PIN_INPUT_VOLTAGE), 0, 1007, 0, 12.6);//1007 = 12.6V
-  }
-*/
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/*
-  float getBatteryPercentage(void){ //TODO: Calibrate the values for your battery
-    return boundFloat(mapNumber(getBatteryVoltage(), 9, 12.6, 0, 100), 0, 100); //780 = 9V = 0%, 1023 = 12.6V = 100%
-  }
-*/
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float panStepsToDegrees(long steps) {
   return steps / pan_steps_per_degree;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float panStepsToDegrees(float steps) {
   return steps / pan_steps_per_degree;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float tiltStepsToDegrees(long steps) {
   return steps / tilt_steps_per_degree;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 float tiltStepsToDegrees(float steps) {
   return steps / tilt_steps_per_degree;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 int addPosition(void) {
   if (keyframe_elements >= 0 && keyframe_elements < KEYFRAME_ARRAY_LENGTH) {
@@ -433,102 +354,112 @@ int addPosition(void) {
   return -1;
 }
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void clearKeyframes(void) {
-  keyframe_elements = 0;
-  current_keyframe_index = -1;
-  printi(F("Keyframes cleared\n"));
-}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void moveToIndex(int index) {
-  if (index < keyframe_elements && index >= 0) {
+  //if (index < keyframe_elements && index >= 0) {
+  if (1 == 1) {
     target_position[0] = keyframe_array[index].panStepCount;
     target_position[1] = keyframe_array[index].tiltStepCount;
     target_position[2] = keyframe_array[index].sliderStepCount;
+    start_position[0] = stepper_pan.currentPosition();
+    start_position[1] = stepper_tilt.currentPosition();
+    start_position[2] = stepper_slider.currentPosition();
+
     stepper_pan.setMaxSpeed(keyframe_array[index].panSpeed);
     stepper_tilt.setMaxSpeed(keyframe_array[index].tiltSpeed);
     stepper_slider.setMaxSpeed(keyframe_array[index].sliderSpeed);
+    
+    //float panInitialSpeed = stepper_pan.speed();
+    //float tiltInitialSpeed = stepper_tilt.speed();
+    //float sliderInitialSpeed = stepper_slider.speed();
 
-    if (acceleration_enable_state == 0) { //If accelerations are not enabled just move directly to the target position.
-      multi_stepper.moveTo(target_position); //Sets new target positions
-      multi_stepper.runSpeedToPosition(); //Moves and blocks until complete
-      delay(keyframe_array[index].msDelay);
-      current_keyframe_index = index;
-      return;
-    }
+    float panInitialSpeed = 0;                                                  // Always starting from stop
+    float tiltInitialSpeed = 0;
+    float sliderInitialSpeed = 0;
 
-    float panInitialSpeed = stepper_pan.speed();
-    float tiltInitialSpeed = stepper_tilt.speed();
-    float sliderInitialSpeed = stepper_slider.speed();
+    multi_stepper.moveTo(target_position);                                      //  Sets new speeds for target pos
 
-    if (index >= 1) {
-      if (keyframe_array[index - 1].msDelay != 0) {
-        panInitialSpeed = 0;
-        tiltInitialSpeed = 0;
-        sliderInitialSpeed = 0;
-      }
-    }
-
-    multi_stepper.moveTo(target_position); //Sets new target positions //sets speeds
-
-    float panDeltaSpeed = stepper_pan.speed() - panInitialSpeed;
+    float panDeltaSpeed = stepper_pan.speed() - panInitialSpeed;                //  deltaSpeed records speeds for whole move pre accel
     float tiltDeltaSpeed = stepper_tilt.speed() - tiltInitialSpeed;
     float sliderDeltaSpeed = stepper_slider.speed() - sliderInitialSpeed;
 
-    float panAccel = stepper_pan.speed() / (pan_accel_increment_us * 0.0001); //Equation is arbitrary and was deterined through empirical testing. The acceleration value does NOT correspond to mm/s/s
+    float panAccel = stepper_pan.speed() / (pan_accel_increment_us * 0.0001);   //  Equation is arbitrary and was deterined through empirical testing. The acceleration value does NOT correspond to mm/s/s
     float tiltAccel = stepper_tilt.speed() / (tilt_accel_increment_us * 0.0001);
     float sliderAccel = stepper_slider.speed() / (slider_accel_increment_us * 0.0001);
 
     long panDist = 0;
     long tiltDist = 0;
     long sliderDist = 0;
+    if ( DEBUG ) {
+      printi(F("C tiltInitialSpeed  : "), tiltInitialSpeed, 3, F("\n"));
+      printi(F("C tiltDeltaSpeed    : "), tiltDeltaSpeed, 3, F("\n"));
+      printi(F("C accel_increment_us: "), tilt_accel_increment_us, 3, F("\n"));
+      printi(F("C tiltAccel         : "), tiltAccel, 3, F("\n"));
+    }
 
     if (panAccel != 0) {
-      panDist = pow(stepper_pan.speed(), 2) / (5 * panAccel); //Equation is arbitrary and was deterined through empirical testing.
+      panDist = pow(stepper_pan.speed(), 2) / (5 * panAccel);                 //  Equation is arbitrary and was deterined through empirical testing.
     }
     if (tiltAccel != 0) {
-      tiltDist = pow(stepper_tilt.speed(), 2) / (5 * tiltAccel); //Equation is arbitrary and was deterined through empirical testing.
+      tiltDist = pow(stepper_tilt.speed(), 2) / (5 * tiltAccel);              //  Equation is arbitrary and was deterined through empirical testing.
     }
     if (sliderAccel != 0) {
-      sliderDist = pow(stepper_slider.speed(), 2) / (5 * sliderAccel); //Equation is arbitrary and was deterined through empirical testing.
+      sliderDist = pow(stepper_slider.speed(), 2) / (5 * sliderAccel);        //  Equation is arbitrary and was deterined through empirical testing.
     }
 
-    if (index + 1 < keyframe_elements) { //makes sure there is a valid next keyframe
-      if (keyframe_array[index].msDelay == 0) {
-        long panStepDiff = keyframe_array[index + 1].panStepCount - keyframe_array[index].panStepCount; //Change in position from current target position to the next.
-        long tiltStepDiff = keyframe_array[index + 1].tiltStepCount - keyframe_array[index].tiltStepCount;
-        long sliderStepDiff = keyframe_array[index + 1].sliderStepCount - keyframe_array[index].sliderStepCount;
-        if ((panStepDiff == 0 && stepper_pan.speed() != 0) || (panStepDiff > 0 && stepper_pan.speed() < 0) || (panStepDiff < 0 && stepper_pan.speed() > 0)) { //if stopping or changing direction
-          target_position[0] = keyframe_array[index].panStepCount - panDist; //Set the target position slightly before the actual target to allow for the distance traveled while decelerating.
+    if ( DEBUG ) {
+      printi(F("panDist   : "), panDist);
+      printi(F("tiltDist  : "), tiltDist);
+      printi(F("sliderDist: "), sliderDist);
+      printi(F("\n"));
+    }
+
+    if ( DEBUG ) {
+      printi(F("Orig Target -   - "), target_position[1], F("\n"));
+    }
+
+    //if (index + 1 < keyframe_elements) {                                                                      //  makes sure there is a valid next keyframe
+    if (1 == 1) {
+      long panStepDiff = 0 - keyframe_array[index].panStepCount;   //  Change in position from current target position to the next.
+      long tiltStepDiff = 0 - keyframe_array[index].tiltStepCount;
+      long sliderStepDiff = 0 - keyframe_array[index].sliderStepCount;
+      if ((panStepDiff == 0 && stepper_pan.speed() != 0) || (panStepDiff > 0 && stepper_pan.speed() < 0) || (panStepDiff < 0 && stepper_pan.speed() > 0)) { //if stopping or changing direction
+        target_position[0] = keyframe_array[index].panStepCount - panDist;                            //  Set the target position slightly before the actual target to allow for the distance traveled while decelerating.
+      }
+      if ((tiltStepDiff == 0 && stepper_tilt.speed() != 0) || (tiltStepDiff > 0 && stepper_tilt.speed() < 0) || (tiltStepDiff < 0 && stepper_tilt.speed() > 0)) { //if stopping or changing direction
+        target_position[1] = keyframe_array[index].tiltStepCount - tiltDist;
+        if ( DEBUG ) {
+          //printi(F("New Target - dist set - "));
+          printi(F("New Target - dist set - "), target_position[1], F("\n"));
         }
-        if ((tiltStepDiff == 0 && stepper_tilt.speed() != 0) || (tiltStepDiff > 0 && stepper_tilt.speed() < 0) || (tiltStepDiff < 0 && stepper_tilt.speed() > 0)) { //if stopping or changing direction
-          target_position[1] = keyframe_array[index].tiltStepCount - tiltDist;
-        }
-        if ((sliderStepDiff == 0 && stepper_slider.speed() != 0) || (sliderStepDiff > 0 && stepper_slider.speed() < 0) || (sliderStepDiff < 0 && stepper_slider.speed() > 0)) { //if stopping or changing direction
-          target_position[2] = keyframe_array[index].sliderStepCount - sliderDist;//If changing dir
-        }
+      }
+      if ((sliderStepDiff == 0 && stepper_slider.speed() != 0) || (sliderStepDiff > 0 && stepper_slider.speed() < 0) || (sliderStepDiff < 0 && stepper_slider.speed() > 0)) { //if stopping or changing direction
+        target_position[2] = keyframe_array[index].sliderStepCount - sliderDist; // If changing dir
       }
     }
 
-    if (index > 0) {
-      long panStepDiffPrev = keyframe_array[index].panStepCount - keyframe_array[index - 1].panStepCount; //Change in position from the privious target to the current target position.
-      long tiltStepDiffPrev = keyframe_array[index].tiltStepCount - keyframe_array[index - 1].tiltStepCount;
-      long sliderStepDiffPrev = keyframe_array[index].sliderStepCount - keyframe_array[index - 1].sliderStepCount;
-      if (panStepDiffPrev == 0 && panDeltaSpeed == 0) { //Movement stopping
-        panDeltaSpeed = -(2 * stepper_pan.speed()); //Making it negative ramps the speed down in the acceleration portion of the movement. The multiplication factor is arbitrary and was deterined through empirical testing.
-      }
-      if (tiltStepDiffPrev == 0 && tiltDeltaSpeed == 0) { //Movement stopping
-        tiltDeltaSpeed = -(2 * stepper_tilt.speed());
-      }
-      if (sliderStepDiffPrev == 0 && sliderDeltaSpeed == 0) { //Movement stopping
-        sliderDeltaSpeed = -(2 * stepper_slider.speed());
+
+    long panStepDiffPrev = keyframe_array[index].panStepCount - start_position[0];   //  Change in position from the privious target to the current target position.
+    long tiltStepDiffPrev = keyframe_array[index].tiltStepCount - start_position[1];
+    long sliderStepDiffPrev = keyframe_array[index].sliderStepCount - start_position[2];
+    if (panStepDiffPrev == 0 && panDeltaSpeed == 0) {                                                     //  Movement stopping
+      panDeltaSpeed = -(2 * stepper_pan.speed());                                                       //  Making it negative ramps the speed down in the acceleration portion of the movement. The multiplication factor is arbitrary and was deterined through empirical testing.
+    }
+    if (tiltStepDiffPrev == 0 && tiltDeltaSpeed == 0) {                                                   //  Movement stopping
+      tiltDeltaSpeed = -(2 * stepper_tilt.speed());
+      if ( DEBUG ) {
+        printi(F("Deccel\n"));
+        printi(F("tiltDeltaSpeed    : "), tiltDeltaSpeed, 3, F("\n"));
       }
     }
+    if (sliderStepDiffPrev == 0 && sliderDeltaSpeed == 0) {                                               //  Movement stopping
+      sliderDeltaSpeed = -(2 * stepper_slider.speed());
+    }
 
-    multi_stepper.moveTo(target_position); //Sets new target positions and calculates new speeds.
+    multi_stepper.moveTo(target_position);                                                                    //  Sets new target positions and calculates new speeds.
 
     if (stepper_pan.currentPosition() != target_position[0] || stepper_tilt.currentPosition() != target_position[1] || stepper_slider.currentPosition() != target_position[2]) { //Prevents issues caused when the motor target positions and speeds not being updated becuase they have not changed.
       //Impliments the acceleration/deceleration. This implimentation feels pretty bad and should probably be updated but it works well enough so I'm not going to...
@@ -552,6 +483,9 @@ void moveToIndex(int index) {
           tiltInc = (tiltInc < 1) ? (tiltInc + 0.01) : 1;
           tilt_last_us = micros();
           stepper_tilt.setSpeed(tiltInitialSpeed + (tiltDeltaSpeed * tiltInc));
+          if ( DEBUG ) {
+            printi(F("C tiltSpeed    : "), stepper_tilt.speed(), 3, F("\n"));
+          }
         }
 
         if (usTime - slider_accel_increment_us >= slider_last_us) {
@@ -560,16 +494,16 @@ void moveToIndex(int index) {
           stepper_slider.setSpeed(sliderInitialSpeed + (sliderDeltaSpeed * sliderInc));
         }
       }
-
-      multi_stepper.moveTo(target_position); //Sets all speeds to reach the target
-      multi_stepper.runSpeedToPosition(); //Moves and blocks until complete
+      multi_stepper.moveTo(target_position);  //Sets all speeds to reach the target
+      multi_stepper.runSpeedToPosition();     //Moves and blocks until complete (this shouldn't work!)
     }
-    delay(keyframe_array[index].msDelay);
     current_keyframe_index = index;
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void executeMoves(int repeat) {
   stepper_pan.setSpeed(0);
@@ -579,59 +513,27 @@ void executeMoves(int repeat) {
     for (int row = 0; row < keyframe_elements; row++) {
       moveToIndex(row);
     }
-    //        if(getBatteryVoltage() < 9.5){//9.5V is used as the cut off to allow for inaccuracies and be on the safe side.
-    //            delay(200);
-    //            if(getBatteryVoltage() < 9.5){//Check voltage is still low and the first wasn't a miscellaneous reading
-    //                printi(F("Battery low"));
-    //                while(1){}//loop and do nothing
-    //            }
-    //        }
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void gotoFirstKeyframe(void) {
-  moveToIndex(0);
+
+void editKeyframe(int keyframeEdit) {
+  keyframe_array[keyframeEdit].panStepCount = stepper_pan.currentPosition();
+  keyframe_array[keyframeEdit].tiltStepCount = stepper_tilt.currentPosition();
+  keyframe_array[keyframeEdit].sliderStepCount = stepper_slider.currentPosition();
+  keyframe_array[keyframeEdit].panSpeed = stepper_pan.maxSpeed();
+  keyframe_array[keyframeEdit].tiltSpeed = stepper_tilt.maxSpeed();
+  keyframe_array[keyframeEdit].sliderSpeed = stepper_slider.maxSpeed();
+
+  printi(F("Edited index: "), keyframeEdit);
 }
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void gotoLastKeyframe(void) {
-  moveToIndex(keyframe_elements - 1);
-}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void editKeyframe(void) {
-  keyframe_array[current_keyframe_index].panStepCount = stepper_pan.currentPosition();
-  keyframe_array[current_keyframe_index].tiltStepCount = stepper_tilt.currentPosition();
-  keyframe_array[current_keyframe_index].sliderStepCount = stepper_slider.currentPosition();
-  keyframe_array[current_keyframe_index].panSpeed = stepper_pan.maxSpeed();
-  keyframe_array[current_keyframe_index].tiltSpeed = stepper_tilt.maxSpeed();
-  keyframe_array[current_keyframe_index].sliderSpeed = stepper_slider.maxSpeed();
-
-  printi(F("Edited index: "), current_keyframe_index);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void editDelay(unsigned int ms) {
-  keyframe_array[current_keyframe_index].msDelay = ms;
-  printi(ms, F(""));
-  printi(F("ms delay added at index: "), current_keyframe_index);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void addDelay(unsigned int ms) {
-  addPosition();
-  keyframe_array[current_keyframe_index].msDelay = ms;
-  printi(ms, F(""));
-  printi(F("ms delay added at index: "), current_keyframe_index);
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void invertPanDirection(bool invert) {
   printi(F("Pan inversion: "), invert);
@@ -639,7 +541,9 @@ void invertPanDirection(bool invert) {
   stepper_pan.setPinsInverted(invert, false, false);
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void invertTiltDirection(bool invert) {
   printi(F("Tilt inversion: "), invert);
@@ -647,7 +551,9 @@ void invertTiltDirection(bool invert) {
   stepper_tilt.setPinsInverted(invert, false, false);
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void invertSliderDirection(bool invert) {
   printi(F("Slider inversion: "), invert);
@@ -655,7 +561,9 @@ void invertSliderDirection(bool invert) {
   stepper_slider.setPinsInverted(invert, false, false);
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void saveEEPROM(void) {
   EEPROM.write(EEPROM_ADDRESS_HOMING_MODE, homing_mode);
@@ -680,7 +588,7 @@ void saveEEPROM(void) {
   EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
   EEPROM.commit();
-  EEPROM.writeUShort(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
+  EEPROM.writeFloat(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
   EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_ACCELERATION_ENABLE, acceleration_enable_state);
   EEPROM.commit();
@@ -692,14 +600,14 @@ void saveEEPROM(void) {
   EEPROM.commit();
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void printEEPROM(void) {
   int itemp;
   float ftemp;
   long ltemp;
-  //    printi(F("EEPROM:\n"));
-  //EEPROM.read(EEPROM_ADDRESS_MODE, itemp);
   itemp = EEPROM.read(EEPROM_ADDRESS_MODE);
   printi(F("EEPROM:\nStep mode: "), itemp, F("\n"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_PAN_MAX_SPEED);
@@ -708,19 +616,19 @@ void printEEPROM(void) {
   printi(F("Tilt max: "), ftemp, 3, F("º/s\n"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_SLIDER_MAX_SPEED);
   printi(F("Slider max: "), ftemp, 3, F("mm/s\n"));
-  ftemp = EEPROM.readFloat(EEPROM_ADDRESS_HALL_PAN_OFFSET);
-  printi(F("Pan offset: "), ftemp, 3, F("º\n"));
-  ftemp = EEPROM.readFloat(EEPROM_ADDRESS_HALL_TILT_OFFSET);
-  printi(F("Tilt offset: "), ftemp, 3, F("º\n"));
-  ftemp = EEPROM.read(EEPROM_ADDRESS_DEGREES_PER_PICTURE);
-  printi(F("Angle between pics: "), ftemp, 3, F(" º\n"));
-  ltemp = EEPROM.readUShort(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY);
-  printi(F("Delay between pics: "), ltemp, F("ms\n"));
+  //ftemp = EEPROM.readFloat(EEPROM_ADDRESS_HALL_PAN_OFFSET);
+  //printi(F("Pan offset: "), ftemp, 3, F("º\n"));
+  //ftemp = EEPROM.readFloat(EEPROM_ADDRESS_HALL_TILT_OFFSET);
+  //printi(F("Tilt offset: "), ftemp, 3, F("º\n"));
+  //ftemp = EEPROM.read(EEPROM_ADDRESS_DEGREES_PER_PICTURE);
+  //printi(F("Angle between pics: "), ftemp, 3, F(" º\n"));
+  //ltemp = EEPROM.readFloat(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY);
+  //printi(F("Delay between pics: "), ltemp, F("ms\n"));
   printi(F("Pan invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
   printi(F("Tilt invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
-  printi(F("Slider invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER));
-  printi(F("Homing mode: "), EEPROM.read(EEPROM_ADDRESS_HOMING_MODE));
-  printi(F("Accel enable: "), EEPROM.read(EEPROM_ADDRESS_ACCELERATION_ENABLE));
+  printi(F("Slider invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER), F("\n"));
+  //printi(F("Homing mode: "), EEPROM.read(EEPROM_ADDRESS_HOMING_MODE));
+  //printi(F("Accel enable: "), EEPROM.read(EEPROM_ADDRESS_ACCELERATION_ENABLE));
   ftemp = EEPROM.readFloat(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY);
   printi(F("Pan accel delay: "), ftemp, 3, F("us\n"));
   ftemp = EEPROM.readFloat(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY);
@@ -729,7 +637,9 @@ void printEEPROM(void) {
   printi(F("Slider accel delay: "), ftemp, 3, F("us\n"));
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void setEEPROMVariables(void) {
   step_mode = EEPROM.read(EEPROM_ADDRESS_MODE);
@@ -750,27 +660,9 @@ void setEEPROMVariables(void) {
   acceleration_enable_state = EEPROM.read(EEPROM_ADDRESS_ACCELERATION_ENABLE);
 }
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void setHoming(byte homingType) {
-  if (homingType >= 0 && homingType <= 4) {
-    homing_mode = homingType;
-    printi(F("Homing set to mode "), homingType, "\n");
-  }
-  else {
-    printi(F("Invalid mode\n"));
-  }
-}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/*
-  void triggerCameraShutter(void){
-    digitalWrite(PIN_SHUTTER_TRIGGER, HIGH);
-    delay(SHUTTER_DELAY);
-    digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
-  }
-*/
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void panoramiclapseInterpolation(float panStartAngle, float tiltStartAngle, float sliderStartPos, float panStopAngle, float tiltStopAngle, float sliderStopPos, float degPerPic, unsigned long msDelay) {
   if (degPerPic == 0) return;
@@ -796,61 +688,10 @@ void panoramiclapseInterpolation(float panStartAngle, float tiltStartAngle, floa
   }
 }
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void panoramiclapse(float degPerPic, unsigned long msDelay, int repeat) {
-  if (keyframe_elements < 2) {
-    printi(F("Not enough keyframes\n"));
-    return; //check there are posions to move to
-  }
-  for (int i = 0; i < repeat; i++) {
-    for (int index = 0; index < keyframe_elements - 1; index++) {
-      panoramiclapseInterpolation(panStepsToDegrees(keyframe_array[index].panStepCount), tiltStepsToDegrees(keyframe_array[index].tiltStepCount), sliderStepsToMillimetres(keyframe_array[index].sliderStepCount),
-                                  panStepsToDegrees(keyframe_array[index + 1].panStepCount), tiltStepsToDegrees(keyframe_array[index + 1].tiltStepCount), sliderStepsToMillimetres(keyframe_array[index + 1].sliderStepCount), degPerPic, msDelay);
-    }
-  }
-}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void timelapse(unsigned int numberOfPictures, unsigned long msDelay) {
-  if (msDelay > SHUTTER_DELAY) {
-    msDelay = msDelay - SHUTTER_DELAY;
-  }
 
-  if (numberOfPictures > 1) {
-    numberOfPictures = numberOfPictures - 1;
-  }
-
-  unsigned long halfDelay = msDelay / 2;
-
-  float panAngle = 0;
-  float tiltAngle = 0;
-  float sliderTravel = 0;
-
-  if (keyframe_elements >= 2) {
-    panAngle = panStepsToDegrees(keyframe_array[1].panStepCount) - panStepsToDegrees(keyframe_array[0].panStepCount);
-    tiltAngle = tiltStepsToDegrees(keyframe_array[1].tiltStepCount) - tiltStepsToDegrees(keyframe_array[0].tiltStepCount);
-    sliderTravel = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
-  }
-
-  float sliderInc = sliderTravel / numberOfPictures;
-  float panInc = panAngle / numberOfPictures;
-  float tiltInc = tiltAngle / numberOfPictures;
-
-  setTargetPositions(panStepsToDegrees(keyframe_array[0].panStepCount), tiltStepsToDegrees(keyframe_array[0].tiltStepCount), sliderStepsToMillimetres(keyframe_array[0].sliderStepCount));
-  multi_stepper.runSpeedToPosition();//blocking move to the next position
-
-  for (int i = 0; i <= numberOfPictures; i++) {
-    setTargetPositions(panStepsToDegrees(keyframe_array[0].panStepCount) + (panInc * i), tiltStepsToDegrees(keyframe_array[0].tiltStepCount) + (tiltInc * i), sliderStepsToMillimetres(keyframe_array[0].sliderStepCount) + (sliderInc * i));
-    multi_stepper.runSpeedToPosition();//blocking move to the next position
-    delay(halfDelay);
-    //triggerCameraShutter();//capture the picture
-    delay(halfDelay);
-  }
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //From the first two keyframes the intercept of where the camera is directed is calculated.
 //The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It wuld be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
 //The intercept of the vectorand plane are then calculated to give the X, Y, Z coordinates of the point the camera was pointed at in both keyframes. (The second keyframe will ignore the tilt value and calculate it based on the first keyframes vector.)
@@ -904,7 +745,9 @@ bool calculateTargetCoordinate(void) {
   return true;
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat) { //The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
   if (keyframe_elements < 2) {
@@ -950,7 +793,9 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat) { //The fir
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void toggleAcceleration(void) {
   if (acceleration_enable_state == 0) {
@@ -963,23 +808,9 @@ void toggleAcceleration(void) {
   }
 }
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-void scaleKeyframeSpeed(float scaleFactor) {
-  if (scaleFactor <= 0) { //Make sure a valid speed factor was entered
-    printi(F("Invalid factor\n"));
-    return;
-  }
-
-  for (int row = 0; row < keyframe_elements; row++) {
-    keyframe_array[row].panSpeed *= scaleFactor;
-    keyframe_array[row].tiltSpeed *= scaleFactor;
-    keyframe_array[row].sliderSpeed *= scaleFactor;
-  }
-  printi(F("Keyframe speed scaled by "), scaleFactor, 3, F("\n"));
-}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void serialData(void) {
   char instruction = Serial.read();
@@ -1031,8 +862,52 @@ void serialData(void) {
   }
 
   switch (instruction) {
-    case INSTRUCTION_SCALE_SPEED: {
-        scaleKeyframeSpeed(serialCommandValueFloat);
+    case INSTRUCTION_SETPOS1: {
+        editKeyframe(0);
+      }
+      break;
+    case INSTRUCTION_GOPOS1: {
+        moveToIndex(0);
+      }
+      break;
+    case INSTRUCTION_SETPOS2: {
+        editKeyframe(1);
+      }
+      break;
+    case INSTRUCTION_GOPOS2: {
+        moveToIndex(1);
+      }
+      break;
+    case INSTRUCTION_SETPOS3: {
+        editKeyframe(2);
+      }
+      break;
+    case INSTRUCTION_GOPOS3: {
+        moveToIndex(2);
+      }
+      break;
+    case INSTRUCTION_SETPOS4: {
+        editKeyframe(3);
+      }
+      break;
+    case INSTRUCTION_GOPOS4: {
+        moveToIndex(3);
+      }
+      break;
+    case INSTRUCTION_SETPOS5: {
+        editKeyframe(4);
+      }
+      break;
+    case INSTRUCTION_GOPOS5: {
+        moveToIndex(4);
+      }
+      break;
+    case INSTRUCTION_SETPOS6: {
+        editKeyframe(5);
+      }
+      break;
+    case INSTRUCTION_GOPOS6: {
+        moveToIndex(5);
       }
       break;
     case INSTRUCTION_PAN_ACCEL_INCREMENT_DELAY: {
@@ -1058,61 +933,6 @@ void serialData(void) {
         sliderMoveTo(serialCommandValueFloat);
       }
       break;
-    case INSTRUCTION_DELAY_BETWEEN_PICTURES: {
-        delay_ms_between_pictures = serialCommandValueFloat;
-        printi(F("Delay between pics: "), delay_ms_between_pictures, F("ms\n"));
-      }
-      break;
-    case INSTRUCTION_ANGLE_BETWEEN_PICTURES: {
-        degrees_per_picture = serialCommandValueFloat;
-        printi(F("Degs per pic: "), degrees_per_picture, 3, F("º\n"));
-      }
-      break;
-    case INSTRUCTION_PANORAMICLAPSE: {
-        printi(F("Panorama\n"));
-        panoramiclapse(degrees_per_picture, delay_ms_between_pictures, 1);
-        printi(F("Finished\n"));
-      }
-      break;
-    case INSTRUCTION_TIMELAPSE: {
-        printi(F("Timelapse with "), serialCommandValueInt, F(" pics\n"));
-        printi(F(""), delay_ms_between_pictures, F("ms between pics\n"));
-        timelapse(serialCommandValueInt, delay_ms_between_pictures);
-        printi(F("Finished\n"));
-      }
-      break;
-    //case INSTRUCTION_TRIGGER_SHUTTER:{
-    //triggerCameraShutter();
-    //}
-    //break;
-    case INSTRUCTION_AUTO_HOME: {
-        printi(F("Homing\n"));
-        if (findHome()) {
-          printi(F("Complete\n"));
-        }
-        else {
-          stepper_pan.setCurrentPosition(0);
-          stepper_tilt.setCurrentPosition(0);
-          stepper_slider.setCurrentPosition(0);
-          setTargetPositions(0, 0, 0);
-          printi(F("Error homing\n"));
-        }
-      }
-      break;
-    case INSTRUCTION_SET_HOMING: {
-        setHoming(serialCommandValueInt);
-      }
-      break;
-    case INSTRUCTION_SET_PAN_HALL_OFFSET: {
-        hall_pan_offset_degrees = serialCommandValueFloat;
-        printi(F("Pan offset: "), hall_pan_offset_degrees, 3, F("º\n"));
-      }
-      break;
-    case INSTRUCTION_SET_TILT_HALL_OFFSET: {
-        hall_tilt_offset_degrees = serialCommandValueFloat;
-        printi(F("Tilt offset: "), hall_tilt_offset_degrees, 3, F("º\n"));
-      }
-      break;
     case INSTRUCTION_INVERT_SLIDER: {
         invertSliderDirection(serialCommandValueInt);
       }
@@ -1128,50 +948,6 @@ void serialData(void) {
     case INSTRUCTION_SAVE_TO_EEPROM: {
         saveEEPROM();
         printi(F("Saved to EEPROM\n"));
-      }
-      break;
-    case INSTRUCTION_ADD_POSITION: {
-        addPosition();
-      }
-      break;
-    case INSTRUCTION_STEP_FORWARD: {
-        moveToIndex(current_keyframe_index + 1);
-        printi(F("Index: "), current_keyframe_index, F("\n"));
-      }
-      break;
-    case INSTRUCTION_STEP_BACKWARD: {
-        moveToIndex(current_keyframe_index - 1);        //INSTRUCTION_STEP_BACKWARD:
-        printi(F("Index: "), current_keyframe_index, F("\n"));
-      }
-      break;
-    case INSTRUCTION_JUMP_TO_START: {
-        gotoFirstKeyframe();
-        printi(F("Index: "), current_keyframe_index, F("\n"));
-      }
-      break;
-    case INSTRUCTION_JUMP_TO_END: {
-        gotoLastKeyframe();
-        printi(F("Index: "), current_keyframe_index, F("\n"));
-      }
-      break;
-    case INSTRUCTION_EDIT_ARRAY: {
-        editKeyframe();
-      }
-      break;
-    case INSTRUCTION_ADD_DELAY: {
-        addDelay(serialCommandValueInt);
-      }
-      break;
-    case INSTRUCTION_EDIT_DELAY: {
-        editDelay(serialCommandValueInt);
-      }
-      break;
-    case INSTRUCTION_CLEAR_ARRAY: {
-        clearKeyframes();
-      }
-      break;
-    case INSTRUCTION_EXECUTE_MOVES: {
-        executeMoves(serialCommandValueInt);
       }
       break;
     case INSTRUCTION_DEBUG_STATUS: {
@@ -1232,13 +1008,17 @@ void serialData(void) {
   }
 }
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void mainLoop(void) {
   while (1) {
     if (Serial.available()) serialData();
     multi_stepper.run();
+    //runRemote();
   }
 }
+
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/

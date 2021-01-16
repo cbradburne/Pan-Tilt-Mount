@@ -418,8 +418,6 @@ void moveToIndex(int index) {
       sliderDist = pow(stepper_slider.speed(), 2) / (5 * sliderAccel);        //  Equation is arbitrary and was deterined through empirical testing.
     }
 
-    //if (index + 1 < keyframe_elements) {                                                  //  makes sure there is a valid next keyframe
-    //if (1 == 1) {
     long panStepDiff = stepper_pan.currentPosition() - keyframe_array[index].panStepCount;                            //  Change in position from current target position to the next.
     long tiltStepDiff = stepper_tilt.currentPosition() - keyframe_array[index].tiltStepCount;
     long sliderStepDiff = stepper_slider.currentPosition() - keyframe_array[index].sliderStepCount;
@@ -428,15 +426,10 @@ void moveToIndex(int index) {
     }
     if ((tiltStepDiff == 0 && stepper_tilt.speed() != 0) || (tiltStepDiff > 0 && stepper_tilt.speed() < 0) || (tiltStepDiff < 0 && stepper_tilt.speed() > 0)) { //if stopping or changing direction
       target_position[1] = keyframe_array[index].tiltStepCount - tiltDist;
-      //if ( DEBUG ) {
-      //  printi(F("Start Target -        - "), start_position[1], F("\n"));
-      //  printi(F("New Target - dist set - "), target_position[1], F("\n"));
-      //}
     }
     if ((sliderStepDiff == 0 && stepper_slider.speed() != 0) || (sliderStepDiff > 0 && stepper_slider.speed() < 0) || (sliderStepDiff < 0 && stepper_slider.speed() > 0)) { //if stopping or changing direction
       target_position[2] = keyframe_array[index].sliderStepCount - sliderDist;            //  If changing dir
     }
-    //}
 
     long panStepDiffPrev = keyframe_array[index].panStepCount - start_position[0];          //  Change in position from the privious target to the current target position.
     long tiltStepDiffPrev = keyframe_array[index].tiltStepCount - start_position[1];
@@ -496,20 +489,28 @@ void moveToIndex(int index) {
     while (stepper_pan.currentPosition() != final_position[0] || stepper_tilt.currentPosition() != final_position[1] || stepper_slider.currentPosition() != final_position[2]) {  //  Prevents issues caused when the motor target positions and speeds not being updated becuase they have not changed.
       //Impliments the acceleration/deceleration. This implimentation feels pretty bad and should probably be updated but it works well enough so I'm not going to...
       unsigned long usTime = micros();
-      if (((stepper_tilt.currentPosition() - start_position[1]) < tiltDist) && (stepper_tilt.currentPosition() < (tiltStepDiff / 2))) { // accel
-        if ((panInc < 1) && multi_stepper.run()) {
-          if (usTime - pan_accel_increment_us >= pan_last_us) {
-            panInc = (panInc < 1) ? (panInc + 0.01) : 1;
-            pan_last_us = micros();
-            stepper_pan.setSpeed(panInitialSpeed + (panDeltaSpeed * panInc));
+      if (((stepper_tilt.currentPosition() - start_position[1]) < tiltDist) && (abs(start_position[1] - stepper_tilt.currentPosition()) < abs(tiltStepDiff / 2))) {   //  accel
+        if (usTime - pan_accel_increment_us >= pan_last_us) {
+          pan_last_us = micros();
+          float multiplier = (((float)stepper_pan.currentPosition() - (float)start_position[0]) / (float)panDist);
+          //multiplier = 0.01;
+          if (multiplier == 0) {
+            multiplier = 0.01;
+          }
+          else {
+            stepper_tilt.setSpeed(panInitialSpeed + (panDeltaSpeed * multiplier));
           }
         }
-
+        
         if (usTime - tilt_accel_increment_us >= tilt_last_us) {
           tilt_last_us = micros();
           float multiplier = (((float)stepper_tilt.currentPosition() - (float)start_position[1]) / (float)tiltDist);
-          multiplier = 0.01;
+          //multiplier = 0.01;
           if (multiplier == 0) {
+            multiplier = 0.01;
+          }
+          else if (multiplier >= 1) {
+            multiplier = 1;
           }
           else {
             stepper_tilt.setSpeed(tiltInitialSpeed + (tiltDeltaSpeed * multiplier));
@@ -524,21 +525,28 @@ void moveToIndex(int index) {
           }
         }
 
-        if ((sliderInc < 1) && multi_stepper.run()) {
-          if (usTime - slider_accel_increment_us >= slider_last_us) {
-            sliderInc = (sliderInc < 1) ? (sliderInc + 0.01) : 1;
-            slider_last_us = micros();
-            stepper_slider.setSpeed(sliderInitialSpeed + (sliderDeltaSpeed * sliderInc));
+        if (usTime - slider_accel_increment_us >= slider_last_us) {
+          slider_last_us = micros();
+          float multiplier = (((float)stepper_slider.currentPosition() - (float)start_position[2]) / (float)sliderDist);
+          //multiplier = 0.01;
+          if (multiplier == 0) {
+            multiplier = 0.01;
+          }
+          else {
+            stepper_tilt.setSpeed(sliderInitialSpeed + (sliderDeltaSpeed * multiplier));
           }
         }
       }
-      else if (((stepper_tilt.currentPosition() - final_position[1]) <= tiltDist) && (stepper_tilt.currentPosition() >= (tiltStepDiff / 2))) { // decel
+      else if (((stepper_tilt.currentPosition() - final_position[1]) <= tiltDist) && (abs(stepper_tilt.currentPosition()) >= abs(tiltStepDiff / 2))) {  //  decel
 
-        if ((panInc > 0) && multi_stepper.run()) {
-          if (usTime - pan_accel_increment_us >= pan_last_us) {
-            panInc = (panInc > 0) ? (panInc - 0.01) : 0;
-            pan_last_us = micros();
-            stepper_pan.setSpeed(panInitialSpeed + (panDeltaSpeed * panInc));
+        if (usTime - pan_accel_increment_us >= pan_last_us) {
+          pan_last_us = micros();
+          float multiplier = (((float)final_position[0] - (float)stepper_pan.currentPosition() / (float)panDist));
+          if (multiplier == 0) {
+            multiplier = 0.01;
+          }
+          else {
+            stepper_pan.setSpeed(panInitialSpeed + (panDeltaSpeed * multiplier));
           }
         }
 
@@ -560,11 +568,15 @@ void moveToIndex(int index) {
             printi(F("Tilt Speed    : "), stepper_tilt.speed(), 3, F("\n"));
           }
         }
-        if ((sliderInc > 0) && multi_stepper.run()) {
-          if (usTime - slider_accel_increment_us >= slider_last_us) {
-            sliderInc = (sliderInc > 0) ? (sliderInc - 0.01) : 0;
-            slider_last_us = micros();
-            stepper_slider.setSpeed(sliderInitialSpeed + (sliderDeltaSpeed * sliderInc));
+        
+        if (usTime - slider_accel_increment_us >= slider_last_us) {
+          slider_last_us = micros();
+          float multiplier = (((float)final_position[2] - (float)stepper_slider.currentPosition() / (float)sliderDist));
+          if (multiplier == 0) {
+            multiplier = 0.01;
+          }
+          else {
+            stepper_slider.setSpeed(sliderInitialSpeed + (sliderDeltaSpeed * multiplier));
           }
         }
       }

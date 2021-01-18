@@ -15,7 +15,7 @@ MultiStepper multi_stepper;
 
 #define EEPROM_SIZE 98
 
-KeyframeElement keyframe_array[5];
+KeyframeElement keyframe_array[6];
 
 bool DEBUG = false;
 
@@ -98,6 +98,16 @@ float boundFloat(float value, float lower, float upper) {
     value = upper;
   }
   return value;
+}
+
+
+void sendCharArray(char *array) {
+  //Serial.write(array, (int)strlen(array));
+
+  int i = 0;
+  while (array[i] != 0)
+    Serial.write((uint8_t)array[i++]);    // Use with ESP32
+  //Serial.write(array, sizeof(array));   // Non-ESP32
 }
 
 
@@ -251,21 +261,37 @@ void sliderMoveTo(float mm) {
 
 
 void printKeyframeElements(void) {
-  printi(F("Keyframe index: "), current_keyframe_index, F("\n"));
-  for (int row = 0; row < keyframe_elements; row++) {
-    printi(F(""), row, F("\t|"));
+  //printi(F("Keyframe index: "), current_keyframe_index, F("\n"));
+
+  int row = 0;
+  // "for" and "while" don't work.... don't believe me? try it for yourself! ;)
+  do {
+    printi(F("Keyframe index: "), row, F("\t|"));
+    delay(200);
     printi(F(" Pan: "), panStepsToDegrees(keyframe_array[row].panStepCount), 3, F("º\t"));
     printi(F("Tilt: "), tiltStepsToDegrees(keyframe_array[row].tiltStepCount), 3, F("º\t"));
     printi(F("Slider: "), sliderStepsToMillimetres(keyframe_array[row].sliderStepCount), 3, F("mm\t"));
+    delay(200);
     printi(F("Pan Speed: "), panStepsToDegrees(keyframe_array[row].panSpeed), 3, F(" º/s\t"));
     printi(F("Tilt Speed: "), tiltStepsToDegrees(keyframe_array[row].tiltSpeed), 3, F(" º/s\t"));
     printi(F("Slider Speed: "), sliderStepsToMillimetres(keyframe_array[row].sliderSpeed), 3, F(" mm/s\t"));
-    printi(F("Delay: "), keyframe_array[row].msDelay, F("ms |\n"));
-  }
+    printi(F("\n"));
+    delay(200);
+    row++;
+  } while (row < 6);
   printi(F("\n"));
 }
 
+/*
+void send_float (float arg)
+{
+  // get access to the float as a byte-array:
+  byte * data = (byte *) &arg;
 
+  // write the data to the serial
+  Serial.write (data, sizeof (arg));
+}
+*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
@@ -273,18 +299,23 @@ void debugReport(void) {
   //printi(F("Status\nEnable state: "), enable_state);
   printi(F("Pan angle: "), panStepsToDegrees(stepper_pan.currentPosition()), 3, F("º\n"));
   printi(F("Tilt angle: "), tiltStepsToDegrees(stepper_tilt.currentPosition()), 3, F("º\n"));
-  printi(F("Slider position: "), sliderStepsToMillimetres(stepper_slider.currentPosition()), 3, F("mm\n"));
+  printi(F("Slider position: "), sliderStepsToMillimetres(stepper_slider.currentPosition()), 3, F("mm\n\n"));
+  delay(100);
   printi(F("Pan max steps/s: "), stepper_pan.maxSpeed());
   printi(F("Tilt max steps/s: "), stepper_tilt.maxSpeed());
   printi(F("Slider max steps/s: "), stepper_slider.maxSpeed());
+  printi(F("\n"));
+  delay(100);
   printi(F("Pan max speed: "), panStepsToDegrees(stepper_pan.maxSpeed()), 3, F("º/s\n"));
   printi(F("Tilt max speed: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()), 3, F("º/s\n"));
   printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n\n"));
+  delay(100);
   //printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
   //printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, 3, F("ms\n"));
   //printi(F(VERSION_NUMBER));
-  printEEPROM();
-  //printKeyframeElements();
+  //printEEPROM();
+  printKeyframeElements();
+
 }
 
 
@@ -371,7 +402,7 @@ void moveToIndex(int index) {
     stepper_pan.setMaxSpeed(keyframe_array[index].panSpeed);
     stepper_tilt.setMaxSpeed(keyframe_array[index].tiltSpeed);
     stepper_slider.setMaxSpeed(keyframe_array[index].sliderSpeed);
-    
+
     //float panInitialSpeed = stepper_pan.speed();
     //float tiltInitialSpeed = stepper_tilt.speed();
     //float sliderInitialSpeed = stepper_slider.speed();
@@ -528,6 +559,7 @@ void editKeyframe(int keyframeEdit) {
   keyframe_array[keyframeEdit].sliderSpeed = stepper_slider.maxSpeed();
 
   printi(F("Edited index: "), keyframeEdit);
+  //sendCharArray((char *)"Edited");
 }
 
 
@@ -973,21 +1005,21 @@ void serialData(void) {
         printi(F("Max pan speed: "), serialCommandValueFloat, 1, "º/s.\n");
         pan_max_speed = serialCommandValueFloat;
         stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-        printi(F("Max pan speed set as: "), stepper_pan.maxSpeed(), 1, "\n");
+        printi(F("Max pan speed set as: "), stepper_pan.maxSpeed(), 1, "\n\n");
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED: {
         printi(F("Max tilt speed: "), serialCommandValueFloat, 1, "º/s.\n");
         tilt_max_speed = serialCommandValueFloat;
         stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-        printi(F("Max tilt speed set as: "), stepper_tilt.maxSpeed(), 1, "\n");
+        printi(F("Max tilt speed set as: "), stepper_tilt.maxSpeed(), 1, "\n\n");
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
         printi(F("Max slider speed: "), serialCommandValueFloat, 1, "mm/s.\n");
         slider_max_speed = serialCommandValueFloat;
         stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
-        printi(F("Max slider speed set as: "), stepper_slider.maxSpeed(), 1, "\n");
+        printi(F("Max slider speed set as: "), stepper_slider.maxSpeed(), 1, "\n\n");
       }
       break;
     case INSTRUCTION_CALCULATE_TARGET_POINT: {

@@ -20,7 +20,10 @@ Stepper stepper_slider(PIN_STEP_SLIDER, PIN_DIRECTION_SLIDER);
 
 //MultiStepper multi_stepper;
 StepControl multi_stepper;
-//RotateControl rotate_stepper;
+
+StepControl step_stepperP;
+StepControl step_stepperT;
+StepControl step_stepperS;
 
 RotateControl rotate_stepperP;
 RotateControl rotate_stepperT;
@@ -86,7 +89,7 @@ void initPanTilt(void) {
   pinMode(PIN_TILT_HALL, INPUT_PULLUP);
   pinMode(PIN_SLIDER_HALL, INPUT_PULLUP);
   setEEPROMVariables();
-  //setStepMode(step_mode); //steping mode
+  setStepMode(step_mode); //steping mode
   stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
   stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
   stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
@@ -96,6 +99,10 @@ void initPanTilt(void) {
   invertPanDirection(invert_pan);
   invertTiltDirection(invert_tilt);
   invertSliderDirection(invert_slider);
+  delay(200);
+  Serial1.println(String("Pan max steps/s: ") + panDegreesToSteps(pan_max_speed));
+  Serial1.println(String("Tilt max steps/s: ") + tiltDegreesToSteps(tilt_max_speed));
+  Serial1.println(String("Slider max steps/s: ") + sliderMillimetresToSteps(slider_max_speed));
   //multi_stepper.addStepper(stepper_pan);
   //multi_stepper.addStepper(stepper_tilt);
   //multi_stepper.addStepper(stepper_slider);
@@ -156,12 +163,12 @@ void enableSteppers(void) {
   if (enable_state == false) {
     digitalWrite(PIN_ENABLE, LOW); //Enable the stepper drivers
     enable_state = true;
-    printi(F("Enabled\n"));
+    Serial1.println(String("Enabled"));
   }
   else {
     digitalWrite(PIN_ENABLE, HIGH); //Disabe the stepper drivers
     enable_state = false;
-    printi(F("Disabled\n"));
+    Serial1.println(String("Disabled"));
   }
 }
 
@@ -170,7 +177,7 @@ void enableSteppers(void) {
 
 
 void setStepMode(int newMode) { //Step modes for the TMC2208
-  //float stepRatio = (float)newMode / (float)step_mode; //Ratio between the new step mode and the previously set one.
+  float stepRatio = (float)newMode / (float)step_mode; //Ratio between the new step mode and the previously set one.
   if (newMode == HALF_STEP) {
     digitalWrite(PIN_MS1, HIGH);
     digitalWrite(PIN_MS2, LOW);
@@ -188,13 +195,13 @@ void setStepMode(int newMode) { //Step modes for the TMC2208
     digitalWrite(PIN_MS2, HIGH);
   }
   else { //If an invalid step mode was entered.
-    printi(F("Invalid mode. Enter 2, 4, 8 or 16\n"));
+    Serial1.println(String("Invalid mode. Enter 2, 4, 8 or 16"));
     return;
   }
   //Scale current step to match the new step mode
-  //stepper_pan.setCurrentPosition(stepper_pan.getPosition() * stepRatio);
-  //stepper_tilt.setCurrentPosition(stepper_tilt.getPosition() * stepRatio);
-  //stepper_slider.setCurrentPosition(stepper_slider.getPosition() * stepRatio);
+  stepper_pan.setPosition(stepper_pan.getPosition() * stepRatio);
+  stepper_tilt.setPosition(stepper_tilt.getPosition() * stepRatio);
+  stepper_slider.setPosition(stepper_slider.getPosition() * stepRatio);
 
   pan_steps_per_degree = (200.0 * (float)newMode * PAN_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
   tilt_steps_per_degree = (200.0 * (float)newMode * TILT_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
@@ -204,7 +211,7 @@ void setStepMode(int newMode) { //Step modes for the TMC2208
   stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
   stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
   //step_mode = newMode;
-  printi(F("Set to "), step_mode, F(" step mode.\n"));
+  Serial1.println(String("Set to ") + step_mode +(" step mode."));
 }
 
 
@@ -215,14 +222,30 @@ void panDegrees(float angle) {
   target_position[0] = panDegreesToSteps(angle);
   if (acceleration_enable_state == 0) {
     //multi_stepper.move(target_position);
-    stepper_pan.setTargetAbs(target_position[0]);
-    rotate_stepperP.rotateAsync(stepper_pan);
+
+    Serial1.println(String("Current Pan Position   : ") + stepper_pan.getPosition());
+    Serial1.println(String("Target  Pan Position   : ") + target_position[0]);
+    
+    stepper_pan.setTargetAbs(target_position[0]); 
+    step_stepperP.move(stepper_pan);
+    
+    //stepper_pan.setTargetAbs(target_position[0]);
+    //rotate_stepperP.overrideSpeed(100);
+    //rotate_stepperP.rotateAsync(stepper_pan);
   }
   else {
     //stepper_pan.setCurrentPosition(stepper_pan.getPosition());
     //stepper_pan.runToNewPosition(panDegreesToSteps(angle));
-    stepper_pan.setTargetAbs(target_position[0]);
-    rotate_stepperP.rotateAsync(stepper_pan);
+
+    Serial1.println(String("Current Pan Position   : ") + stepper_pan.getPosition());
+    Serial1.println(String("Target  Pan Position   : ") + target_position[0]);
+    
+    stepper_pan.setTargetAbs(target_position[0]); 
+    step_stepperP.move(stepper_pan);
+    
+    //stepper_pan.setTargetAbs(target_position[0]);
+    //rotate_stepperP.overrideSpeed(100);
+    //rotate_stepperP.rotateAsync(stepper_pan);
   }
 }
 
@@ -234,14 +257,29 @@ void tiltDegrees(float angle) {
   target_position[1] = tiltDegreesToSteps(angle);
   if (acceleration_enable_state == 0) {
     //multi_stepper.move(target_position);
+    Serial1.println(String("Current Tilt Position  : ") + stepper_tilt.getPosition());
+    Serial1.println(String("Target  Tilt Position  : ") + target_position[1]);
+    
     stepper_tilt.setTargetAbs(target_position[1]);
-    rotate_stepperT.rotateAsync(stepper_tilt);
+    step_stepperT.move(stepper_tilt);
+    
+    //stepper_tilt.setTargetAbs(target_position[1]);  
+    //rotate_stepperT.overrideSpeed(100);
+    //rotate_stepperT.rotateAsync(stepper_tilt);
   }
   else {
     //stepper_tilt.setCurrentPosition(stepper_tilt.getPosition());
     //stepper_tilt.runToNewPosition(tiltDegreesToSteps(angle));
-    stepper_tilt.setTargetAbs(target_position[1]);
-    rotate_stepperT.rotateAsync(stepper_tilt);
+    
+    Serial1.println(String("Current Tilt Position  : ") + stepper_tilt.getPosition());
+    Serial1.println(String("Target  Tilt Position  : ") + target_position[1]);
+    
+    stepper_tilt.setTargetAbs(target_position[1]); 
+    step_stepperT.move(stepper_tilt);
+    
+    //stepper_tilt.setTargetAbs(target_position[1]);
+    //rotate_stepperT.overrideSpeed(100);
+    //rotate_stepperT.rotateAsync(stepper_tilt);
   }
 }
 
@@ -285,14 +323,30 @@ void sliderMoveTo(float mm) {
   target_position[2] = sliderMillimetresToSteps(mm);
   if (acceleration_enable_state == 0) {
     //multi_stepper.move(target_position);
-    stepper_slider.setTargetAbs(target_position[2]);
-    rotate_stepperS.rotateAsync(stepper_slider);
+
+    Serial1.println(String("Current Slider Position: ") + stepper_slider.getPosition());
+    Serial1.println(String("Target Slider Position : ") + target_position[2]);
+    
+    stepper_slider.setTargetAbs(target_position[2]); 
+    step_stepperS.move(stepper_slider);
+    
+    //stepper_slider.setTargetAbs(target_position[2]);
+    //rotate_stepperS.overrideSpeed(100);
+    //rotate_stepperS.rotateAsync(stepper_slider);
   }
   else {
     //stepper_slider.setCurrentPosition(stepper_slider.getPosition());
     //stepper_slider.runToNewPosition(sliderMillimetresToSteps(mm));
-    stepper_slider.setTargetAbs(target_position[2]);
-    rotate_stepperS.rotateAsync(stepper_slider);
+
+    Serial1.println(String("Current Slider Position: ") + stepper_slider.getPosition());
+    Serial1.println(String("Target Slider Position : ") + target_position[2]);
+    
+    stepper_slider.setTargetAbs(target_position[2]); 
+    step_stepperS.move(stepper_slider);
+    
+    //stepper_slider.setTargetAbs(target_position[2]);
+    //rotate_stepperS.overrideSpeed(100);
+    //rotate_stepperS.rotateAsync(stepper_slider);
   }
 }
 
@@ -306,20 +360,19 @@ void printKeyframeElements(void) {
   int row = 0;
   // "for" and "while" don't work.... don't believe me? try it for yourself! ;)
   do {
-    printi(F("Keyframe index: "), row, F("\t|"));
+    Serial1.println(String("Keyframe index: ") + row); //, F("\t|"));
     delay(200);
-    printi(F(" Pan: "), panStepsToDegrees(keyframe_array[row].panStepCount), 3, F("º\t"));
-    printi(F("Tilt: "), tiltStepsToDegrees(keyframe_array[row].tiltStepCount), 3, F("º\t"));
-    printi(F("Slider: "), sliderStepsToMillimetres(keyframe_array[row].sliderStepCount), 3, F("mm\t"));
+    Serial1.print(String("Pan   : ") + panStepsToDegrees(keyframe_array[row].panStepCount) + String("º\t"));
+    Serial1.print(String("Tilt  : ") + tiltStepsToDegrees(keyframe_array[row].tiltStepCount) + String("º\t"));
+    Serial1.print(String("Slider: ") + sliderStepsToMillimetres(keyframe_array[row].sliderStepCount) + String("mm\t"));
     delay(200);
-    printi(F("Pan Speed: "), panStepsToDegrees(keyframe_array[row].panSpeed), 3, F(" º/s\t"));
-    printi(F("Tilt Speed: "), tiltStepsToDegrees(keyframe_array[row].tiltSpeed), 3, F(" º/s\t"));
-    printi(F("Slider Speed: "), sliderStepsToMillimetres(keyframe_array[row].sliderSpeed), 3, F(" mm/s\t"));
-    printi(F("\n"));
+    Serial1.print(String("Pan Speed   : ") + panStepsToDegrees(keyframe_array[row].panSpeed) + String(" º/s\t"));
+    Serial1.print(String("Tilt Speed  : ") + tiltStepsToDegrees(keyframe_array[row].tiltSpeed) + String(" º/s\t"));
+    Serial1.println(String("Slider Speed: ") + sliderStepsToMillimetres(keyframe_array[row].sliderSpeed) + String(" mm/s"));
     delay(200);
     row++;
   } while (row < 6);
-  printi(F("\n"));
+  Serial1.println(String(""));
 }
 
 /*
@@ -337,25 +390,29 @@ void printKeyframeElements(void) {
 
 void debugReport(void) {
   //printi(F("Status\nEnable state: "), enable_state);
-  Serial1.printf(("Pan angle: "), panStepsToDegrees(stepper_pan.getPosition()), 3, ("º\n"));
-  printi(F("Tilt angle: "), tiltStepsToDegrees(stepper_tilt.getPosition()), 3, F("º\n"));
-  printi(F("Slider position: "), sliderStepsToMillimetres(stepper_slider.getPosition()), 3, F("mm\n\n"));
+  Serial1.println(String("Pan angle      : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("º"));
+  Serial1.println(String("Tilt angle     : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("º"));
+  Serial1.println(String("Slider position: ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String("mm\n"));
   delay(100);
-  printi(F("Pan max steps/s: "), panDegreesToSteps(pan_max_speed));
-  printi(F("Tilt max steps/s: "), tiltDegreesToSteps(tilt_max_speed));
-  printi(F("Slider max steps/s: "), sliderMillimetresToSteps(slider_max_speed));
-  //printi(F("\n"));
-  //delay(100);
-  printi(F("Pan max speed: "), pan_max_speed, 3, F("º/s\n"));
-  printi(F("Tilt max speed: "), tilt_max_speed, 3, F("º/s\n"));
-  printi(F("Slider max speed: "), slider_max_speed, 3, F("mm/s\n\n"));
+  Serial1.println(String("Pan max steps/s   : ") + panDegreesToSteps(pan_max_speed));
+  Serial1.println(String("Tilt max steps/s  : ") + tiltDegreesToSteps(tilt_max_speed));
+  Serial1.println(String("Slider max steps/s: ") + sliderMillimetresToSteps(slider_max_speed));
+  Serial1.println(String(""));
+  delay(100);
+  Serial1.println(String("Pan max speed   : ") + pan_max_speed + String("º/s"));
+  Serial1.println(String("Tilt max speed  : ") + tilt_max_speed + String("º/s"));
+  Serial1.println(String("Slider max speed: ") + slider_max_speed + String("mm/s\n"));
   delay(100);
   //printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
   //printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, 3, F("ms\n"));
   //printi(F(VERSION_NUMBER));
   //printEEPROM();
+  
+  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
+  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
+  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
+  
   printKeyframeElements();
-
 }
 
 
@@ -421,11 +478,11 @@ int addPosition(void) {
     keyframe_array[keyframe_elements].msDelay = 0;
     current_keyframe_index = keyframe_elements;
     keyframe_elements++;//increment the index
-    printi(F("Added at index: "), current_keyframe_index);
+    Serial1.println(String("Added at index: ") + current_keyframe_index);
     return 0;
   }
   else {
-    printi(F("Max number of keyframes reached\n"));
+    Serial1.println(String("Max number of keyframes reached"));
   }
   return -1;
 }
@@ -435,7 +492,7 @@ int addPosition(void) {
 
 
 void moveToIndex(int index) {
-
+    //stepper_tilt.setTargetAbs(target_position[1]); 
     stepper_pan.setTargetAbs(keyframe_array[index].panStepCount);
     stepper_tilt.setTargetAbs(keyframe_array[index].tiltStepCount);
     stepper_slider.setTargetAbs(keyframe_array[index].sliderStepCount);
@@ -612,7 +669,7 @@ void editKeyframe(int keyframeEdit) {
   keyframe_array[keyframeEdit].tiltSpeed = tiltDegreesToSteps(tilt_max_speed);
   keyframe_array[keyframeEdit].sliderSpeed = sliderMillimetresToSteps(slider_max_speed);
 
-  printi(F("Edited index: "), keyframeEdit);
+  Serial1.println(String("Edited index: ") + keyframeEdit);
   //sendCharArray((char *)"Edited");
 }
 
@@ -621,7 +678,7 @@ void editKeyframe(int keyframeEdit) {
 
 
 void invertPanDirection(bool invert) {
-  printi(F("Pan inversion: "), invert);
+  Serial1.println(String("Pan inversion: ") + invert);
   invert_pan = invert;
   stepper_pan.setInverseRotation(invert);
 }
@@ -631,7 +688,7 @@ void invertPanDirection(bool invert) {
 
 
 void invertTiltDirection(bool invert) {
-  printi(F("Tilt inversion: "), invert);
+  Serial1.println(String("Tilt inversion: ") + invert);
   invert_tilt = invert;
   stepper_tilt.setInverseRotation(invert);
 }
@@ -641,7 +698,7 @@ void invertTiltDirection(bool invert) {
 
 
 void invertSliderDirection(bool invert) {
-  printi(F("Slider inversion: "), invert);
+  Serial1.println(String("Slider inversion: ") + invert);
   invert_slider = invert;
   stepper_slider.setInverseRotation(invert);
 }
@@ -694,13 +751,13 @@ void printEEPROM(void) {
   float ftemp;
   //long ltemp;
   itemp = EEPROM.read(EEPROM_ADDRESS_MODE);
-  printi(F("EEPROM:\nStep mode: "), itemp, F("\n"));
+  Serial1.println(String("EEPROM:\nStep mode: ") + itemp);
   ftemp = EEPROM.read(EEPROM_ADDRESS_PAN_MAX_SPEED);
-  printi(F("Pan max: "), ftemp, 3, F("º/s\n"));
+  Serial1.println(String("Pan max: ") + ftemp + String("º/s"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_TILT_MAX_SPEED);
-  printi(F("Tilt max: "), ftemp, 3, F("º/s\n"));
+  Serial1.println(String("Tilt max: ") + ftemp + String("º/s"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_SLIDER_MAX_SPEED);
-  printi(F("Slider max: "), ftemp, 3, F("mm/s\n"));
+  Serial1.println(String("Slider max: ") + ftemp + String("mm/s"));
   //ftemp = EEPROM.readFloat(EEPROM_ADDRESS_HALL_PAN_OFFSET);
   //printi(F("Pan offset: "), ftemp, 3, F("º\n"));
   //ftemp = EEPROM.readFloat(EEPROM_ADDRESS_HALL_TILT_OFFSET);
@@ -709,17 +766,17 @@ void printEEPROM(void) {
   //printi(F("Angle between pics: "), ftemp, 3, F(" º\n"));
   //ltemp = EEPROM.readFloat(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY);
   //printi(F("Delay between pics: "), ltemp, F("ms\n"));
-  printi(F("Pan invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
-  printi(F("Tilt invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
-  printi(F("Slider invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER), F("\n"));
+  Serial1.println(String("Pan invert: ") + EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
+  Serial1.println(String("Tilt invert: ") + EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
+  Serial1.println(String("Slider invert: ") + EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER) + String("\n"));
   //printi(F("Homing mode: "), EEPROM.read(EEPROM_ADDRESS_HOMING_MODE));
   //printi(F("Accel enable: "), EEPROM.read(EEPROM_ADDRESS_ACCELERATION_ENABLE));
   ftemp = EEPROM.read(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY);
-  printi(F("Pan accel delay: "), ftemp, 3, F("us\n"));
+  Serial1.println(String("Pan accel delay: ") + ftemp + String("us"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY);
-  printi(F("Tilt accel delay: "), ftemp, 3, F("us\n"));
+  Serial1.println(String("Tilt accel delay: ") + ftemp + String("us"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY);
-  printi(F("Slider accel delay: "), ftemp, 3, F("us\n"));
+  Serial1.println(String("Slider accel delay: ") + ftemp + String("us"));
 }
 
 
@@ -885,11 +942,11 @@ void setEEPROMVariables(void) {
 void toggleAcceleration(void) {
   if (acceleration_enable_state == 0) {
     acceleration_enable_state = 1;
-    printi(F("Accel enabled.\n"));
+    Serial1.println(String("Accel enabled."));
   }
   else {
     acceleration_enable_state = 0;
-    printi(F("Accel disabled.\n"));
+    Serial1.println(String("Accel disabled."));
   }
 }
 
@@ -914,9 +971,9 @@ void Serial1Data(void) {
     short tiltStepSpeed = (Serial1.read() << 8) + Serial1.read();
 
     if ( DEBUG1 ) {
-      printi(sliderStepSpeed, F(" , "));
-      printi(panStepSpeed, F(" , "));
-      printi(tiltStepSpeed, F("\n"));
+      Serial1.print(sliderStepSpeed + String(" , "));
+      Serial1.print(panStepSpeed + String(" , "));
+      Serial1.println(tiltStepSpeed);
     }
 
     sliderStepSpeed = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_max_speed)), sliderMillimetresToSteps(slider_max_speed));
@@ -1003,17 +1060,17 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_PAN_ACCEL_INCREMENT_DELAY: {
         pan_accel_increment_us = (Serial1CommandValueInt >= 0) ? Serial1CommandValueInt : 0;
-        printi(F("Pan accel delay: "), pan_accel_increment_us, 3, F("us\n"));
+        Serial1.println(String("Pan accel delay: ") + pan_accel_increment_us + String("us"));
       }
       break;
     case INSTRUCTION_TILT_ACCEL_INCREMENT_DELAY: {
         tilt_accel_increment_us = (Serial1CommandValueInt >= 0) ? Serial1CommandValueInt : 0;
-        printi(F("Tilt accel delay: "), tilt_accel_increment_us, 3, F("us\n"));
+        Serial1.println(String("Tilt accel delay: ") + tilt_accel_increment_us + String("us"));
       }
       break;
     case INSTRUCTION_SLIDER_ACCEL_INCREMENT_DELAY: {
         slider_accel_increment_us = (Serial1CommandValueInt >= 0) ? Serial1CommandValueInt : 0;
-        printi(F("Slider accel delay: "), slider_accel_increment_us, 3, F("us\n"));
+        Serial1.println(String("Slider accel delay: ") + slider_accel_increment_us + String("us"));
       }
       break;
     case INSTRUCTION_ACCEL_ENABLE: {
@@ -1022,6 +1079,7 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_SLIDER_MILLIMETRES: {
         sliderMoveTo(Serial1CommandValueFloat);
+        Serial1.println(String("Slider mm set  : ") + sliderMillimetresToSteps(slider_max_speed));
       }
       break;
     case INSTRUCTION_INVERT_SLIDER: {
@@ -1038,7 +1096,7 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_SAVE_TO_EEPROM: {
         saveEEPROM();
-        printi(F("Saved to EEPROM\n"));
+        Serial1.println(String("Saved to EEPROM"));
       }
       break;
     case INSTRUCTION_DEBUG_STATUS: {
@@ -1047,10 +1105,12 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_PAN_DEGREES: {
         panDegrees(Serial1CommandValueFloat);
+       //Serial1.println(String("PanDegrees set : ") + panDegreesToSteps(pan_max_speed));
       }
       break;
     case INSTRUCTION_TILT_DEGREES: {
         tiltDegrees(Serial1CommandValueFloat);
+        //Serial1.println(String("TiltDegrees set: ") + tiltDegreesToSteps(tilt_max_speed));
       }
       break;
     case INSTRUCTION_ENABLE: {
@@ -1062,21 +1122,21 @@ void Serial1Data(void) {
     //  }
     //  break;
     case INSTRUCTION_SET_PAN_SPEED: {
-        printi(F("Max pan speed: "), Serial1CommandValueFloat, 1, "º/s.\n");
+        Serial1.println(String("Max pan speed: ") + Serial1CommandValueFloat + String("º/s."));
         pan_max_speed = Serial1CommandValueFloat;
         stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-        printi(F("Max pan speed set as: "), panDegreesToSteps(pan_max_speed), 1, "\n\n");
+        Serial1.println(String("Max pan speed set as: ") + panDegreesToSteps(pan_max_speed) + String("\n\n"));
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED: {
-        printi(F("Max tilt speed: "), Serial1CommandValueFloat, 1, "º/s.\n");
+        Serial1.println(String("Max tilt speed: ") + Serial1CommandValueFloat + String("º/s."));
         tilt_max_speed = Serial1CommandValueFloat;
         stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
         //printi(F("Max tilt speed set as: "), tiltDegreesToSteps(tilt_max_speed), 1, "\n\n");
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
-        printi(F("Max slider speed: "), Serial1CommandValueFloat, 1, "mm/s.\n");
+        Serial1.println(String("Max slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
         slider_max_speed = Serial1CommandValueFloat;
         stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
         //printi(F("Max slider speed set as: "), (sliderMillimetresToSteps(slider_max_speed)), 1, "\n\n");
@@ -1105,7 +1165,7 @@ void Serial1Data(void) {
         irsend.sendSony(0x2C9B, 12);
         delay(20);
 
-        printi(F("Zoom IN\n\n"));
+        Serial1.println(String("Zoom IN"));
       }
       break;
     case INSTRUCTION_ZOOM_OUT: {
@@ -1117,7 +1177,7 @@ void Serial1Data(void) {
         irsend.sendSony(0x6C9B, 12);
         delay(20);
 
-        printi(F("Zoom OUT\n\n"));
+        Serial1.println(String("Zoom OUT"));
       }
       break;
   }

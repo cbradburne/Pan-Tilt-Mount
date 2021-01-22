@@ -211,7 +211,7 @@ void setStepMode(int newMode) { //Step modes for the TMC2208
   stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
   stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
   //step_mode = newMode;
-  Serial1.println(String("Set to ") + step_mode +(" step mode."));
+  Serial1.println(String("Set to ") + step_mode + (" step mode."));
 }
 
 
@@ -390,6 +390,7 @@ void printKeyframeElements(void) {
 
 void debugReport(void) {
   //printi(F("Status\nEnable state: "), enable_state);
+  Serial1.println(String(""));
   Serial1.println(String("Pan angle      : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("º"));
   Serial1.println(String("Tilt angle     : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("º"));
   Serial1.println(String("Slider position: ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String("mm\n"));
@@ -408,9 +409,9 @@ void debugReport(void) {
   //printi(F(VERSION_NUMBER));
   //printEEPROM();
   
-  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
+  //stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
+  //stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
+  //stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
   
   printKeyframeElements();
 }
@@ -966,19 +967,25 @@ void Serial1Data(void) {
         break;
       }
     }
-    short sliderStepSpeed = (Serial1.read() << 8) + Serial1.read();
-    short panStepSpeed = (Serial1.read() << 8) + Serial1.read();
-    short tiltStepSpeed = (Serial1.read() << 8) + Serial1.read();
+    float sliderStepSpeed = (Serial1.read() << 8) + Serial1.read();
+    float panStepSpeed = (Serial1.read() << 8) + Serial1.read();
+    float tiltStepSpeed = (Serial1.read() << 8) + Serial1.read(); // short
 
     if ( DEBUG1 ) {
-      Serial1.print(sliderStepSpeed + String(" , "));
-      Serial1.print(panStepSpeed + String(" , "));
+      Serial1.print(sliderStepSpeed);
+      Serial1.print(" , ");
+      Serial1.print(panStepSpeed);
+      Serial1.print(" , ");
       Serial1.println(tiltStepSpeed);
     }
 
-    sliderStepSpeed = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_max_speed)), sliderMillimetresToSteps(slider_max_speed));
-    panStepSpeed = map(panStepSpeed, -255, 255, -(panDegreesToSteps(pan_max_speed)), panDegreesToSteps(pan_max_speed));
-    tiltStepSpeed = map(tiltStepSpeed, -255, 255, -(tiltDegreesToSteps(tilt_max_speed)), tiltDegreesToSteps(tilt_max_speed));
+    sliderStepSpeed = map(sliderStepSpeed, -255, 255, -1, 1);
+    panStepSpeed = map(panStepSpeed, -255, 255, -1, 1);
+    tiltStepSpeed = map(tiltStepSpeed, -255, 255, -1, 1);
+    
+    //sliderStepSpeed = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_max_speed)), sliderMillimetresToSteps(slider_max_speed));
+    //panStepSpeed = map(panStepSpeed, -255, 255, -(panDegreesToSteps(pan_max_speed)), panDegreesToSteps(pan_max_speed));
+    //tiltStepSpeed = map(tiltStepSpeed, -255, 255, -(tiltDegreesToSteps(tilt_max_speed)), tiltDegreesToSteps(tilt_max_speed));
 
     //stepper_slider.setMaxSpeed(sliderStepSpeed);
     //stepper_pan.setMaxSpeed(panStepSpeed);

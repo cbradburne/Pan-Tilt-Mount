@@ -58,7 +58,7 @@ bool motorRunning = false;
 
 
 void initPanTilt(void) {
-  EEPROM.begin(EEPROM_SIZE);
+  //EEPROM.begin(EEPROM_SIZE);
   Serial.begin(BAUD_RATE);
   pinMode(PIN_MS1, OUTPUT);
   pinMode(PIN_MS2, OUTPUT);
@@ -601,37 +601,37 @@ void invertSliderDirection(bool invert) {
 
 void saveEEPROM(void) {
   EEPROM.write(EEPROM_ADDRESS_HOMING_MODE, homing_mode);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_MODE, step_mode);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_PAN_MAX_SPEED, pan_max_speed);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_TILT_MAX_SPEED, tilt_max_speed);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_SLIDER_MAX_SPEED, slider_max_speed);
-  EEPROM.commit();
-  EEPROM.writeFloat(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
-  EEPROM.commit();
-  EEPROM.writeFloat(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
-  EEPROM.commit();
+  //EEPROM.commit();
+  EEPROM.write(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
+  //EEPROM.commit();
+  EEPROM.write(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_INVERT_PAN, invert_pan);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_INVERT_TILT, invert_tilt);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_INVERT_SLIDER, invert_slider);
-  EEPROM.commit();
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-  EEPROM.commit();
-  EEPROM.writeFloat(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
-  EEPROM.commit();
+  //EEPROM.commit();
+  EEPROM.write(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
+  //EEPROM.commit();
   EEPROM.write(EEPROM_ADDRESS_ACCELERATION_ENABLE, acceleration_enable_state);
-  EEPROM.commit();
-  EEPROM.writeFloat(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, pan_accel_increment_us);
-  EEPROM.commit();
-  EEPROM.writeFloat(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, tilt_accel_increment_us);
-  EEPROM.commit();
-  EEPROM.writeFloat(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY, slider_accel_increment_us);
-  EEPROM.commit();
+  //EEPROM.commit();
+  EEPROM.write(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, pan_accel_increment_us);
+  //EEPROM.commit();
+  EEPROM.write(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, tilt_accel_increment_us);
+  //EEPROM.commit();
+  EEPROM.write(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY, slider_accel_increment_us);
+  //EEPROM.commit();
 }
 
 
@@ -641,7 +641,7 @@ void saveEEPROM(void) {
 void printEEPROM(void) {
   int itemp;
   float ftemp;
-  long ltemp;
+  //long ltemp;
   itemp = EEPROM.read(EEPROM_ADDRESS_MODE);
   printi(F("EEPROM:\nStep mode: "), itemp, F("\n"));
   ftemp = EEPROM.read(EEPROM_ADDRESS_PAN_MAX_SPEED);
@@ -663,11 +663,11 @@ void printEEPROM(void) {
   printi(F("Slider invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER), F("\n"));
   //printi(F("Homing mode: "), EEPROM.read(EEPROM_ADDRESS_HOMING_MODE));
   //printi(F("Accel enable: "), EEPROM.read(EEPROM_ADDRESS_ACCELERATION_ENABLE));
-  ftemp = EEPROM.readFloat(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY);
+  ftemp = EEPROM.read(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY);
   printi(F("Pan accel delay: "), ftemp, 3, F("us\n"));
-  ftemp = EEPROM.readFloat(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY);
+  ftemp = EEPROM.read(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY);
   printi(F("Tilt accel delay: "), ftemp, 3, F("us\n"));
-  ftemp = EEPROM.readFloat(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY);
+  ftemp = EEPROM.read(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY);
   printi(F("Slider accel delay: "), ftemp, 3, F("us\n"));
 }
 
@@ -680,13 +680,13 @@ void setEEPROMVariables(void) {
   pan_max_speed = EEPROM.read(EEPROM_ADDRESS_PAN_MAX_SPEED);
   tilt_max_speed = EEPROM.read(EEPROM_ADDRESS_TILT_MAX_SPEED);
   slider_max_speed = EEPROM.read(EEPROM_ADDRESS_SLIDER_MAX_SPEED);
-  hall_pan_offset_degrees = EEPROM.readFloat(EEPROM_ADDRESS_HALL_PAN_OFFSET);
-  hall_tilt_offset_degrees = EEPROM.readFloat(EEPROM_ADDRESS_HALL_TILT_OFFSET);
+  hall_pan_offset_degrees = EEPROM.read(EEPROM_ADDRESS_HALL_PAN_OFFSET);
+  hall_tilt_offset_degrees = EEPROM.read(EEPROM_ADDRESS_HALL_TILT_OFFSET);
   degrees_per_picture = EEPROM.read(EEPROM_ADDRESS_DEGREES_PER_PICTURE);
-  delay_ms_between_pictures = EEPROM.readFloat(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY);
-  pan_accel_increment_us = EEPROM.readFloat(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY);
-  tilt_accel_increment_us = EEPROM.readFloat(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY);
-  slider_accel_increment_us = EEPROM.readFloat(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY);
+  delay_ms_between_pictures = EEPROM.read(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY);
+  pan_accel_increment_us = EEPROM.read(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY);
+  tilt_accel_increment_us = EEPROM.read(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY);
+  slider_accel_increment_us = EEPROM.read(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY);
   invert_pan = EEPROM.read(EEPROM_ADDRESS_INVERT_PAN);
   invert_tilt = EEPROM.read(EEPROM_ADDRESS_INVERT_TILT);
   invert_slider = EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER);
@@ -1040,12 +1040,12 @@ void serialData(void) {
       }
       break;
     case INSTRUCTION_ZOOM_IN: {
-        irsend.sendSony(0x2C9B, 15);
-        delay(500);
-      }
-      break;
+      irsend.sendSony(0x481, 12);
+      delay(500);
+    }
+    break;
     case INSTRUCTION_ZOOM_OUT: {
-        irsend.sendSony(0x6C9B, 15);
+      irsend.sendSony(0x481, 12);
       delay(500);
     }
     break;

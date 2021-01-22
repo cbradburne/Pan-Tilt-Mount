@@ -1,0 +1,19 @@
+# Syntax Coloring Map Iibrary
+
+# Datatypes (KEYWORD1)
+Iibrary	KEYWORD1
+HSV	KEYWORD1
+RGB	KEYWORD1
+Coordinate	KEYWORD1
+
+# Methods and Functions (KEYWORD2)
+mapNumber	KEYWORD2
+roundMapNumber	KEYWORD2
+printi	KEYWORD2
+serialReadInt	KEYWORD2
+getRandomNumber	KEYWORD2
+degToRads	KEYWORD2
+radsToDeg	KEYWORD2
+hsv2rgb	KEYWORD 2
+
+# Constants (LITERAL1)

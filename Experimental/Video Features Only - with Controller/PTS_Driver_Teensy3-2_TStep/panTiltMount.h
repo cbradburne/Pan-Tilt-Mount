@@ -3,22 +3,22 @@
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-#define BAUD_RATE 57600
-
-//#define PIN_SHUTTER_TRIGGER A1
-#define PIN_PAN_HALL 32         //A3
-#define PIN_TILT_HALL 33        //A4
-#define PIN_SLIDER_HALL 4       //2
-//#define PIN_INPUT_VOLTAGE A5
-#define PIN_ENABLE 23           //12
-#define PIN_MS1 22              //11
-#define PIN_MS2 26              //10
-#define PIN_STEP_SLIDER 17      //4
-#define PIN_DIRECTION_SLIDER 16 //3
-#define PIN_STEP_TILT 18        //6
-#define PIN_DIRECTION_TILT 5    //5
-#define PIN_STEP_PAN 21         //8
-#define PIN_DIRECTION_PAN 19    //7
+#define BAUD_RATE 115200            //57600
+// Different Boards                 ESP32         Nano
+//#define PIN_SHUTTER_TRIGGER //    // --         //A1
+#define PIN_PAN_HALL 6              //32          //A3
+#define PIN_TILT_HALL 7             //33          //A4
+#define PIN_SLIDER_HALL 16          //4           //2
+//#define PIN_INPUT_VOLTAGE //      // --         //A5
+#define PIN_ENABLE 2 //8            //23          //12
+#define PIN_MS1 3 //9               //22          //11
+#define PIN_MS2 4 //10              //26          //10
+#define PIN_STEP_SLIDER 18          //17          //4
+#define PIN_DIRECTION_SLIDER 17     //16          //3
+#define PIN_STEP_TILT 20            //18          //6
+#define PIN_DIRECTION_TILT 19       //5           //5
+#define PIN_STEP_PAN  22            //21          //8
+#define PIN_DIRECTION_PAN 21        //19          //7
 
 #define HALF_STEP 2
 #define QUARTER_STEP 4
@@ -142,10 +142,10 @@ struct LinePoints {
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void initPanTilt(void);
-void serialFlush(void);
+void Serial1Flush(void);
 void enableSteppers(void);
 void setStepMode(int);
-void serialData(void);
+void Serial1Data(void);
 void mainLoop(void);
 void panDegrees(float);
 void tiltDegrees(float);
@@ -177,16 +177,16 @@ void invertPanDirection(bool);
 void invertTiltDirection(bool);
 int setTargetPositions(float, float, float);
 void toggleAutoHoming(void);
-void triggerCameraShutter(void);
-void panoramiclapseInterpolation(float, float, float, float, float, float, float, unsigned long);
-void panoramiclapse(float, unsigned long, int);
+//void triggerCameraShutter(void);
+//void panoramiclapseInterpolation(float, float, float, float, float, float, float, unsigned long);
+//void panoramiclapse(float, unsigned long, int);
 long sliderMillimetresToSteps(float);
 float sliderStepsToMillimetres(long);
 void sliderMoveTo(float);
 void invertSliderDirection(bool);
-void timelapse(unsigned int, unsigned long);
-bool calculateTargetCoordinate(void);
-void interpolateTargetPoint(FloatCoordinate);
+//void timelapse(unsigned int, unsigned long);
+//bool calculateTargetCoordinate(void);
+//void interpolateTargetPoint(FloatCoordinate);
 void toggleAcceleration(void);
 void scaleKeyframeSpeed(float);
 

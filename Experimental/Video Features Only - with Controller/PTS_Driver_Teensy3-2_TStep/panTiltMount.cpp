@@ -98,18 +98,18 @@ void initPanTilt(void) {
   digitalWrite(PIN_ENABLE, LOW); //Enable the stepper drivers
 
   /*
-  rotate_stepperP.overrideAcceleration(5000);
-  rotate_stepperT.overrideAcceleration(5000);
-  rotate_stepperS.overrideAcceleration(50000);
+    rotate_stepperP.overrideAcceleration(5000);
+    rotate_stepperT.overrideAcceleration(5000);
+    rotate_stepperS.overrideAcceleration(50000);
 
-  rotate_stepperP.rotateAsync(stepper_pan);
-  rotate_stepperT.rotateAsync(stepper_tilt);
-  rotate_stepperS.rotateAsync(stepper_slider);
-  rotate_stepperP.overrideSpeed(0.0f);
-  rotate_stepperT.overrideSpeed(0.0f);
-  rotate_stepperS.overrideSpeed(0.0f);
+    rotate_stepperP.rotateAsync(stepper_pan);
+    rotate_stepperT.rotateAsync(stepper_tilt);
+    rotate_stepperS.rotateAsync(stepper_slider);
+    rotate_stepperP.overrideSpeed(0.0f);
+    rotate_stepperT.overrideSpeed(0.0f);
+    rotate_stepperS.overrideSpeed(0.0f);
   */
-  
+
   //rotate_stepperP.overrideAcceleration(pan_accel_increment_us);
   //rotate_stepperT.overrideAcceleration(tilt_accel_increment_us);
   //rotate_stepperS.overrideAcceleration(slider_accel_increment_us);
@@ -463,15 +463,15 @@ void invertPanDirection(bool invert) {
   invert_pan = invert;
   if (invert_pan == 1) {
     stepper_pan.setInverseRotation(true);
-    StepControl multi_stepper;
-    StepControl step_stepperP;
-    RotateControl rotate_stepperP;
+    //StepControl multi_stepper;
+    //StepControl step_stepperP;
+    //RotateControl rotate_stepperP;
   }
   else {
     stepper_pan.setInverseRotation(false);
-    StepControl multi_stepper;
-    StepControl step_stepperP;
-    RotateControl rotate_stepperP;
+    //StepControl multi_stepper;
+    //StepControl step_stepperP;
+    //RotateControl rotate_stepperP;
   }
 }
 
@@ -484,15 +484,15 @@ void invertTiltDirection(bool invert) {
   invert_tilt = invert;
   if (invert_tilt == 1) {
     stepper_tilt.setInverseRotation(true);
-    StepControl multi_stepper;
-    StepControl step_stepperT;
-    RotateControl rotate_stepperT;
+    //StepControl multi_stepper;
+    //StepControl step_stepperT;
+    //RotateControl rotate_stepperT;
   }
   else {
     stepper_tilt.setInverseRotation(false);
-    StepControl multi_stepper;
-    StepControl step_stepperT;
-    RotateControl rotate_stepperT;
+    //StepControl multi_stepper;
+    //StepControl step_stepperT;
+    //RotateControl rotate_stepperT;
   }
 }
 
@@ -505,15 +505,15 @@ void invertSliderDirection(bool invert) {
   invert_slider = invert;
   if (invert_slider == 1) {
     stepper_slider.setInverseRotation(true);
-    StepControl multi_stepper;
-    StepControl step_stepperS;
-    RotateControl rotate_stepperS;
+    //StepControl multi_stepper;
+    //StepControl step_stepperS;
+    //RotateControl rotate_stepperS;
   }
   else {
     stepper_slider.setInverseRotation(false);
-    StepControl multi_stepper;
-    StepControl step_stepperS;
-    RotateControl rotate_stepperS;
+    //StepControl multi_stepper;
+    //StepControl step_stepperS;
+    //RotateControl rotate_stepperS;
   }
 }
 
@@ -595,15 +595,15 @@ void setEEPROMVariables(void) {
   EEPROM.get(EEPROM_ADDRESS_HOMING_MODE, homing_mode);
   EEPROM.get(EEPROM_ADDRESS_ACCELERATION_ENABLE, acceleration_enable_state);
 
-  StepControl multi_stepper;
+  //StepControl multi_stepper;
 
-  StepControl step_stepperP;
-  StepControl step_stepperT;
-  StepControl step_stepperS;
+  //StepControl step_stepperP;
+  //StepControl step_stepperT;
+  //StepControl step_stepperS;
 
-  RotateControl rotate_stepperP;
-  RotateControl rotate_stepperT;
-  RotateControl rotate_stepperS;
+  //RotateControl rotate_stepperP;
+  //RotateControl rotate_stepperT;
+  //RotateControl rotate_stepperS;
 
   //rotate_stepperP.overrideAcceleration(pan_accel_increment_us);
   //rotate_stepperT.overrideAcceleration(tilt_accel_increment_us);
@@ -769,15 +769,12 @@ void Serial1Data(void) {
     float speedFactorT = tiltStepSpeed2 / 2000.0f;
     float speedFactorS = sliderStepSpeed2 / 2000.0f;
 
-    rotate_stepperP.overrideAcceleration(5000);
-    rotate_stepperT.overrideAcceleration(5000);
-    rotate_stepperS.overrideAcceleration(50000);
-
     if (speedFactorS == 0) {
       rotate_stepperS.stopAsync();
     }
     else {
       rotate_stepperS.rotateAsync(stepper_slider);
+      rotate_stepperS.overrideAcceleration(50000);
       rotate_stepperS.overrideSpeed(speedFactorS);
     }
 
@@ -786,6 +783,7 @@ void Serial1Data(void) {
     }
     else {
       rotate_stepperP.rotateAsync(stepper_pan);
+      rotate_stepperP.overrideAcceleration(5000);
       rotate_stepperP.overrideSpeed(speedFactorP);
     }
 
@@ -794,16 +792,8 @@ void Serial1Data(void) {
     }
     else {
       rotate_stepperT.rotateAsync(stepper_tilt);
+      rotate_stepperT.overrideAcceleration(5000);
       rotate_stepperT.overrideSpeed(speedFactorT);
-    }
-
-
-    if ( DEBUG1 ) {
-      //Serial1.print(String("speedFactorP - ") + speedFactorP);
-      //Serial1.print(String(" , "));
-      //Serial1.print(String("speedFactorT - ") + speedFactorT);
-      //Serial1.print(String(" , "));
-      //Serial1.println(String("speedFactorS - ") + speedFactorS);
     }
   }
 
@@ -828,7 +818,9 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_GOPOS1: {
-        moveToIndex(0);
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && rotate_stepperP.isRunning() && !step_stepperT.isRunning() && rotate_stepperT.isRunning() && !step_stepperS.isRunning() && rotate_stepperS.isRunning()) {
+          moveToIndex(0);
+        }
       }
       break;
     case INSTRUCTION_SETPOS2: {
@@ -836,7 +828,9 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_GOPOS2: {
-        moveToIndex(1);
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && rotate_stepperP.isRunning() && !step_stepperT.isRunning() && rotate_stepperT.isRunning() && !step_stepperS.isRunning() && rotate_stepperS.isRunning()) {
+          moveToIndex(1);
+        }
       }
       break;
     case INSTRUCTION_SETPOS3: {
@@ -844,7 +838,9 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_GOPOS3: {
-        moveToIndex(2);
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && rotate_stepperP.isRunning() && !step_stepperT.isRunning() && rotate_stepperT.isRunning() && !step_stepperS.isRunning() && rotate_stepperS.isRunning()) {
+          moveToIndex(2);
+        }
       }
       break;
     case INSTRUCTION_SETPOS4: {
@@ -852,7 +848,9 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_GOPOS4: {
-        moveToIndex(3);
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && rotate_stepperP.isRunning() && !step_stepperT.isRunning() && rotate_stepperT.isRunning() && !step_stepperS.isRunning() && rotate_stepperS.isRunning()) {
+          moveToIndex(3);
+        }
       }
       break;
     case INSTRUCTION_SETPOS5: {
@@ -860,7 +858,9 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_GOPOS5: {
-        moveToIndex(4);
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && rotate_stepperP.isRunning() && !step_stepperT.isRunning() && rotate_stepperT.isRunning() && !step_stepperS.isRunning() && rotate_stepperS.isRunning()) {
+          moveToIndex(4);
+        }
       }
       break;
     case INSTRUCTION_SETPOS6: {
@@ -868,18 +868,19 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_GOPOS6: {
-        moveToIndex(5);
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && rotate_stepperP.isRunning() && !step_stepperT.isRunning() && rotate_stepperT.isRunning() && !step_stepperS.isRunning() && rotate_stepperS.isRunning()) {
+          moveToIndex(5);
+        }
       }
       break;
     case INSTRUCTION_PAN_ACCEL_INCREMENT_DELAY: {
         pan_accel_increment_us = (Serial1CommandValueInt >= 0) ? Serial1CommandValueInt : 0;
         stepper_pan.setAcceleration(pan_accel_increment_us);
         //rotate_stepperP.rotateAsync(stepper_pan);
-        StepControl multi_stepper;
-        StepControl step_stepperP;
+        //StepControl multi_stepper;
+        //StepControl step_stepperP;
         //RotateControl rotate_stepperP;
         //rotate_stepperP.overrideAcceleration(pan_accel_increment_us);
-
         Serial1.println(String("Pan accel delay: ") + pan_accel_increment_us + String(" steps/s²"));
       }
       break;
@@ -887,8 +888,8 @@ void Serial1Data(void) {
         tilt_accel_increment_us = (Serial1CommandValueInt >= 0) ? Serial1CommandValueInt : 0;
         stepper_tilt.setAcceleration(tilt_accel_increment_us);
         //rotate_stepperT.rotateAsync(stepper_tilt);
-        StepControl multi_stepper;
-        StepControl step_stepperT;
+        //StepControl multi_stepper;
+        //StepControl step_stepperT;
         //RotateControl rotate_stepperT;
         //rotate_stepperT.overrideAcceleration(tilt_accel_increment_us);
         Serial1.println(String("Tilt accel delay: ") + tilt_accel_increment_us + String(" steps/s²"));
@@ -898,8 +899,8 @@ void Serial1Data(void) {
         slider_accel_increment_us = (Serial1CommandValueInt >= 0) ? Serial1CommandValueInt : 0;
         stepper_slider.setAcceleration(slider_accel_increment_us);
         //rotate_stepperS.rotateAsync(stepper_slider);
-        StepControl multi_stepper;
-        StepControl step_stepperS;
+        //StepControl multi_stepper;
+        //StepControl step_stepperS;
         //RotateControl rotate_stepperS;
         //rotate_stepperS.overrideAcceleration(slider_accel_increment_us);
         Serial1.println(String("Slider accel delay: ") + slider_accel_increment_us + String(" steps/s²"));
@@ -937,12 +938,12 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_PAN_DEGREES: {
         panDegrees(Serial1CommandValueFloat);
-        //Serial1.println(String("PanDegrees set : ") + panDegreesToSteps(pan_max_speed));
+        Serial1.println(String("PanDegrees set : ") + Serial1CommandValueFloat);
       }
       break;
     case INSTRUCTION_TILT_DEGREES: {
         tiltDegrees(Serial1CommandValueFloat);
-        //Serial1.println(String("TiltDegrees set: ") + tiltDegreesToSteps(tilt_max_speed));
+        Serial1.println(String("TiltDegrees set: ") + Serial1CommandValueFloat);
       }
       break;
     case INSTRUCTION_ENABLE: {
@@ -957,10 +958,11 @@ void Serial1Data(void) {
         Serial1.println(String("Max pan speed: ") + Serial1CommandValueFloat + String("º/s."));
         pan_max_speed = Serial1CommandValueFloat;
         stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-        //rotate_stepperP.rotateAsync(stepper_pan);
-        StepControl multi_stepper;
-        StepControl step_stepperP;
-        RotateControl rotate_stepperP;
+        /*
+          StepControl multi_stepper;
+          StepControl step_stepperP;
+          RotateControl rotate_stepperP;
+        */
         Serial1.println(String("Max pan speed set as: ") + panDegreesToSteps(pan_max_speed) + String("\n\n"));
       }
       break;
@@ -968,22 +970,24 @@ void Serial1Data(void) {
         Serial1.println(String("Max tilt speed: ") + Serial1CommandValueFloat + String("º/s."));
         tilt_max_speed = Serial1CommandValueFloat;
         stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-        //rotate_stepperT.rotateAsync(stepper_tilt);
-        StepControl multi_stepper;
-        StepControl step_stepperT;
-        RotateControl rotate_stepperT;
-        //printi(F("Max tilt speed set as: "), tiltDegreesToSteps(tilt_max_speed), 1, "\n\n");
+        /*
+          StepControl multi_stepper;
+          StepControl step_stepperT;
+          RotateControl rotate_stepperT;
+        */
+        Serial1.println(String("Max tilt speed set as: ") + tiltDegreesToSteps(tilt_max_speed) + String("\n\n"));
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
         Serial1.println(String("Max slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
         slider_max_speed = Serial1CommandValueFloat;
         stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
-        //rotate_stepperS.rotateAsync(stepper_slider);
-        StepControl multi_stepper;
-        StepControl step_stepperS;
-        RotateControl rotate_stepperS;
-        //printi(F("Max slider speed set as: "), (sliderMillimetresToSteps(slider_max_speed)), 1, "\n\n");
+        /*
+          StepControl multi_stepper;
+          StepControl step_stepperS;
+          RotateControl rotate_stepperS;
+        */
+        Serial1.println(String("Max slider speed set as: ") + (sliderMillimetresToSteps(slider_max_speed) + String("\n\n"));
       }
       break;
     //case INSTRUCTION_CALCULATE_TARGET_POINT: {
@@ -1034,8 +1038,6 @@ void Serial1Data(void) {
 void mainLoop(void) {
   while (1) {
     if (Serial1.available()) Serial1Data();
-    //multi_stepper.run();
-    //runRemote();
   }
 }
 

@@ -42,9 +42,15 @@ byte invert_pan = 0; //Variables to invert the direction of the axis. Note: Thes
 byte invert_tilt = 0;
 byte invert_slider = 0;
 byte homing_mode = 0; //Note: Gets set from the saved EEPROM value on startup
-float pan_max_speed = 20; //degrees/second. Note: Gets set from the saved EEPROM value on startup.
-float tilt_max_speed = 20; //degrees/second.
-float slider_max_speed = 40; //mm/second
+float pan_max_speed = 20;     //degrees/second. Note: Gets set from the saved EEPROM value on startup.
+float tilt_max_speed = 20;    //degrees/second.
+float slider_max_speed = 40;  //mm/second.
+float pan_fast_speed = 20;    //degrees/second.
+float tilt_fast_speed = 20;   //degrees/second.
+float slider_fast_speed = 60; //mm/second.
+float pan_slow_speed = 5;    //degrees/second.
+float tilt_slow_speed = 5;   //degrees/second.
+float slider_slow_speed = 20; //mm/second.
 long target_position[3]; //Array to store stepper motor step counts
 long start_position[3];
 float final_position[3];
@@ -422,6 +428,8 @@ void moveToIndex(int index) {
   //stepper_pan.setMaxSpeed(initialPanSpeed);
   //stepper_tilt.setMaxSpeed(initialTiltSpeed);
   //stepper_slider.setMaxSpeed(initialSliderSpeed);
+
+
 }
 
 
@@ -435,7 +443,6 @@ void executeMoves(int repeat) {
     }
   }
 }
-
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -579,10 +586,10 @@ void setEEPROMVariables(void) {
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-  //From the first two keyframes the intercept of where the camera is directed is calculated.
-  //The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It wuld be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
-  //The intercept of the vectorand plane are then calculated to give the X, Y, Z coordinates of the point the camera was pointed at in both keyframes. (The second keyframe will ignore the tilt value and calculate it based on the first keyframes vector.)
-  bool calculateTargetCoordinate(void) {
+//From the first two keyframes the intercept of where the camera is directed is calculated.
+//The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It wuld be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
+//The intercept of the vectorand plane are then calculated to give the X, Y, Z coordinates of the point the camera was pointed at in both keyframes. (The second keyframe will ignore the tilt value and calculate it based on the first keyframes vector.)
+bool calculateTargetCoordinate(void) {
   float m1, c1, m2, c2;
 
   LinePoints line0;
@@ -630,13 +637,13 @@ void setEEPROMVariables(void) {
     return false;
   }
   return true;
-  }
+}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat) { //The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
-  if (keyframe_elements < 2) {
+  if (keyframe_elements < 1) {
     Serial1.println(String("Not enough keyframes recorded\n"));
     return; //check there are posions to move to
   }
@@ -672,11 +679,12 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat) { //The fir
   while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
     currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
     if (currentSliderPosMM != previousSliderPosMM) {
-      previousSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
+      previousSliderPosMM = currentSliderPosMM;
 
       //x = targetPoint.x - (sliderStartPos + increment * i);
       panAngle = radsToDeg(atan2(targetPoint.y, x));
       tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+
       //setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
       stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
       stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
@@ -741,11 +749,11 @@ void Serial1Data(void) {
   char instruction = Serial1.read();
   if (instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED) {
     int count = 0;
-    while (Serial1.available() < 6) {                      //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
+    while (Serial1.available() < 6) {                       //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
       delayMicroseconds(200);
       count++;
       if (count > 100) {
-        Serial1Flush();                            //  Clear the Serial1 buffer
+        Serial1Flush();                                     //  Clear the Serial1 buffer
         break;
       }
     }
@@ -773,8 +781,9 @@ void Serial1Data(void) {
       rotate_stepperS.stopAsync();
     }
     else {
+      //Serial1.println(String("speedFactorS - ") + speedFactorS);
       rotate_stepperS.rotateAsync(stepper_slider);
-      rotate_stepperS.overrideAcceleration(50000);
+      rotate_stepperS.overrideAcceleration(10);
       rotate_stepperS.overrideSpeed(speedFactorS);
     }
 
@@ -782,8 +791,9 @@ void Serial1Data(void) {
       rotate_stepperP.stopAsync();
     }
     else {
+      //Serial1.println(String("speedFactorP - ") + speedFactorP);
       rotate_stepperP.rotateAsync(stepper_pan);
-      rotate_stepperP.overrideAcceleration(5000);
+      rotate_stepperP.overrideAcceleration(100);
       rotate_stepperP.overrideSpeed(speedFactorP);
     }
 
@@ -791,8 +801,9 @@ void Serial1Data(void) {
       rotate_stepperT.stopAsync();
     }
     else {
+      //Serial1.println(String("speedFactorT - ") + speedFactorT);
       rotate_stepperT.rotateAsync(stepper_tilt);
-      rotate_stepperT.overrideAcceleration(5000);
+      rotate_stepperT.overrideAcceleration(100);
       rotate_stepperT.overrideSpeed(speedFactorT);
     }
   }
@@ -870,6 +881,24 @@ void Serial1Data(void) {
     case INSTRUCTION_GOPOS6: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           moveToIndex(5);
+        }
+      }
+      break;
+    case INSTRUCTION_SET_FAST_SPEED: {
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_fast_speed));
+          stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_fast_speed));
+          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_fast_speed));
+          Serial1.println(String("#V"));
+        }
+      }
+      break;
+    case INSTRUCTION_SET_SLOW_SPEED: {
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_slow_speed));
+          stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_slow_speed));
+          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_slow_speed));
+          Serial1.println(String("#v"));
         }
       }
       break;
@@ -953,27 +982,27 @@ void Serial1Data(void) {
     case INSTRUCTION_SET_PAN_SPEED: {
         Serial1.println(String("Max pan speed: ") + Serial1CommandValueFloat + String("º/s."));
         pan_max_speed = Serial1CommandValueFloat;
-        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-        stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-        //}
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
+        }
         Serial1.println(String("Max pan speed set as: ") + panDegreesToSteps(pan_max_speed) + String("\n\n"));
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED: {
         Serial1.println(String("Max tilt speed: ") + Serial1CommandValueFloat + String("º/s."));
         tilt_max_speed = Serial1CommandValueFloat;
-        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-        stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-        //}
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
+        }
         Serial1.println(String("Max tilt speed set as: ") + tiltDegreesToSteps(tilt_max_speed) + String("\n\n"));
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
         Serial1.println(String("Max slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
         slider_max_speed = Serial1CommandValueFloat;
-        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-        stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
-        //}
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
+        }
         Serial1.println(String("Max slider speed set as: ") + sliderMillimetresToSteps(slider_max_speed) + String("\n\n"));
       }
       break;
@@ -1003,7 +1032,7 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_ZOOM_OUT: {
-        irsend.sendSony(0x6C9B, 12);
+        irsend.sendSony(0x6C9B, 12);   // test with hi-fi 0x481  // camera zoom out 0x6C9B
         delay(20);
         irsend.sendSony(0x6C9B, 12);
         delay(20);

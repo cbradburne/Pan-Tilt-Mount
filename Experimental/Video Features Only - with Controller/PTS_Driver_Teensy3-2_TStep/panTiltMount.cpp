@@ -632,7 +632,7 @@ bool calculateTargetCoordinate(void) {
 
 
 void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
-  if (keyframe_elements < 1) {
+  if (1 == 0) {
     Serial1.println(String("Not enough keyframes recorded\n"));
     return; //check there are posions to move to
   }
@@ -646,25 +646,25 @@ void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyfr
   float sliderTravelMM = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
   int ABSsliderTravelMM = abs(sliderTravelMM);
   float directionMultiplier = sliderTravelMM / ABSsliderTravelMM;         //  Will always be either 1 or -1, direction multiplier    not (size of interpolation increments in mm)
+  /*
+    for (int i = 0; i <= ABSsliderTravelMM; i++) {
+      x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
+      panAngle = radsToDeg(atan2(targetPoint.y, x));
+      tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
 
-  for (int i = 0; i <= ABSsliderTravelMM; i++) {
-    x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
-    panAngle = radsToDeg(atan2(targetPoint.y, x));
-    tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+      stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
+      stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
+      stepper_slider.setTargetAbs(sliderMillimetresToSteps(sliderStartPosMM + directionMultiplier * i));
 
-    stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
-    stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
-    stepper_slider.setTargetAbs(sliderMillimetresToSteps(sliderStartPosMM + directionMultiplier * i));
+      multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
+    }
+
+    stepper_pan.setTargetAbs(keyframe_array[1].panStepCount);
+    stepper_tilt.setTargetAbs(keyframe_array[1].tiltStepCount);
+    stepper_slider.setTargetAbs(keyframe_array[1].sliderStepCount);
 
     multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
-  }
-
-  stepper_pan.setTargetAbs(keyframe_array[1].panStepCount);
-  stepper_tilt.setTargetAbs(keyframe_array[1].tiltStepCount);
-  stepper_slider.setTargetAbs(keyframe_array[1].sliderStepCount);
-
-  multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
-
+  */
   /*
     x = targetPoint.x - sliderEndPosMM;
     panAngle = radsToDeg(atan2(targetPoint.y, x));
@@ -678,29 +678,30 @@ void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyfr
   */
 
 
-  /*
-    float currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
-    float previousSliderPosMM = currentSliderPosMM;
 
-    final_position[0] = keyframe_array[1].panStepCount;
-    final_position[1] = keyframe_array[1].tiltStepCount;
-    final_position[2] = keyframe_array[1].sliderStepCount;
+  long currentSliderPosMM = (long)sliderStepsToMillimetres(stepper_slider.getPosition());
+  long previousSliderPosMM = currentSliderPosMM;
 
-    rotate_stepperP.rotateAsync(stepper_pan);
-    rotate_stepperP.overrideSpeed(0.0f);
+  final_position[0] = keyframe_array[1].panStepCount;
+  final_position[1] = keyframe_array[1].tiltStepCount;
+  final_position[2] = keyframe_array[1].sliderStepCount;
 
-    rotate_stepperT.rotateAsync(stepper_tilt);
-    rotate_stepperT.overrideSpeed(0.0f);
+  rotate_stepperP.rotateAsync(stepper_pan);
+  rotate_stepperP.overrideSpeed(0.0f);
 
-    stepper_slider.setTargetAbs(final_position[2]);
-    step_stepperS.moveAsync(stepper_slider);
+  rotate_stepperT.rotateAsync(stepper_tilt);
+  rotate_stepperT.overrideSpeed(0.0f);
 
-    while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
+  stepper_slider.setTargetAbs(final_position[2]);
+  step_stepperS.moveAsync(stepper_slider);
+
+  while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
     currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
     if (currentSliderPosMM != previousSliderPosMM) {
       previousSliderPosMM = currentSliderPosMM;
 
       //x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
+      x = targetPoint.x - (sliderStartPosMM + previousSliderPosMM);
       panAngle = radsToDeg(atan2(targetPoint.y, x));
       tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
 
@@ -717,11 +718,11 @@ void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyfr
       rotate_stepperP.overrideSpeed(factorP); // set new speed
       rotate_stepperT.overrideSpeed(factorT); // set new speed
     }
-    }
-    step_stepperS.stopAsync();
-    rotate_stepperP.stopAsync();
-    rotate_stepperT.stopAsync();
-  */
+  }
+  step_stepperS.stopAsync();
+  rotate_stepperP.stopAsync();
+  rotate_stepperT.stopAsync();
+
 }
 
 

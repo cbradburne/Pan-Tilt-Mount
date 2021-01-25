@@ -409,14 +409,6 @@ void moveToIndex(int index) {
   stepper_tilt.setTargetAbs(keyframe_array[index].tiltStepCount);
   stepper_slider.setTargetAbs(keyframe_array[index].sliderStepCount);
 
-  //float initialPanSpeed = panDegreesToSteps(pan_max_speed);
-  //float initialTiltSpeed = tiltDegreesToSteps(tilt_max_speed);
-  //float initialSliderSpeed = sliderMillimetresToSteps(slider_max_speed);
-
-  //stepper_pan.setMaxSpeed(keyframe_array[index].panSpeed);
-  //stepper_tilt.setMaxSpeed(keyframe_array[index].tiltSpeed);
-  //stepper_slider.setMaxSpeed(keyframe_array[index].sliderSpeed);
-
   Serial1.println(String("\nMove to Index: ") + index);
   delay(200);
   Serial1.println(String("panStepCount   : ") + keyframe_array[index].panStepCount);
@@ -424,12 +416,6 @@ void moveToIndex(int index) {
   Serial1.println(String("sliderStepCount: ") + keyframe_array[index].sliderStepCount);
 
   multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
-
-  //stepper_pan.setMaxSpeed(initialPanSpeed);
-  //stepper_tilt.setMaxSpeed(initialTiltSpeed);
-  //stepper_slider.setMaxSpeed(initialSliderSpeed);
-
-
 }
 
 
@@ -590,7 +576,10 @@ void setEEPROMVariables(void) {
 //The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It wuld be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
 //The intercept of the vectorand plane are then calculated to give the X, Y, Z coordinates of the point the camera was pointed at in both keyframes. (The second keyframe will ignore the tilt value and calculate it based on the first keyframes vector.)
 bool calculateTargetCoordinate(void) {
-  float m1, c1, m2, c2;
+  float m1 = 0;
+  float c1 = 0;
+  float m2 = 0;
+  float c2 = 0;
 
   LinePoints line0;
   line0.x0 = sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
@@ -624,7 +613,7 @@ bool calculateTargetCoordinate(void) {
   }
   else {
     if (m1 == m2) { //If the angle of the slope of both lines are the same they are parallel and cannot intercept.
-      Serial1.println(String("Positions do not intersect."));
+      Serial1.println(String("Positions do not intersect. Lines are parallel."));
       return false;
     }
     intercept.x = (c2 - c1) / (m1 - m2);
@@ -633,7 +622,7 @@ bool calculateTargetCoordinate(void) {
   intercept.z = tan(degToRads(tiltStepsToDegrees(keyframe_array[0].tiltStepCount))) * sqrt(pow(intercept.x - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount), 2) + pow(intercept.y, 2));
   if (((panStepsToDegrees(keyframe_array[0].panStepCount) > 0 && panStepsToDegrees(keyframe_array[1].panStepCount) > 0) && intercept.y < 0)
       || ((panStepsToDegrees(keyframe_array[0].panStepCount) < 0 && panStepsToDegrees(keyframe_array[1].panStepCount) < 0) && intercept.y > 0) || intercept.y == 0) { //Checks that the intercept point is in the direction the camera was pointing and not on the opposite side behind the camera.
-    Serial1.println(String("Invalid intercept.\n"));
+    Serial1.println(String("Invalid intercept."));
     return false;
   }
   return true;
@@ -642,50 +631,80 @@ bool calculateTargetCoordinate(void) {
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat) { //The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
+void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
   if (keyframe_elements < 1) {
     Serial1.println(String("Not enough keyframes recorded\n"));
     return; //check there are posions to move to
   }
 
-  //float sliderStartPos = sliderStepsToMillimetres(keyframe_array[0].sliderStepCount); //slider start position
-  //float sliderEndPos = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount);
+  float sliderStartPosMM = sliderStepsToMillimetres(keyframe_array[0].sliderStepCount); //slider start position
+  float sliderEndPosMM = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount);
   float panAngle = 0;
   float tiltAngle = 0;
   float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
   float ySqared = pow(targetPoint.y, 2);
-  //float sliderTravel = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
-  //int numberOfIncrements = abs(sliderTravel);
-  //float increment = sliderTravel / numberOfIncrements;//size of interpolation increments in mm
+  float sliderTravelMM = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
+  int ABSsliderTravelMM = abs(sliderTravelMM);
+  float directionMultiplier = sliderTravelMM / ABSsliderTravelMM;         //  Will always be either 1 or -1, direction multiplier    not (size of interpolation increments in mm)
 
-  float currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
-  float previousSliderPosMM = 0;
-  //multi_stepper.rotateAsync(stepper_slider);
+  for (int i = 0; i <= ABSsliderTravelMM; i++) {
+    x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
+    panAngle = radsToDeg(atan2(targetPoint.y, x));
+    tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
 
-  final_position[0] = keyframe_array[1].panStepCount;
-  final_position[1] = keyframe_array[1].tiltStepCount;
-  final_position[2] = keyframe_array[1].sliderStepCount;
+    stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
+    stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
+    stepper_slider.setTargetAbs(sliderMillimetresToSteps(sliderStartPosMM + directionMultiplier * i));
 
-  rotate_stepperS.rotateAsync(stepper_slider);
-  rotate_stepperP.rotateAsync(stepper_pan);
-  rotate_stepperT.rotateAsync(stepper_tilt);
+    multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
+  }
 
-  rotate_stepperS.overrideSpeed(1.0f);
-  rotate_stepperP.overrideSpeed(0.0f);
-  rotate_stepperT.overrideSpeed(0.0f);
+  stepper_pan.setTargetAbs(keyframe_array[1].panStepCount);
+  stepper_tilt.setTargetAbs(keyframe_array[1].tiltStepCount);
+  stepper_slider.setTargetAbs(keyframe_array[1].sliderStepCount);
 
-  //for (int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++) {
-  //for (int i = 0; i <= numberOfIncrements; i++) {
-  while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
+  multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
+
+  /*
+    x = targetPoint.x - sliderEndPosMM;
+    panAngle = radsToDeg(atan2(targetPoint.y, x));
+    tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+
+    stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
+    stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
+    stepper_slider.setTargetAbs(sliderMillimetresToSteps(sliderEndPosMM));
+
+    multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
+  */
+
+
+  /*
+    float currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
+    float previousSliderPosMM = currentSliderPosMM;
+
+    final_position[0] = keyframe_array[1].panStepCount;
+    final_position[1] = keyframe_array[1].tiltStepCount;
+    final_position[2] = keyframe_array[1].sliderStepCount;
+
+    rotate_stepperP.rotateAsync(stepper_pan);
+    rotate_stepperP.overrideSpeed(0.0f);
+
+    rotate_stepperT.rotateAsync(stepper_tilt);
+    rotate_stepperT.overrideSpeed(0.0f);
+
+    stepper_slider.setTargetAbs(final_position[2]);
+    step_stepperS.moveAsync(stepper_slider);
+
+    while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
     currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
     if (currentSliderPosMM != previousSliderPosMM) {
       previousSliderPosMM = currentSliderPosMM;
 
-      //x = targetPoint.x - (sliderStartPos + increment * i);
+      //x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
       panAngle = radsToDeg(atan2(targetPoint.y, x));
       tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
 
-      //setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
+      //setTargetPositions(panAngle, tiltAngle, sliderStartPosMM + directionMultiplier * i);
       stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
       stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
 
@@ -697,33 +716,12 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat) { //The fir
 
       rotate_stepperP.overrideSpeed(factorP); // set new speed
       rotate_stepperT.overrideSpeed(factorT); // set new speed
-
-      //multi_stepper.runSpeedToPosition();//blocking move to the next position
     }
-  }
-  rotate_stepperS.stopAsync();
-  rotate_stepperP.stopAsync();
-  rotate_stepperT.stopAsync();
-  /*
-    x = targetPoint.x - sliderEndPos;
-    panAngle = radsToDeg(atan2(targetPoint.y, x));
-    tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
-    //setTargetPositions(panAngle, tiltAngle, sliderEndPos);
-    //multi_stepper.runSpeedToPosition();//blocking move to the next position
-
-    for (int i = numberOfIncrements; (i >= 0 && repeat > 0); i--) {
-    x = targetPoint.x - (sliderStartPos + increment * i);
-    panAngle = radsToDeg(atan2(targetPoint.y, x));
-    tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
-    //setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
-    //multi_stepper.runSpeedToPosition();//blocking move to the next position
     }
-    if (repeat > 0) {
-    //setTargetPositions(panAngle, tiltAngle, sliderStartPos);
-    //multi_stepper.runSpeedToPosition();//blocking move to the next position
-    }
-
-    }*/
+    step_stepperS.stopAsync();
+    rotate_stepperP.stopAsync();
+    rotate_stepperT.stopAsync();
+  */
 }
 
 
@@ -1016,7 +1014,7 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_ORIBIT_POINT: {
         if (calculateTargetCoordinate()) {
-          interpolateTargetPoint(intercept, Serial1CommandValueInt);
+          interpolateTargetPoint(intercept);
         }
       }
       break;

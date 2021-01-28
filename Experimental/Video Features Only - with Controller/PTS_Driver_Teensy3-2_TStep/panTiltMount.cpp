@@ -696,27 +696,37 @@ void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyfr
   step_stepperS.moveAsync(stepper_slider);
 
   while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
-    currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
-    if (currentSliderPosMM != previousSliderPosMM) {
-      previousSliderPosMM = currentSliderPosMM;
+  
+  unsigned long currentMillis = millis();
+  unsigned long previousMillis = 0;
+  
+    if (currentMillis - previousMillis > PID_Interval)
+    {
+      previousMillis = currentMillis;
+      
+      currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
+      
+      if (currentSliderPosMM != previousSliderPosMM) {
+        previousSliderPosMM = currentSliderPosMM;
 
-      //x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
-      x = targetPoint.x - (sliderStartPosMM + previousSliderPosMM);
-      panAngle = radsToDeg(atan2(targetPoint.y, x));
-      tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
+        //x = targetPoint.x - (sliderStartPosMM + directionMultiplier * i);
+        x = targetPoint.x - (sliderStartPosMM + previousSliderPosMM);
+        panAngle = radsToDeg(atan2(targetPoint.y, x));
+        tiltAngle = radsToDeg(atan2(targetPoint.z, sqrt(pow(x, 2) + ySqared)));
 
-      //setTargetPositions(panAngle, tiltAngle, sliderStartPosMM + directionMultiplier * i);
-      stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
-      stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
+        //setTargetPositions(panAngle, tiltAngle, sliderStartPosMM + directionMultiplier * i);
+        stepper_pan.setTargetAbs(panDegreesToSteps(panAngle));
+        stepper_tilt.setTargetAbs(tiltDegreesToSteps(tiltAngle));
 
-      float deltaP = ((panAngle - panStepsToDegrees(stepper_pan.getPosition())) * (P / PID_Interval));  // This implements a simple P regulator (can be extended to a PID if necessary)
-      float factorP = std::max(-1.0f, std::min(1.0f, deltaP)); // limit to -1.0..1.0
+        float deltaP = ((panAngle - panStepsToDegrees(stepper_pan.getPosition())) * (P / PID_Interval));  // This implements a simple P regulator (can be extended to a PID if necessary)
+        float factorP = std::max(-1.0f, std::min(1.0f, deltaP)); // limit to -1.0..1.0
 
-      float deltaT = ((tiltAngle - tiltStepsToDegrees(stepper_tilt.getPosition())) * (P / PID_Interval));  // This implements a simple P regulator (can be extended to a PID if necessary)
-      float factorT = std::max(-1.0f, std::min(1.0f, deltaT)); // limit to -1.0..1.0
+        float deltaT = ((tiltAngle - tiltStepsToDegrees(stepper_tilt.getPosition())) * (P / PID_Interval));  // This implements a simple P regulator (can be extended to a PID if necessary)
+        float factorT = std::max(-1.0f, std::min(1.0f, deltaT)); // limit to -1.0..1.0
 
-      rotate_stepperP.overrideSpeed(factorP); // set new speed
-      rotate_stepperT.overrideSpeed(factorT); // set new speed
+        rotate_stepperP.overrideSpeed(factorP); // set new speed
+        rotate_stepperT.overrideSpeed(factorT); // set new speed
+      }
     }
   }
   step_stepperS.stopAsync();

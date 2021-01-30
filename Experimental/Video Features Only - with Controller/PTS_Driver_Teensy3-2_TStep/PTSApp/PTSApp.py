@@ -5,139 +5,16 @@ from serial import *
 from threading import Timer
 import serial.tools.list_ports
 
-ser = ""
+ser = ''
+serBuffer = ''
+backgroundColour = '#3C3C3C'
 
 def sendSerial(sendValue):
-    if (ser == ""):
-        textBox1.insert(END, "Serial port not selected!\n")
+    if (ser == ''):
+        textBox1.insert(END, 'Serial port not selected!\n')
         textBox1.see(END)
     else:
         ser.write(sendValue.encode())
-
-def sendUP1():
-    temp="T1"
-    sendSerial(temp)
-
-def sendDOWN1():
-    temp="T-1"
-    sendSerial(temp)
-
-def sendLEFT1():
-    temp="P0.5"
-    sendSerial(temp)
-
-def sendRIGHT1():
-    temp="P-0.5"
-    sendSerial(temp)
-
-def sendUP10():
-    temp="T10"
-    sendSerial(temp)
-
-def sendDOWN10():
-    temp="T-10"
-    print(temp)
-    sendSerial(temp)
-
-def sendLEFT10():
-    temp="P10"
-    sendSerial(temp)
-
-def sendRIGHT10():
-    temp="P-10"
-    sendSerial(temp)
-
-def sendRESETpos():
-    temp="h"
-    sendSerial(temp)
-
-def sendSR1():
-    temp="L10"
-    sendSerial(temp)
-
-def sendSR10():
-    temp="L100"
-    sendSerial(temp)
-
-def sendSL1():
-    temp="L-10"
-    sendSerial(temp)
-
-def sendSL10():
-    temp="L-100"
-    sendSerial(temp)
-
-def sendZOOMin():
-    temp="Z"
-    sendSerial(temp)
-
-def sendZOOMout():
-    temp="z"
-    sendSerial(temp)
-
-def sendREPORTall():
-    temp="R"
-    sendSerial(temp)
-
-def sendREPORTpos():
-    temp="r"
-    sendSerial(temp)
-
-def sendSPEEDfast():
-    temp="V"
-    sendSerial(temp)
-
-def sendSPEEDslow():
-    temp="v"
-    sendSerial(temp)
-
-def sendSET1():
-    temp="a"
-    sendSerial(temp)
-
-def sendSET2():
-    temp="b"
-    sendSerial(temp)
-
-def sendSET3():
-    temp="c"
-    sendSerial(temp)
-
-def sendSET4():
-    temp="d"
-    sendSerial(temp)
-
-def sendSET5():
-    temp="e"
-    sendSerial(temp)
-
-def sendSET6():
-    temp="f"
-    sendSerial(temp)
-
-def sendGO1():
-    temp="A"
-    sendSerial(temp)
-
-def sendGO2():
-    temp="B"
-    sendSerial(temp)
-
-def sendGO3():
-    temp="C"
-    sendSerial(temp)
-
-def sendGO4():
-    temp="D"
-    sendSerial(temp)
-
-def sendGO5():
-    temp="E"
-    sendSerial(temp)
-
-def sendGO6():
-    temp="F"
-    sendSerial(temp)
 
 def serial_ports():
     ports = serial.tools.list_ports.comports()
@@ -149,6 +26,10 @@ def serial_ports():
 
     return available_ports
 
+def updateComPortlist():
+    list = serial_ports()
+    cb['values'] = list
+
 def on_select(event=None):
     global ser
     serialPortSelect = cb.get()
@@ -156,12 +37,153 @@ def on_select(event=None):
     ser = Serial(serialPortSelect , baudRate, timeout=0, writeTimeout=0) #ensure non-blocking
     readSerial()
 
-mainWindow = tk.Tk() #if master is None else tk.Toplevel(master)
-mainWindow.title("Pan / Tilt Controller")
+def sendUP1():
+    temp='T1'
+    sendSerial(temp)
+
+def sendDOWN1():
+    temp='T-1'
+    sendSerial(temp)
+
+def sendLEFT1():
+    temp='P0.5'
+    sendSerial(temp)
+
+def sendRIGHT1():
+    temp='P-0.5'
+    sendSerial(temp)
+
+def sendUP10():
+    temp='T10'
+    sendSerial(temp)
+
+def sendDOWN10():
+    temp='T-10'
+    print(temp)
+    sendSerial(temp)
+
+def sendLEFT10():
+    temp='P10'
+    sendSerial(temp)
+
+def sendRIGHT10():
+    temp='P-10'
+    sendSerial(temp)
+
+def sendRESETpos():
+    temp='h'
+    sendSerial(temp)
+
+def sendSR1():
+    temp='L10'
+    sendSerial(temp)
+
+def sendSR10():
+    temp='L100'
+    sendSerial(temp)
+
+def sendSL1():
+    temp='L-10'
+    sendSerial(temp)
+
+def sendSL10():
+    temp='L-100'
+    sendSerial(temp)
+
+def sendZOOMin():
+    temp='Z'
+    sendSerial(temp)
+
+def sendZOOMout():
+    temp='z'
+    sendSerial(temp)
+
+def sendREPORTall():
+    temp='R'
+    sendSerial(temp)
+
+def sendREPORTpos():
+    temp='r'
+    sendSerial(temp)
+
+def sendSPEEDfast():
+    temp='V'
+    sendSerial(temp)
+
+def sendSPEEDslow():
+    temp='v'
+    sendSerial(temp)
+
+def sendSET1():
+    temp='a'
+    sendSerial(temp)
+
+def sendSET2():
+    temp='b'
+    sendSerial(temp)
+
+def sendSET3():
+    temp='c'
+    sendSerial(temp)
+
+def sendSET4():
+    temp='d'
+    sendSerial(temp)
+
+def sendSET5():
+    temp='e'
+    sendSerial(temp)
+
+def sendSET6():
+    temp='f'
+    sendSerial(temp)
+
+def sendGO1():
+    temp='A'
+    sendSerial(temp)
+
+def sendGO2():
+    temp='B'
+    sendSerial(temp)
+
+def sendGO3():
+    temp='C'
+    sendSerial(temp)
+
+def sendGO4():
+    temp='D'
+    sendSerial(temp)
+
+def sendGO5():
+    temp='E'
+    sendSerial(temp)
+
+def sendGO6():
+    temp='F'
+    sendSerial(temp)
+
+mainWindow = tk.Tk()
+mainWindow.title('Pan / Tilt Controller')
 mainWindow.configure(height='768', width='800')
-frame_1 = tk.Frame(mainWindow, bg='#3C3C3C')
+frame_1 = tk.Frame(mainWindow, bg=backgroundColour)
 frame_1.configure(height='768', width='800')
 frame_1.place(anchor='nw', x='0', y='0')
+lbl1 = tk.Label(mainWindow, text='Serial Port')
+lbl1.configure(bg=backgroundColour, fg='White')
+lbl1.place(anchor='nw', x='30', y='10')
+cb = ttk.Combobox(frame_1, postcommand=updateComPortlist)
+cb.place(anchor='nw', height='26', width='200', x='30', y='40')
+lbl2 = tk.Label(mainWindow, text='Serial Send:')
+lbl2.configure(bg=backgroundColour, fg='White')
+lbl2.place(anchor='nw', x='30', y='420')
+textINPUT = tk.Entry(frame_1)
+textINPUT.place(anchor='nw', x='30', y='450', height='30', width='740')
+textINPUT.focus_set()
+lbl3 = tk.Label(mainWindow, text='Serial Receive:')
+lbl3.configure(bg=backgroundColour, fg='White')
+lbl3.place(anchor='nw', x='30', y='510')
+textBox1 = tk.Text(frame_1)
+textBox1.place(anchor='nw', x='30', y='540', height='200', width='740')
 buttonSET1 = tk.Button(frame_1)
 buttonSET1.configure(text='SET\n 1')
 buttonSET1.place(anchor='nw', height='60', width='60', x='420', y='80')
@@ -210,22 +232,22 @@ buttonGO6 = tk.Button(frame_1)
 buttonGO6.configure(text='GO\n6')
 buttonGO6.place(anchor='nw', height='60', width='60', x='720', y='20')
 buttonGO6.configure(command=sendGO6)
-buttonUP = tk.Button(frame_1)
-buttonUP.configure(text='1')
-buttonUP.place(anchor='nw', height='60', width='60', x='250', y='130')
-buttonUP.configure(command=sendUP1)
-buttonDOWN2 = tk.Button(frame_1)
-buttonDOWN2.configure(text='1')
-buttonDOWN2.place(anchor='nw', height='60', width='60', x='250', y='270')
-buttonDOWN2.configure(command=sendDOWN1)
-buttonLEFT2 = tk.Button(frame_1)
-buttonLEFT2.configure(text='1')
-buttonLEFT2.place(anchor='nw', height='60', width='60', x='180', y='200')
-buttonLEFT2.configure(command=sendLEFT1)
-buttonRIGHT2 = tk.Button(frame_1)
-buttonRIGHT2.configure(text='1')
-buttonRIGHT2.place(anchor='nw', height='60', width='60', x='320', y='200')
-buttonRIGHT2.configure(command=sendRIGHT1)
+buttonUP1 = tk.Button(frame_1)
+buttonUP1.configure(text='1')
+buttonUP1.place(anchor='nw', height='60', width='60', x='250', y='130')
+buttonUP1.configure(command=sendUP1)
+buttonDOWN1 = tk.Button(frame_1)
+buttonDOWN1.configure(text='1')
+buttonDOWN1.place(anchor='nw', height='60', width='60', x='250', y='270')
+buttonDOWN1.configure(command=sendDOWN1)
+buttonLEFT1 = tk.Button(frame_1)
+buttonLEFT1.configure(text='1')
+buttonLEFT1.place(anchor='nw', height='60', width='60', x='180', y='200')
+buttonLEFT1.configure(command=sendLEFT1)
+buttonRIGHT1 = tk.Button(frame_1)
+buttonRIGHT1.configure(text='1')
+buttonRIGHT1.place(anchor='nw', height='60', width='60', x='320', y='200')
+buttonRIGHT1.configure(command=sendRIGHT1)
 buttonUP10 = tk.Button(frame_1)
 buttonUP10.configure(text='10')
 buttonUP10.place(anchor='nw', height='60', width='60', x='250', y='70')
@@ -270,14 +292,6 @@ buttonZOOMOUT = tk.Button(frame_1)
 buttonZOOMOUT.configure(text='ZOOM\nOUT')
 buttonZOOMOUT.place(anchor='nw', height='60', width='80', x='450', y='350')
 buttonZOOMOUT.configure(command=sendZOOMout)
-buttonREPORTALL = tk.Button(frame_1)
-buttonREPORTALL.configure(text='Report\nALL')
-buttonREPORTALL.place(anchor='nw', height='60', width='80', x='700', y='290')
-buttonREPORTALL.configure(command=sendREPORTall)
-buttonREPORTPOS = tk.Button(frame_1)
-buttonREPORTPOS.configure(text='Report\nPOS')
-buttonREPORTPOS.place(anchor='nw', height='60', width='80', x='700', y='350')
-buttonREPORTPOS.configure(command=sendREPORTpos)
 buttonSPEEDFAST = tk.Button(frame_1)
 buttonSPEEDFAST.configure(text='FAST')
 buttonSPEEDFAST.place(anchor='nw', height='60', width='80', x='30', y='290')
@@ -286,33 +300,31 @@ buttonSPEEDSLOW = tk.Button(frame_1)
 buttonSPEEDSLOW.configure(text='SLOW')
 buttonSPEEDSLOW.place(anchor='nw', height='60', width='80', x='30', y='350')
 buttonSPEEDSLOW.configure(command=sendSPEEDslow)
-textBox1 = tk.Text(frame_1)
-textBox1.configure(height='18', width='105')
-textBox1.place(anchor='nw', x='30', y='500')
-textINPUT = tk.Entry(frame_1)
-textINPUT.place(anchor='nw', x='30', y='430', height='30', width='740')
-textINPUT.focus_set()
-cb = ttk.Combobox(frame_1, values=serial_ports())
-cb.place(anchor='nw', height='26', width='200', x='30', y='30')
-
-serBuffer = ""
+buttonREPORTALL = tk.Button(frame_1)
+buttonREPORTALL.configure(text='Report\nALL')
+buttonREPORTALL.place(anchor='nw', height='60', width='80', x='690', y='290')
+buttonREPORTALL.configure(command=sendREPORTall)
+buttonREPORTPOS = tk.Button(frame_1)
+buttonREPORTPOS.configure(text='Report\nPOS')
+buttonREPORTPOS.place(anchor='nw', height='60', width='80', x='690', y='350')
+buttonREPORTPOS.configure(command=sendREPORTpos)
 
 def readSerial():
     global ser
-    if (ser == ""):
+    if (ser == ''):
         return
     else:
 
         while True:
             c = ser.read()
-            if (c == b'\xb0'): # remove characters that cause error
-                c = "°"
+            if (c == b'\xb0'):                          # remove characters that cause error
+                c = '°'
             elif (c == b'\xb2'):
-                c = "²"
+                c = '²'
             elif (c == b'\xba') or (c == b'\xc2'):
-                c = ""
+                c = ''
             else:
-                c = c.decode("ascii")
+                c = c.decode('ascii')
             
             #was anything read?
             if len(c) == 0:
@@ -326,11 +338,11 @@ def readSerial():
                 c = '' # don't want returns. chuck it
                 
             if c == '\n':
-                serBuffer += "\n" # add the newline to the buffer
+                serBuffer += '\n' # add the newline to the buffer
                 #add the line to the TOP of the log
                 textBox1.insert(END, serBuffer)
                 textBox1.see(END)
-                serBuffer = "" # empty the buffer
+                serBuffer = '' # empty the buffer
             else:
                 serBuffer += c # add to the buffer
         

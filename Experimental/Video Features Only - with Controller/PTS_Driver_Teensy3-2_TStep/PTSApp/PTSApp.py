@@ -46,11 +46,11 @@ def sendDOWN1():
     sendSerial(temp)
 
 def sendLEFT1():
-    temp='P0.5'
+    temp='P-0.5'
     sendSerial(temp)
 
 def sendRIGHT1():
-    temp='P-0.5'
+    temp='P0.5'
     sendSerial(temp)
 
 def sendUP10():
@@ -63,11 +63,11 @@ def sendDOWN10():
     sendSerial(temp)
 
 def sendLEFT10():
-    temp='P10'
+    temp='P-10'
     sendSerial(temp)
 
 def sendRIGHT10():
-    temp='P-10'
+    temp='P10'
     sendSerial(temp)
 
 def sendRESETpos():

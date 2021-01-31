@@ -185,16 +185,16 @@ void setStepMode(int newMode) { //Step modes for the TMC2208
 void panDegrees(float angle) {
   target_position[0] = panDegreesToSteps(angle);
   if (acceleration_enable_state == 0) {
-    Serial1.println(String("Current Pan Position   : ") + stepper_pan.getPosition());
-    Serial1.println(String("Target  Pan Position   : ") + target_position[0]);
+    Serial1.println(String("Current Pan Position   : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("° - ") + stepper_pan.getPosition());
+    Serial1.println(String("Target  Pan Position   : ") + panStepsToDegrees(target_position[0]) + String("° - ") + target_position[0]);
     Serial1.println("");
 
     stepper_pan.setTargetAbs(target_position[0]);
     step_stepperP.move(stepper_pan);
   }
   else {
-    Serial1.println(String("Current Pan Position   : ") + stepper_pan.getPosition());
-    Serial1.println(String("Target  Pan Position   : ") + target_position[0]);
+    Serial1.println(String("Current Pan Position   : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("° - ") + stepper_pan.getPosition());
+    Serial1.println(String("Target  Pan Position   : ") + panStepsToDegrees(target_position[0]) + String("° - ") + target_position[0]);
     Serial1.println("");
 
     stepper_pan.setTargetAbs(target_position[0]);
@@ -209,16 +209,16 @@ void panDegrees(float angle) {
 void panDegreesRel(float angle) {
   target_position[0] = panDegreesToSteps(angle);
   if (acceleration_enable_state == 0) {
-    Serial1.println(String("Current Pan Position   : ") + stepper_pan.getPosition());
-    Serial1.println(String("Relative Pan Position  : ") + target_position[0]);
+    Serial1.println(String("Current Pan Position   : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("° - ") + stepper_pan.getPosition());
+    Serial1.println(String("Relative Pan Position  : ") + panStepsToDegrees((stepper_pan.getPosition() + target_position[0])) + String("° - ") + (stepper_pan.getPosition() + target_position[0]));
     Serial1.println("");
 
     stepper_pan.setTargetRel(target_position[0]);
     step_stepperP.move(stepper_pan);
   }
   else {
-    Serial1.println(String("Current Pan Position   : ") + stepper_pan.getPosition());
-    Serial1.println(String("Relative Pan Position  : ") + target_position[0]);
+    Serial1.println(String("Current Pan Position   : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("° - ") + stepper_pan.getPosition());
+    Serial1.println(String("Relative Pan Position  : ") + panStepsToDegrees((stepper_pan.getPosition() + target_position[0])) + String("° - ") + (stepper_pan.getPosition() + target_position[0]));
     Serial1.println("");
 
     stepper_pan.setTargetRel(target_position[0]);
@@ -233,16 +233,16 @@ void panDegreesRel(float angle) {
 void tiltDegrees(float angle) {
   target_position[1] = tiltDegreesToSteps(angle);
   if (acceleration_enable_state == 0) {
-    Serial1.println(String("Current Tilt Position  : ") + stepper_tilt.getPosition());
-    Serial1.println(String("Relative Tilt Position : ") + target_position[1]);
+    Serial1.println(String("Current Tilt Position  : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("° - ") + stepper_tilt.getPosition());
+    Serial1.println(String("Relative Tilt Position : ") + tiltStepsToDegrees(target_position[1]) + String("° - ") + target_position[1]);
     Serial1.println("");
 
     stepper_tilt.setTargetAbs(target_position[1]);
     step_stepperT.move(stepper_tilt);
   }
   else {
-    Serial1.println(String("Current Tilt Position  : ") + stepper_tilt.getPosition());
-    Serial1.println(String("Relative Tilt Position : ") + target_position[1]);
+    Serial1.println(String("Current Tilt Position  : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("° - ") + stepper_tilt.getPosition());
+    Serial1.println(String("Relative Tilt Position : ") + tiltStepsToDegrees(target_position[1]) + String("° - ") + target_position[1]);
     Serial1.println("");
 
     stepper_tilt.setTargetAbs(target_position[1]);
@@ -257,16 +257,16 @@ void tiltDegrees(float angle) {
 void tiltDegreesRel(float angle) {
   target_position[1] = tiltDegreesToSteps(angle);
   if (acceleration_enable_state == 0) {
-    Serial1.println(String("Current Tilt Position  : ") + stepper_tilt.getPosition());
-    Serial1.println(String("Target  Tilt Position  : ") + target_position[1]);
+    Serial1.println(String("Current Tilt Position  : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("° - ") + stepper_tilt.getPosition());
+    Serial1.println(String("Target  Tilt Position  : ") + tiltStepsToDegrees((stepper_tilt.getPosition() + target_position[1])) + String("° - ") + (stepper_tilt.getPosition() + target_position[1]));
     Serial1.println("");
 
     stepper_tilt.setTargetRel(target_position[1]);
     step_stepperT.move(stepper_tilt);
   }
   else {
-    Serial1.println(String("Current Tilt Position  : ") + stepper_tilt.getPosition());
-    Serial1.println(String("Target  Tilt Position  : ") + target_position[1]);
+    Serial1.println(String("Current Tilt Position  : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("° - ") + stepper_tilt.getPosition());
+    Serial1.println(String("Target  Tilt Position  : ") + tiltStepsToDegrees((stepper_tilt.getPosition() + target_position[1])) + String("° - ") + (stepper_tilt.getPosition() + target_position[1]));
     Serial1.println("");
 
     stepper_tilt.setTargetRel(target_position[1]);
@@ -278,19 +278,19 @@ void tiltDegreesRel(float angle) {
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-void sliderDegreesRel(float angle) {
+void sliderMMRel(float angle) {
   target_position[2] = sliderMillimetresToSteps(angle);
   if (acceleration_enable_state == 0) {
-    Serial1.println(String("Current Slider Position: ") + stepper_slider.getPosition());
-    Serial1.println(String("Target Slider Position : ") + target_position[2]);
+    Serial1.println(String("Current Slider Position: ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm - ") + stepper_slider.getPosition());
+    Serial1.println(String("Target Slider Position : ") + sliderStepsToMillimetres((stepper_slider.getPosition() + target_position[2])) + String(" mm - ") + (stepper_slider.getPosition() + target_position[2]));
     Serial1.println("");
 
     stepper_slider.setTargetRel(target_position[2]);
     step_stepperS.move(stepper_slider);
   }
   else {
-    Serial1.println(String("Current Slider Position: ") + stepper_slider.getPosition());
-    Serial1.println(String("Target Slider Position : ") + target_position[2]);
+    Serial1.println(String("Current Slider Position: ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm - ") + stepper_slider.getPosition());
+    Serial1.println(String("Target Slider Position : ") + sliderStepsToMillimetres((stepper_slider.getPosition() + target_position[2])) + String(" mm - ") + (stepper_slider.getPosition() + target_position[2]));
     Serial1.println("");
 
     stepper_slider.setTargetRel(target_position[2]);
@@ -336,15 +336,15 @@ float sliderStepsToMillimetres(long steps) {
 void sliderMoveTo(float mm) {
   target_position[2] = sliderMillimetresToSteps(mm);
   if (acceleration_enable_state == 0) {
-    Serial1.println(String("Current Slider Position: ") + stepper_slider.getPosition());
-    Serial1.println(String("Target Slider Position : ") + target_position[2]);
+    Serial1.println(String("Current Slider Position: ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm - ") + stepper_slider.getPosition());
+    Serial1.println(String("Target Slider Position : ") + sliderStepsToMillimetres(target_position[2]) + String(" mm - ") + target_position[2]);
 
     stepper_slider.setTargetAbs(target_position[2]);
     step_stepperS.move(stepper_slider);
   }
   else {
-    Serial1.println(String("Current Slider Position: ") + stepper_slider.getPosition());
-    Serial1.println(String("Target Slider Position : ") + target_position[2]);
+    Serial1.println(String("Current Slider Position: ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm - ") + stepper_slider.getPosition());
+    Serial1.println(String("Target Slider Position : ") + sliderStepsToMillimetres(target_position[2]) + String(" mm - ") + target_position[2]);
 
     stepper_slider.setTargetAbs(target_position[2]);
     step_stepperS.move(stepper_slider);
@@ -1069,7 +1069,7 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_SLIDER_MILLIMETRES_REL: {
       if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-          sliderDegreesRel(Serial1CommandValueFloat);
+          sliderMMRel(Serial1CommandValueFloat);
         }
       }
       break;

@@ -1,47 +1,54 @@
 #define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
-#define INPUT_DEADZONE 60
 
 bool DEBUG = false;
 
+const int XdeadRangeLow  = 512 - 60;
+const int XdeadRangeHigh = 512 + 60;
+const int YdeadRangeLow  = 512 - 60;
+const int YdeadRangeHigh = 512 + 60;
+
 const int ledPin1r = 27;
 const int ledPin1g = 25;
-const int swPin1s = 23;
-const int swPin1r = 29;
+const int swPin1r = 23;
+const int swPin1s = 29;
 
 const int ledPin2r = 35;
 const int ledPin2g = 33;
-const int swPin2s = 31;
-const int swPin2r = 37;
+const int swPin2r = 31;
+const int swPin2s = 37;
 
 const int ledPin3r = 43;
 const int ledPin3g = 41;
-const int swPin3s = 39;
-const int swPin3r = 45;
+const int swPin3r = 39;
+const int swPin3s = 45;
 
 const int ledPin4r = 26;
 const int ledPin4g = 24;
-const int swPin4s = 22;
-const int swPin4r = 28;
+const int swPin4r = 22;
+const int swPin4s = 28;
 
 const int ledPin5r = 34;
 const int ledPin5g = 32;
-const int swPin5s = 30;
-const int swPin5r = 36;
+const int swPin5r = 30;
+const int swPin5s = 36;
 
 const int ledPin6r = 42;
 const int ledPin6g = 40;
-const int swPin6s = 38;
-const int swPin6r = 44;
+const int swPin6r = 38;
+const int swPin6s = 44;
 
 const int ledPinSlow = 47;
 const int ledPinFast = 51;
 const int swPinSlow = 49;
 const int swPinFast = 53;
 
-const int ledPinLeft = 46;
-const int ledPinRight = 50;
+//const int ledPinLeft = 46;
+//const int ledPinRight = 50;
 const int swPinLeft = 48;
 const int swPinRight = 52;
+
+const int swPinZoomIn = 46;
+const int swPinZoomOut = 50;
 
 int reading1;
 int reading2;
@@ -59,6 +66,8 @@ int reading13;
 int reading14;
 int reading15;
 int reading16;
+int reading17;
+int reading18;
 
 bool pos1set = false;
 bool pos2set = false;
@@ -75,8 +84,13 @@ bool pos5run = false;
 bool pos6run = false;
 
 bool speedFast = true;
+bool speedFastSet = true;
+
 bool notMoving = true;
 bool sliderPressed = false;
+
+bool zoomPressed = false;
+bool notZooming = true;
 
 int buttonState1;
 int buttonState2;
@@ -94,6 +108,8 @@ int buttonState13;
 int buttonState14;
 int buttonState15;
 int buttonState16;
+int buttonState17;
+int buttonState18;
 
 int lastButtonState1 = HIGH;
 int lastButtonState2 = HIGH;
@@ -111,6 +127,8 @@ int lastButtonState13 = HIGH;
 int lastButtonState14 = HIGH;
 int lastButtonState15 = HIGH;
 int lastButtonState16 = HIGH;
+int lastButtonState17 = HIGH;
+int lastButtonState18 = HIGH;
 
 unsigned long lastDebounceTime1 = 0;
 unsigned long lastDebounceTime2 = 0;
@@ -128,6 +146,8 @@ unsigned long lastDebounceTime13 = 0;
 unsigned long lastDebounceTime14 = 0;
 unsigned long lastDebounceTime15 = 0;
 unsigned long lastDebounceTime16 = 0;
+unsigned long lastDebounceTime17 = 0;
+unsigned long lastDebounceTime18 = 0;
 
 unsigned long debounceDelay = 10;
 
@@ -145,19 +165,16 @@ int Y_max = 1023;
 int out_min = -254;
 int out_max = 254;
 
-const int XdeadRangeLow  = 512 - 50; // arbitrary range
-const int XdeadRangeHigh = 512 + 50; // arbitrary range
-const int YdeadRangeLow  = 512 - 50; // arbitrary range
-const int YdeadRangeHigh = 512 + 50; // arbitrary range
-
 int joyXread;
 int joyX;
 int joyYread;
 int joyY;
 
 void setup() {
-  Serial.begin(57600);
-  Serial3.begin(57600);
+  //Serial.begin(115200);
+  //Serial3.begin(115200);
+  Serial.begin(38400);
+  Serial3.begin(38400);
 
   pinMode(ledPin1r, OUTPUT);
   pinMode(ledPin1g, OUTPUT);
@@ -197,6 +214,9 @@ void setup() {
   pinMode(swPinLeft, INPUT_PULLUP);
   pinMode(swPinRight, INPUT_PULLUP);
 
+  pinMode(swPinZoomIn, INPUT_PULLUP);
+  pinMode(swPinZoomOut, INPUT_PULLUP);
+
   digitalWrite(ledPinSlow, LOW);
   digitalWrite(ledPinFast, HIGH);
 }
@@ -207,30 +227,68 @@ void loop() {
     int inByte = Serial.read();
     Serial3.write(inByte);
   }
-  
-    joyXread = analogRead(A0);
-    if (joyXread < XdeadRangeLow) {
-      XShort = map(joyXread, 0, XdeadRangeLow, out_min, 0);
-    }
-    else if (joyXread > XdeadRangeHigh) {
-      XShort = map(joyXread, XdeadRangeHigh, X_max, 0, out_max);
+
+  //if (Serial3.available()) {        // If anything comes in Serial1 (pins 0 & 1)
+  //  Serial.write(Serial3.read());   // read it and send it out Serial (USB)
+  //}
+
+  if (Serial3.available()) {
+    char instruction = Serial3.read();
+    if (instruction == '#') {
+      int count = 0;
+      while (Serial3.available() < 1) {                       //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
+        delayMicroseconds(200);
+        count++;
+        if (count > 100) {
+          SerialFlush();                                     //  Clear the Serial1 buffer
+          break;
+        }
+      }
+      instruction = Serial3.read();
+      switch (instruction) {
+        case 'v': {                       // speed set slow
+            speedFastSet = false;
+            doLEDs();
+          }
+          break;
+        case 'V': {                       // speed set fast
+            speedFastSet = true;
+            doLEDs();
+          }
+          break;
+      }
     }
     else {
-      XShort = 0; // deadzone around center value
+      //Serial.write(Serial3.read());
+      Serial.write(instruction);
     }
+  }
 
-    joyYread = analogRead(A1);
-    if (joyYread < YdeadRangeLow) {
-      YShort = map(joyYread, 0, YdeadRangeLow, out_min, 0);
-    }
-    else if (joyYread > YdeadRangeHigh) {
-      YShort = map(joyYread, YdeadRangeHigh, Y_max, 0, out_max);
-    }
-    else {
-      YShort = 0; // deadzone around center value
-    }
-  
+  /* ------------------------------------------------- Calculate Joystick ------------------------------------------------- */
 
+  joyXread = analogRead(A0);
+  if (joyXread < XdeadRangeLow) {
+    XShort = map(joyXread, 0, XdeadRangeLow, out_min, 0);
+  }
+  else if (joyXread > XdeadRangeHigh) {
+    XShort = map(joyXread, XdeadRangeHigh, X_max, 0, out_max);
+  }
+  else {
+    XShort = 0; // deadzone around center value
+  }
+
+  joyYread = analogRead(A1);
+  if (joyYread < YdeadRangeLow) {
+    YShort = map(joyYread, 0, YdeadRangeLow, out_min, 0);
+  }
+  else if (joyYread > YdeadRangeHigh) {
+    YShort = map(joyYread, YdeadRangeHigh, Y_max, 0, out_max);
+  }
+  else {
+    YShort = 0; // deadzone around center value
+  }
+
+  /* ------------------------------------------------- Buttons ------------------------------------------------- */
 
   reading1 = digitalRead(swPin1s);
   if (reading1 != lastButtonState1) {
@@ -529,14 +587,17 @@ void loop() {
     if (reading13 != buttonState13) {
       buttonState13 = reading13;
       if (buttonState13 == LOW) {
-        if (speedFast) {
-          sendCharArray((char *)"s5");
+        if (1==1) {                                    // If Fast is set, Send SLOW  (speedFast)
+          /*
+          sendCharArray((char *)"s10");
           delay(50);
-          sendCharArray((char *)"S5");
+          sendCharArray((char *)"S10");
           delay(50);
-          sendCharArray((char *)"X10");
+          sendCharArray((char *)"X30");
           speedFast = false;
           doLEDs();
+          */
+          sendCharArray((char *)"v");
         }
       }
     }
@@ -551,52 +612,63 @@ void loop() {
     if (reading14 != buttonState13) {
       buttonState14 = reading14;
       if (buttonState14 == LOW) {
-        if (!speedFast) {
-          sendCharArray((char *)"s20");
+        if (1==1) {                                   // If Slow is set, Send FAST  (!speedFast)
+          /*
+          sendCharArray((char *)"s30");
           delay(50);
-          sendCharArray((char *)"S20");
+          sendCharArray((char *)"S30");
           delay(50);
-          sendCharArray((char *)"X40");
+          sendCharArray((char *)"X60");
           speedFast = true;
           doLEDs();
+          */
+          sendCharArray((char *)"V");
         }
       }
     }
   }
   lastButtonState14 = reading14;
 
+  /* --------------------------------------------- Send Move Slider Left / Right -------------------------------------------- */
 
   reading15 = digitalRead(swPinLeft);
   reading16 = digitalRead(swPinRight);
   if (!reading15 && reading16 && !sliderPressed) {
     sliderPressed = true;
     notMoving = false;
-    digitalWrite(ledPinLeft, HIGH);
-    digitalWrite(ledPinRight, LOW);
-    //sendCharArray((char *)"<");                   // Go Left
-    ZShort = -127;
+    ZShort = -127;                                          // Go Left
   }
   else if (reading15 && !reading16 && !sliderPressed) {
     sliderPressed = true;
     notMoving = false;
-    digitalWrite(ledPinLeft, LOW);
-    digitalWrite(ledPinRight, HIGH);
-    //sendCharArray((char *)">");                   // Go Right
-    ZShort = 127;
+    ZShort = 127;                                           // Go Right
   }
   if (reading15 && reading16 && !notMoving && sliderPressed) {
     sliderPressed = false;
     notMoving = true;
-    digitalWrite(ledPinLeft, LOW);
-    digitalWrite(ledPinRight, LOW);
-    //sendCharArray((char *)".");                   // Stop L&R
-    ZShort = 0;
+    ZShort = 0;                                             // Stop L&R
   }
 
+  /* --------------------------------------------- Send Zoom In / Out -------------------------------------------- */
 
-  /* ------------------------------------------------- Set LEDs ------------------------------------------------- */
+  reading17 = digitalRead(swPinZoomIn);
+  reading18 = digitalRead(swPinZoomOut);
+  if (!reading17 && reading18 && !zoomPressed) {
+    zoomPressed = true;
+    notZooming = false;
+    sendCharArray((char *)"Z");                             // Zoom In
+  }
+  else if (reading17 && !reading18 && !zoomPressed) {
+    zoomPressed = true;
+    notZooming = false;
+    sendCharArray((char *)"z");                             // Zoom In
+  }
+  if (reading17 && reading18 && !notZooming && zoomPressed) {
+    zoomPressed = false;
+    notZooming = true;                                      //
+  }
 
-
+  /* --------------------------------------------- Send Joystick & Left / Right -------------------------------------------- */
 
   shortVals[0] = ZShort;
   shortVals[1] = XShort;
@@ -613,107 +685,138 @@ void loop() {
     if ( DEBUG ) {
       Serial.print(XShort, DEC);
       Serial.print(" - ");
-      Serial.println(YShort, DEC);
+      Serial.print(YShort, DEC);
+      Serial.print(" - ");
+      Serial.println(ZShort);
     }
   }
 }
+
+/* ------------------------------------------------- Set LEDs ------------------------------------------------- */
 
 void doLEDs() {
   if (pos1set && !pos1run) {
     digitalWrite(ledPin1r, HIGH);
     digitalWrite(ledPin1g, LOW);
-    Serial.println(", 1 - Red, ");
+    if ( DEBUG ) {
+      Serial.println(", 1 - Red, ");
+    }
   }
   if (pos2set && !pos2run) {
     digitalWrite(ledPin2r, HIGH);
     digitalWrite(ledPin2g, LOW);
-    Serial.println(", 2 - Red, ");
+    if ( DEBUG ) {
+      Serial.println(", 2 - Red, ");
+    }
   }
 
   if (pos3set && !pos3run) {
     digitalWrite(ledPin3r, HIGH);
     digitalWrite(ledPin3g, LOW);
-    Serial.println(", 3 - Red, ");
+    if ( DEBUG ) {
+      Serial.println(", 3 - Red, ");
+    }
   }
   if (pos4set && !pos4run) {
     digitalWrite(ledPin4r, HIGH);
     digitalWrite(ledPin4g, LOW);
-    Serial.println(", 4 - Red, ");
+    if ( DEBUG ) {
+      Serial.println(", 4 - Red, ");
+    }
   }
   if (pos5set && !pos5run) {
     digitalWrite(ledPin5r, HIGH);
     digitalWrite(ledPin5g, LOW);
-    Serial.println(", 5 - Red, ");
+    if ( DEBUG ) {
+      Serial.println(", 5 - Red, ");
+    }
   }
   if (pos6set && !pos6run) {
     digitalWrite(ledPin6r, HIGH);
     digitalWrite(ledPin6g, LOW);
-    Serial.println(", 6 - Red, ");
+    if ( DEBUG ) {
+      Serial.println(", 6 - Red, ");
+    }
   }
   if (pos1run) {
     digitalWrite(ledPin1r, LOW);
     digitalWrite(ledPin1g, HIGH);
-    Serial.println(", 1 - Green, ");
+    if ( DEBUG ) {
+      Serial.println(", 1 - Green, ");
+    }
   }
   if (pos2run) {
     digitalWrite(ledPin2r, LOW);
     digitalWrite(ledPin2g, HIGH);
-    Serial.println(", 2 - Green, ");
+    if ( DEBUG ) {
+      Serial.println(", 2 - Green, ");
+    }
   }
   if (pos3run) {
     digitalWrite(ledPin3r, LOW);
     digitalWrite(ledPin3g, HIGH);
-    Serial.println(", 3 - Green, ");
+    if ( DEBUG ) {
+      Serial.println(", 3 - Green, ");
+    }
   }
   if (pos4run) {
     digitalWrite(ledPin4r, LOW);
     digitalWrite(ledPin4g, HIGH);
-    Serial.println(", 4 - Green, ");
+    if ( DEBUG ) {
+      Serial.println(", 4 - Green, ");
+    }
   }
   if (pos5run) {
     digitalWrite(ledPin5r, LOW);
     digitalWrite(ledPin5g, HIGH);
-    Serial.println(", 5 - Green, ");
+    if ( DEBUG ) {
+      Serial.println(", 5 - Green, ");
+    }
   }
   if (pos6run) {
     digitalWrite(ledPin6r, LOW);
     digitalWrite(ledPin6g, HIGH);
-    Serial.println(", 6 - Green, ");
+    if ( DEBUG ) {
+      Serial.println(", 6 - Green, ");
+    }
   }
-  if (speedFast) {
+  if (speedFastSet) {
     digitalWrite(ledPinSlow, LOW);
     digitalWrite(ledPinFast, HIGH);
   }
-  else if (!speedFast) {
+  else if (!speedFastSet) {
     digitalWrite(ledPinSlow, HIGH);
     digitalWrite(ledPinFast, LOW);
   }
 }
 
-void sendCharArray(char *array) {
-  //Serial3.write(array, (int)strlen(array));
+void SerialFlush(void) {
+  while (Serial.available() > 0) {
+    char c = Serial.read();
+  }
+}
 
+void sendCharArray(char *array) {
   int i = 0;
   while (array[i] != 0)
     if ( DEBUG ) {
-      Serial.write((uint8_t)array[i++]);    // Use with ESP32
+      Serial.write((uint8_t)array[i++]);
     }
     else {
-      Serial3.write((uint8_t)array[i++]);    // Use with ESP32
+      Serial3.write((uint8_t)array[i++]);
     }
-  //Serial3.write(array, sizeof(array));   // Non-ESP32
 }
 
 void sendSliderPanTiltStepSpeed(int command, short * arr) {
-  byte data[7];                           // Data array to send
+  byte data[7];                               // Data array to send
 
   data[0] = command;
-  data[1] = (arr[0] >> 8);                // Gets the most significant byte
-  data[2] = (arr[0] & 0xFF);               // Gets the second most significant byte
+  data[1] = (arr[0] >> 8);                    // Gets the most significant byte
+  data[2] = (arr[0] & 0xFF);                  // Gets the second most significant byte
   data[3] = (arr[1] >> 8);
   data[4] = (arr[1] & 0xFF);
   data[5] = (arr[2] >> 8);
-  data[6] = (arr[2] & 0xFF);               // Gets the least significant byte
+  data[6] = (arr[2] & 0xFF);                  // Gets the least significant byte
 
   if ( DEBUG ) {
     Serial.print(data[0], HEX);
@@ -725,7 +828,6 @@ void sendSliderPanTiltStepSpeed(int command, short * arr) {
     Serial.println(data[6], HEX);
   }
   else {
-    Serial3.write(data, sizeof(data));     // Send the command and the 6 bytes of data
+    Serial3.write(data, sizeof(data));        // Send the command and the 6 bytes of data
   }
-  //return 0;                             // Non-ESP32
 }

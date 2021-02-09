@@ -327,25 +327,40 @@ class OptionsUIApp:
                                       self.ui_manager,
                                       object_id='#everything_button')
 
-        self.serial_text_entry = UITextEntryLine(pygame.Rect((930, 60),
-                                                           (250, -1)),
-                                               self.ui_manager,
-                                               object_id='#main_text_entry')
+        self.joystick_label = UILabel(pygame.Rect(540, 10,
+                                                    230, 24),
+                                                    "Joystick",
+                                                    self.ui_manager,
+                                                    object_id='#main_text_entry')
 
-        current_resolution_string = (str(self.options.resolution[0]) +
-                                     'x' +
-                                     str(self.options.resolution[1]))
-        current_serialPort = 'Select Serial Port'
+        self.serial_text_entry = UITextEntryLine(pygame.Rect((930, 95),
+                                                    (250, 35)),
+                                                    self.ui_manager,
+                                                    object_id='#main_text_entry')
+
+        self.serial_port_label = UILabel(pygame.Rect(550, 70,
+                                                    230, 24),
+                                                    "Serial Port",
+                                                    self.ui_manager,
+                                                    object_id='#main_text_entry')
+
+        self.serial_command_label = UILabel(pygame.Rect(870, 70,
+                                                    230, 24),
+                                                    "Serial Command",
+                                                    self.ui_manager,
+                                                    object_id='#main_text_entry')
+
+        current_serialPort = ' - '
         ports = serial.tools.list_ports.comports()
         available_ports = []
         for p in ports:
             available_ports.append(p.device)                        # Append each found serial port to array available_ports
 
         self.drop_down_serial = UIDropDownMenu(available_ports,
-                                            current_serialPort,
-                                            pygame.Rect((620,60),
-                                            (250, 25)),
-                                            self.ui_manager)
+                                                    current_serialPort,
+                                                    pygame.Rect((620,95),
+                                                    (250, 25)),
+                                                    self.ui_manager)
 
         self.serialPortTextBox()
         self.textBoxJoystickName()
@@ -372,7 +387,6 @@ class OptionsUIApp:
 
     def sendDOWN10(self):
         temp='T-10'
-        print(temp)
         self.sendSerial(temp)
 
     def sendLEFT10(self):
@@ -543,16 +557,16 @@ class OptionsUIApp:
 
     def serialPortTextBox(self):
         self.textBoxSerial = UITextBox(serialText,
-                                pygame.Rect((620, 100), (560, 480)),
-                                self.ui_manager,
-                                object_id="#text_box_1")
+                                            pygame.Rect((620, 130), (560, 450)),
+                                            self.ui_manager,
+                                            object_id="#text_box_1")
 
     def textBoxJoystickName(self):
         global joystickName
         self.textBoxJoystickName = UITextBox(joystickName,
-                                pygame.Rect((620, 10), (580, 35)),
-                                self.ui_manager,
-                                object_id="#text_box_1")
+                                            pygame.Rect((620, 30), (560, 35)),
+                                            self.ui_manager,
+                                            object_id="#text_box_1")
 
     def readSerial(self):
         global ser

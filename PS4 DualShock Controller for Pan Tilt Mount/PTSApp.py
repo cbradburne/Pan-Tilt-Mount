@@ -1,4 +1,5 @@
 import pygame
+from pygame.cursors import tri_left
 import pygame_gui
 import time
 import serial.tools.list_ports
@@ -13,7 +14,7 @@ from pygame_gui.elements.ui_text_box import UITextBox
 from serial import *
 from pathlib import Path
 
-baudRate = 57600 #38400
+baudRate = 57600 #57600 or 38400
 ser = ''
 serBuffer = ''
 serialText = ''
@@ -35,15 +36,22 @@ arr = []
 oldAxisX = 0
 oldAxisY = 0
 oldAxisZ = 0
+axisX = 0
+axisY = 0
+axisZ = 0
 data = bytearray(7)
 hat = ()
 oldHatX = 0
 oldHatY = 0
 previousTime = 0
+RED = (255, 0, 0)
+mouseBorder = 360
+radius = 15
+mouseMoving = False
 
 class Options:
     def __init__(self):
-        self.resolution = (1200, 600)
+        self.resolution = (1200, 660)
         self.fullscreen = False
 
 class OptionsUIApp:
@@ -65,6 +73,11 @@ class OptionsUIApp:
         base_path = Path(__file__).parent
         file_path = (base_path / "./theme.json").resolve()
         self.ui_manager = UIManager(self.options.resolution, file_path)
+
+        font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
+        print (file_path)
+        self.ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
+        self.ui_manager.preload_fonts([{'name': 'montserrat', 'style': 'regular'}]) # 'point_size': 12,
 
         self.test_button = None
         self.test_button_2 = None
@@ -122,146 +135,68 @@ class OptionsUIApp:
         self.background_surface = pygame.Surface(self.options.resolution)
         self.background_surface.fill(self.ui_manager.get_theme().get_colour('dark_bg'))
 
-        self.rel_button_L1 = UIButton(pygame.Rect((120, 180),
-                                                    (60, 60)),
-                                                    '.5',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_L10 = UIButton(pygame.Rect((60, 180),
-                                                    (60, 60)),
-                                                    '10',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-                                      
-        self.rel_button_R1 = UIButton(pygame.Rect((240, 180),
-                                                    (60, 60)),
-                                                    '.5',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_R10 = UIButton(pygame.Rect((300, 180),
-                                                    (60, 60)),
-                                                    '10',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_U1 = UIButton(pygame.Rect((180, 120),
-                                                    (60, 60)),
-                                                    '.5',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_U10 = UIButton(pygame.Rect((180, 60),
-                                                    (60, 60)),
-                                                    '10',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_D1 = UIButton(pygame.Rect((180, 240),
-                                                    (60, 60)),
-                                                    '.5',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_D10 = UIButton(pygame.Rect((180, 300),
-                                                    (60, 60)),
-                                                    '10',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_set0 = UIButton(pygame.Rect((190, 190),
-                                                    (40, 40)),
-                                                    '0',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_SL100 = UIButton(pygame.Rect((85, 360),
-                                                    (60, 60)),
-                                                    '100',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_SL10 = UIButton(pygame.Rect((145, 360),
-                                                    (60, 60)),
-                                                    '10',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_SR10 = UIButton(pygame.Rect((215, 360),
-                                                    (60, 60)),
-                                                    '10',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_SR100 = UIButton(pygame.Rect((275, 360),
-                                                    (60, 60)),
-                                                    '100',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_Clear = UIButton(pygame.Rect((110, 440),
+        self.rel_button_Clear = UIButton(pygame.Rect((110, 500),
                                                     (60, 60)),
                                                     'Clear',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_AddPos = UIButton(pygame.Rect((180, 440),
+        self.rel_button_AddPos = UIButton(pygame.Rect((180, 500),
                                                     (60, 60)),
                                                     'ADD',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_EditPos = UIButton(pygame.Rect((250, 440),
+        self.rel_button_EditPos = UIButton(pygame.Rect((250, 500),
                                                     (60, 60)),
                                                     'EDIT',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_ExecMoves = UIButton(pygame.Rect((450, 120),
-                                                    (120, 60)),
-                                                    'Exec. Moves',
-                                                    self.ui_manager,
-                                                    object_id='#everything_button')
-
-        self.rel_button_GOFirst = UIButton(pygame.Rect((85, 500),
+        self.rel_button_GOFirst = UIButton(pygame.Rect((85, 560),
                                                     (60, 60)),
                                                     '< <',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_GOBack = UIButton(pygame.Rect((145, 500),
+        self.rel_button_GOBack = UIButton(pygame.Rect((145, 560),
                                                     (60, 60)),
                                                     '<',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_GOFwd = UIButton(pygame.Rect((215, 500),
+        self.rel_button_GOFwd = UIButton(pygame.Rect((215, 560),
                                                     (60, 60)),
                                                     '>',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_GOLast = UIButton(pygame.Rect((275, 500),
+        self.rel_button_GOLast = UIButton(pygame.Rect((275, 560),
                                                     (60, 60)),
                                                     '> >',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_OrbitPoint = UIButton(pygame.Rect((450, 180),
-                                                    (120, 60)),
+        self.rel_button_ExecMoves = UIButton(pygame.Rect((430, 120),
+                                                    (160, 60)),
+                                                    'Exec. Moves',
+                                                    self.ui_manager,
+                                                    object_id='#everything_button')
+
+        self.rel_button_OrbitPoint = UIButton(pygame.Rect((430, 180),
+                                                    (160, 60)),
                                                     'Orbit Point',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_Timelapse = UIButton(pygame.Rect((450, 240),
-                                                    (120, 60)),
+        self.rel_button_Timelapse = UIButton(pygame.Rect((430, 240),
+                                                    (160, 60)),
                                                     'Timelapse',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
 
-        self.rel_button_PANORAMICLAPSE = UIButton(pygame.Rect((450, 300),
-                                                    (120, 60)),
+        self.rel_button_PANORAMICLAPSE = UIButton(pygame.Rect((430, 300),
+                                                    (160, 60)),
                                                     'Panoramiclapse',
                                                     self.ui_manager,
                                                     object_id='#everything_button')
@@ -310,11 +245,37 @@ class OptionsUIApp:
         self.drop_down_serial = UIDropDownMenu(available_ports,
                                                     current_serialPort,
                                                     pygame.Rect((620,95),
-                                                    (250, 25)),
+                                                    (250, 35)),
                                                     self.ui_manager)
 
         self.serialPortTextBox()
         self.textBoxJoystickName()
+
+        self.joyCircle = pygame.draw.circle(self.window_surface, pygame.Color("blue"), (225,225), radius)
+        self.joyCircle_draging = False
+
+        self.joyCircle.x = 195
+        self.joyCircle.y = 195
+
+        # Generate crosshair
+        self.crosshair = pygame.surface.Surface((30, 30))
+        self.crosshair.fill(pygame.Color("magenta"))
+        pygame.draw.circle(self.crosshair, pygame.Color("blue"), (radius,radius), radius)
+        self.crosshair.set_colorkey(pygame.Color("magenta"))#, pygame.RLEACCEL)
+        #self.crosshair = self.crosshair.convert()
+
+        self.sliderCircle = pygame.draw.circle(self.window_surface, pygame.Color("blue"), (225,415), radius)
+        self.sliderCircle_draging = False
+
+        self.sliderCircle.x = 195
+        self.sliderCircle.y = 405
+
+        # Generate crosshair
+        self.crosshairSlider = pygame.surface.Surface((30, 30))
+        self.crosshairSlider.fill(pygame.Color("magenta"))
+        pygame.draw.circle(self.crosshairSlider, pygame.Color("blue"), (radius,radius), radius)
+        self.crosshairSlider.set_colorkey(pygame.Color("magenta"))#, pygame.RLEACCEL)
+        #self.crosshair = self.crosshair.convert()
 
     def sendUP1(self):
         temp='T1'
@@ -338,7 +299,6 @@ class OptionsUIApp:
 
     def sendDOWN10(self):
         temp='T-10'
-        print(temp)
         self.sendSerial(temp)
 
     def sendLEFT10(self):
@@ -432,7 +392,9 @@ class OptionsUIApp:
         global ser
         global serialText
         if (ser == ''):                                             # Checks to see if com port has been selected
-            serialText = 'Serial port not selected!'
+            serialNotSel = 'Serial port not selected!<br>'
+            self.textBoxSerial.kill()
+            serialText = serialNotSel + serialText
             self.serialPortTextBox()
             #textOUTPUT.insert(END, 'Serial port not selected!\n')
             #textOUTPUT.see(END)
@@ -489,7 +451,7 @@ class OptionsUIApp:
 
     def serialPortTextBox(self):
         self.textBoxSerial = UITextBox(serialText,
-                                            pygame.Rect((620, 130), (560, 450)),
+                                            pygame.Rect((620, 130), (560, 510)),
                                             self.ui_manager,
                                             object_id="#text_box_1")
 
@@ -523,15 +485,16 @@ class OptionsUIApp:
                 else:
                     c = c.decode('ascii') 
 
-                if c == '\r':                                       # check if character is a delimeter
+                if ((c == '\r') or (c == '\t')):                                       # check if character is a delimeter
                     c = ''                                          # don't want returns. chuck it
                     
                 if c == '\n':
                     serBuffer += '<br>'                              # replace \n with HTML <br>
                     #textOUTPUT.insert(END, serBuffer)               #add the line to the TOP of the log
                     #textOUTPUT.see(END)
-
-                    serialText += serBuffer
+                    self.textBoxSerial.kill()
+                    #serialText += serBuffer
+                    serialText = serBuffer + serialText
                     self.serialPortTextBox()     # check this
                     serBuffer = ''                                  # empty the buffer
                 else:
@@ -591,7 +554,11 @@ class OptionsUIApp:
         global oldAxisZ
         global oldHatX
         global oldHatY
+        global axisX
+        global axisY
+        global axisZ
         global previousTime
+        global mouseMoving
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -607,7 +574,7 @@ class OptionsUIApp:
 
                 if (joyXread < deadRangeLow):
                     axisX = int(self.scale(joyXread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyXread >deadRangeHigh):
+                elif (joyXread > deadRangeHigh):
                     axisX = int(self.scale(joyXread, (deadRangeHigh,1.0), (0,255)))
                 else:
                     axisX = 0
@@ -655,7 +622,6 @@ class OptionsUIApp:
                         self.sendGOFirst()
 
                 if event.type == pygame.JOYBUTTONDOWN:
-                    
                     if (joystick.get_button(0) and not buttonSquPressed):
                         buttonSquPressed = True
                         self.sendEditPos()
@@ -727,37 +693,10 @@ class OptionsUIApp:
                 if (event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
                         event.ui_object_id == '#main_text_entry'):
                     self.sendSerial(event.text)
-                    print(event.text)
                     self.serial_text_entry.set_text('')
 
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == self.rel_button_L1:
-                        self.sendLEFT1()
-                    elif event.ui_element == self.rel_button_L10:
-                        self.sendLEFT10()
-                    elif event.ui_element == self.rel_button_R1:
-                        self.sendRIGHT1()
-                    elif event.ui_element == self.rel_button_R10:
-                        self.sendRIGHT10()
-                    elif event.ui_element == self.rel_button_U1:
-                        self.sendUP1()
-                    elif event.ui_element == self.rel_button_U10:
-                        self.sendUP10()
-                    elif event.ui_element == self.rel_button_D1:
-                        self.sendDOWN1()
-                    elif event.ui_element == self.rel_button_D10:
-                        self.sendDOWN10()
-                    elif event.ui_element == self.rel_button_set0:
-                        self.sendRESETpos()
-                    elif event.ui_element == self.rel_button_SR10:
-                        self.sendSR1()
-                    elif event.ui_element == self.rel_button_SR100:
-                        self.sendSR10()
-                    elif event.ui_element == self.rel_button_SL10:
-                        self.sendSL1()
-                    elif event.ui_element == self.rel_button_SL100:
-                        self.sendSL10()
-                    elif event.ui_element == self.rel_button_Clear:
+                    if event.ui_element == self.rel_button_Clear:
                         self.sendClearArray()
                     elif event.ui_element == self.rel_button_AddPos:
                         self.sendAddPos()
@@ -788,7 +727,164 @@ class OptionsUIApp:
                     and event.ui_element == self.drop_down_serial):
                         self.serialPort_changed()
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:            
+                    if self.joyCircle.collidepoint(event.pos):
+                        self.joyCircle_draging = True
+                        mouse_x, mouse_y = event.pos
+                        self.offset_x = self.joyCircle.x - mouse_x
+                        self.offset_y = self.joyCircle.y - mouse_y
+                        #mouseMoving = True
+
+                    if self.sliderCircle.collidepoint(event.pos):
+                        self.sliderCircle_draging = True
+                        mouse_x, mouse_y = event.pos
+                        self.sliderOffset_x = self.sliderCircle.x - mouse_x
+                        self.sliderOffset_y = self.sliderCircle.y - mouse_y
+                        #mouseMoving = True
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:            
+                    self.joyCircle_draging = False
+                    self.joyCircle.x = 195
+                    self.joyCircle.y = 195
+
+                    self.sliderCircle_draging = False
+                    self.sliderCircle.x = 195
+                    self.sliderCircle.y = 405
+
+                    axisX = int(0)
+                    axisY = int(0)
+                    axisZ = int(0)
+                        
+                    axisXh = self.tohex(axisX, 16)
+                    axisYh = self.tohex(axisY, 16)
+                    axisZh = self.tohex(axisZ, 16)
+
+                    mouseMoving = False
+
+            if event.type == pygame.MOUSEMOTION:
+                if self.joyCircle_draging:
+                    mouseMoving = True
+                    mouse_x, mouse_y = event.pos
+                    self.joyCircle.x = mouse_x
+                    self.joyCircle.y = mouse_y
+                    if ((mouse_x + self.offset_x) > mouseBorder) and ((mouse_y + self.offset_y) > mouseBorder):
+                        self.joyCircle.x = mouseBorder
+                        self.joyCircle.y = mouseBorder
+                        #print("test1")
+
+                    elif (((mouse_x + self.offset_x) > mouseBorder) and ((mouse_y + self.offset_y) < 30)):
+                        self.joyCircle.x = mouseBorder
+                        self.joyCircle.y = 30
+                        #print("test2")
+
+                    elif (((mouse_x + self.offset_x) < 30) and ((mouse_y + self.offset_y) > mouseBorder)):
+                        self.joyCircle.x = 30
+                        self.joyCircle.y = mouseBorder
+                        #print("test3")
+
+                    elif (((mouse_x + self.offset_x) < 30) and ((mouse_y + self.offset_y) < 30)):
+                        self.joyCircle.x = 30
+                        self.joyCircle.y = 30
+                        #print("test4")
+
+                    elif ((mouse_x + self.offset_x) > (mouseBorder)):
+                        self.joyCircle.x = mouseBorder
+                        self.joyCircle.y = mouse_y + self.offset_y
+                        #print("test5")
+
+                    elif ((mouse_x + self.offset_x) < 30):#-self.offset_x):
+                        self.joyCircle.x = 30
+                        self.joyCircle.y = mouse_y + self.offset_y
+                        #print("test6")
+
+                    #elif (self.rectangle.x < 30):#-self.offset_x):
+                    #    self.rectangle.x = 0
+                    #    self.rectangle.y = mouse_y + self.offset_y
+                        #print("test6")
+
+                    elif ((mouse_y + self.offset_y) > (mouseBorder)):
+                        self.joyCircle.y = mouseBorder
+                        self.joyCircle.x = mouse_x + self.offset_x
+                        #print("test7")
+
+                    elif ((mouse_y + self.offset_y) < 30):
+                        self.joyCircle.y = 30
+                        self.joyCircle.x = mouse_x + self.offset_x
+                        #print("test8")
+
+                    else:
+                        self.joyCircle.x = mouse_x + self.offset_x
+                        self.joyCircle.y = mouse_y + self.offset_y
+
+                    axisX = int(self.scale((self.joyCircle.x), (30,mouseBorder), (-254,255)))
+                    axisY = -(int(self.scale((self.joyCircle.y), (30,mouseBorder), (-255,254))))
+                    axisZ = int(0)
+                  
+                if self.sliderCircle_draging:
+                    mouseMoving = True
+                    mouse_x, mouse_y = event.pos
+                    self.sliderCircle.x = mouse_x
+                    self.sliderCircle.y = 420
+                    if ((mouse_x + self.sliderOffset_x) > mouseBorder):
+                        self.sliderCircle.x = mouseBorder
+
+                    elif ((mouse_x + self.sliderOffset_x) < 30):
+                        self.sliderCircle.x = 30
+
+                    else:
+                        self.sliderCircle.x = mouse_x + self.sliderOffset_x
+                        
+                    axisX = int(0)
+                    axisY = int(0)
+                    axisZ = int(self.scale((self.sliderCircle.x), (30,mouseBorder), (-254,255)))
+
+            if (mouseMoving == False):
+                if joystick == '':
+                    pass
+                else:
+                    deadRangeLow = -0.2
+                    deadRangeHigh = 0.2
+                    joyXreadDOT = joystick.get_axis(0)
+                    joyYreadDOT = joystick.get_axis(1)
+                    joyZreadDOT = joystick.get_axis(2)
+
+                    if (joyXreadDOT < deadRangeLow):
+                        axisXDOT = self.scale(joyXreadDOT, (-1.0,deadRangeLow), (-1.0,0.0))
+                    elif (joyXread > deadRangeHigh):
+                        axisXDOT = self.scale(joyXreadDOT, (deadRangeHigh,1.0), (0.0,1.0))
+                    else:
+                        axisXDOT = 0
+
+                    if (joyYreadDOT < deadRangeLow):
+                        axisYDOT = self.scale(joyYreadDOT, (-1.0,deadRangeLow), (-1.0,0.0))
+                    elif (joyYreadDOT > deadRangeHigh):
+                        axisYDOT = self.scale(joyYreadDOT, (deadRangeHigh,1.0), (0.0,1.0))
+                    else:
+                        axisYDOT = 0
+
+                    if (joyZreadDOT < deadRangeLow):
+                        axisZDOT = self.scale(joyZreadDOT, (-1.0,deadRangeLow), (-1.0,0.0))
+                    elif (joyZreadDOT > deadRangeHigh):
+                        axisZDOT = self.scale(joyZreadDOT, (deadRangeHigh,1.0), (0.0,1.0))
+                    else:
+                        axisZDOT = 0
+                    
+                    self.joyCircle.x = (axisXDOT*165)+210-radius
+                    self.joyCircle.y = (axisYDOT*165)+210-radius
+                    self.sliderCircle.x = (axisZDOT*165)+210-radius
+
     def run(self):
+        global previousTime
+        global oldAxisX
+        global oldAxisY
+        global oldAxisZ
+        global axisX
+        global axisY
+        global axisZ
+        global mouseMoving
+
         while self.running:
             time_delta = self.clock.tick() / 1000.0
             self.time_delta_stack.append(time_delta)
@@ -797,11 +893,30 @@ class OptionsUIApp:
             
             self.process_events()                                               # check for input
 
+            if (((axisX != oldAxisX) or (axisY != oldAxisY) or (axisZ != oldAxisZ)) and ((time.time() - previousTime) > 0.1)):
+                previousTime = time.time()
+                oldAxisX = axisX
+                oldAxisY = axisY
+                oldAxisZ = axisZ
+                axisXh = self.tohex(axisX, 16)
+                axisYh = self.tohex(axisY, 16)
+                axisZh = self.tohex(axisZ, 16)
+
+                arr = [4, axisZh, axisXh, axisYh]
+                self.sendJoystick(arr)
+
             self.readSerial()
 
             self.ui_manager.update(time_delta)                                  # respond to input
 
             self.window_surface.blit(self.background_surface, (0, 0))           # draw graphics
+
+            pygame.draw.circle(self.window_surface, RED, (self.joyCircle.x+15,self.joyCircle.y+radius), radius)
+            pygame.draw.circle(self.window_surface, RED, (self.sliderCircle.x+15,420), radius)
+
+            pygame.draw.rect(self.window_surface, [125,0,0], [30,30,360,360],width=3)
+            pygame.draw.rect(self.window_surface, [125,0,0], [30,400,360,40],width=3)
+
             self.ui_manager.draw_ui(self.window_surface)
 
             pygame.display.update()

@@ -132,8 +132,8 @@
         },
         "font":
         {
-            "name": "fira_code",
-            "size": "14"
+            "name": "montserrat",
+            "size": "12"
         }
     },
     
@@ -142,7 +142,7 @@
         "colours":
         {
             "normal_border": "#585C5E",
-            "normal_text": "#FFFFFF,#BBBBBB,90"
+            "normal_text": "#FFFFFF,#333333,90"
         },
         "misc":
         {

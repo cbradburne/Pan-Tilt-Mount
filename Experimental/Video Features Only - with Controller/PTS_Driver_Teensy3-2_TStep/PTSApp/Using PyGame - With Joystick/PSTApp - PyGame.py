@@ -1,3 +1,4 @@
+from operator import truediv
 import random
 import os
 import pygame
@@ -34,6 +35,7 @@ baudRate = 38400
 ser = ''
 serBuffer = ''
 serialText = ''
+
 joystick = ''
 joystickName = ''
 buttonXPressed = None
@@ -57,6 +59,7 @@ hat = ()
 oldHatX = 0
 oldHatY = 0
 previousTime = 0
+RED = (255, 0, 0)
 
 class Options:
     def __init__(self):
@@ -79,9 +82,16 @@ class OptionsUIApp:
 
         self.background_surface = None
 
+        
+
         base_path = Path(__file__).parent
         file_path = (base_path / "./theme.json").resolve()
         self.ui_manager = UIManager(self.options.resolution, file_path)
+
+        font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
+        print (file_path)
+        self.ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
+        self.ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 12, 'style': 'regular'}])
 
         self.test_button = None
         self.test_button_2 = None
@@ -129,6 +139,8 @@ class OptionsUIApp:
 
         self.all_enabled = True
         self.all_shown = True
+
+        
 
         previousTime = time.time()
 
@@ -189,11 +201,11 @@ class OptionsUIApp:
                                       self.ui_manager,
                                       object_id='#everything_button')
 
-        self.rel_button_set0 = UIButton(pygame.Rect((190, 190),
-                                                  (40, 40)),
-                                      '0',
-                                      self.ui_manager,
-                                      object_id='#everything_button')
+        #self.rel_button_set0 = UIButton(pygame.Rect((190, 190),
+        #                                          (40, 40)),
+        #                              '0',
+        #                              self.ui_manager,
+        #                              object_id='#everything_button')
 
         self.rel_button_SL10 = UIButton(pygame.Rect((145, 360),
                                                   (60, 60)),
@@ -338,6 +350,13 @@ class OptionsUIApp:
                                                     self.ui_manager,
                                                     object_id='#main_text_entry')
 
+        #self.serial_text_entry.set_text("Yellow su")
+        #self.serial_text_entry.select_range = [1, 3]
+        self.serial_text_entry.focus()
+        #self.serial_text_entry.start_text_offset = 50
+        #self.serial_text_entry.edit_position = 3
+        #self.serial_text_entry.redraw()
+
         self.serial_port_label = UILabel(pygame.Rect(550, 70,
                                                     230, 24),
                                                     "Serial Port",
@@ -362,8 +381,19 @@ class OptionsUIApp:
                                                     (250, 25)),
                                                     self.ui_manager)
 
-        self.serialPortTextBox()
+        #self.serialPortTextBox()
+        self.sendSerial('')
         self.textBoxJoystickName()
+
+        self.rectangle = pygame.rect.Rect(176, 134, 17, 17)
+        self.rectangle_draging = False
+
+        # Generate crosshair
+        self.crosshair = pygame.surface.Surface((30, 30))
+        self.crosshair.fill(pygame.Color("magenta"))
+        pygame.draw.circle(self.crosshair, pygame.Color("blue"), (15,15), 15)
+        self.crosshair.set_colorkey(pygame.Color("magenta"))#, pygame.RLEACCEL)
+        #self.crosshair = self.crosshair.convert()
 
     def sendUP1(self):
         temp='T1'
@@ -500,7 +530,8 @@ class OptionsUIApp:
         global ser
         global serialText
         if (ser == ''):                                             # Checks to see if com port has been selected
-            serialText = 'Serial port not selected!'
+            #serialText = 'Serial port not selected!'
+            serialText = ''
             self.serialPortTextBox()
             #textOUTPUT.insert(END, 'Serial port not selected!\n')
             #textOUTPUT.see(END)
@@ -559,7 +590,11 @@ class OptionsUIApp:
         self.textBoxSerial = UITextBox(serialText,
                                             pygame.Rect((620, 130), (560, 450)),
                                             self.ui_manager,
+                                            wrap_to_height=False,
                                             object_id="#text_box_1")
+        #self.textBoxSerial.set_focus_set
+        self.ui_manager.set_focus_set(self.textBoxSerial.get_focus_set())
+
 
     def textBoxJoystickName(self):
         global joystickName
@@ -591,16 +626,27 @@ class OptionsUIApp:
 
                 if c == '\r':                                       # check if character is a delimeter
                     c = ''                                          # don't want returns. chuck it
+
+                if c == '\t':                                       # check if character is a delimeter
+                    c = '<br>' 
                     
                 if c == '\n':
                     serBuffer += '<br>'                              # replace \n with HTML <br>
                     #textOUTPUT.insert(END, serBuffer)               #add the line to the TOP of the log
                     #textOUTPUT.see(END)
                     global serialText
-                        
-                    serialText=serialText+serBuffer
-                    self.serialPortTextBox()     # check this
-                    #self.serialPortTextBox.redraw_from_text_block()
+                    
+                    self.textBoxSerial.kill()
+                    #serialText=serialText+serBuffer
+                    serialText = serBuffer + serialText
+                    self.serialPortTextBox()
+
+                    #self.ui_manager.get_focus_set()
+                    #self.textBoxSerial.update(1.0)
+                    #self.ui_manager.set_focus_set(self.textBoxSerial.get_focus_set())
+                    #self.textBoxSerial.full_redraw()
+                    #self.textBoxSerial.rebuild()
+                    #self.textBoxSerial.redraw_from_chunks()
                     serBuffer = ''                                  # empty the buffer
                 else:
                     serBuffer += c                                  # add to the buffer
@@ -640,6 +686,7 @@ class OptionsUIApp:
         return number.to_bytes(length=(8 + (number + (number < 0)).bit_length()) // 8, byteorder='big', signed=True)
 
     def process_events(self):
+        
         global arr
         global joystick
         global buttonXPressed
@@ -665,6 +712,8 @@ class OptionsUIApp:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+                pygame.quit()
+                sys.exit()
 
             self.ui_manager.process_events(event)
             deadRangeLow = -0.2
@@ -877,29 +926,66 @@ class OptionsUIApp:
                         self.sendREPORTall()
                     elif event.ui_element == self.rel_button_REPORTPOS:
                         self.sendREPORTpos()
-
+                
                 if (event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED
-                    and event.ui_element == self.drop_down_serial):
-                        self.serialPort_changed()
+                and event.ui_element == self.drop_down_serial):
+                    self.serialPort_changed()
+                
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:            
+                    if self.rectangle.collidepoint(event.pos):
+                        self.rectangle_draging = True
+                        mouse_x, mouse_y = event.pos
+                        offset_x = self.rectangle.x - mouse_x
+                        offset_y = self.rectangle.y - mouse_y
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:            
+                    self.rectangle_draging = False
+
+            elif event.type == pygame.MOUSEMOTION:
+                if self.rectangle_draging:
+                    mouse_x, mouse_y = event.pos
+                    self.rectangle.x = mouse_x + offset_x
+                    self.rectangle.y = mouse_y + offset_y
+
+            
+
+
+
 
     def run(self):
         while self.running:
             time_delta = self.clock.tick() / 1000.0
             self.time_delta_stack.append(time_delta)
-            if len(self.time_delta_stack) > 2000:
-                self.time_delta_stack.popleft()
+            #if len(self.time_delta_stack) > 2000:
+            #    self.time_delta_stack.popleft()
             
             self.process_events()                                               # check for input
 
             self.readSerial()
 
+            
+            x = joystick.get_axis(0)
+            y = joystick.get_axis(1)
+ 
+            # Black the screen
+            #self.window_surface.fill(pygame.Color("black"))
+            
+
             self.ui_manager.update(time_delta)                                  # respond to input
 
             self.window_surface.blit(self.background_surface, (0, 0))           # draw graphics
-            self.ui_manager.draw_ui(self.window_surface)
+            
+            # Blit to the needed coords:
+            # x*amplitude+(centre offset (window size/2))-(xhair offset (xh size/2))
+            
 
-            #pygame.display.update()
-            pygame.display.flip()
+            self.ui_manager.draw_ui(self.window_surface)
+            #self.window_surface.blit(self.crosshair, ((x*150)+210-15, (y*150)+210-15))
+            pygame.draw.rect(self.window_surface, RED, self.rectangle)
+            pygame.display.update()
+            #pygame.display.flip()
 
 if __name__ == '__main__':
     app = OptionsUIApp()

@@ -21,7 +21,7 @@
             "hovered_border": "#585C5E",
             "disabled_border": "#585C5E",
             "selected_border": "#585C5E",
-            "filled_bar": "#f4251b",
+            "filled_bar": "#444444",
             "unfilled_bar": "#CCCCCC"
         }
     },
@@ -30,7 +30,7 @@
     {
         "colours":
         {
-            "dark_bg": "#fb86fb,#fd92A0,180",
+            "dark_bg": "#333333,#222222,180",
             "normal_border": "#ffB2A5",
             "normal_bg": "#fb9e91"
         }
@@ -83,7 +83,7 @@
         "colours":
         {
             "selected_bg": "#fb9e91",
-            "dark_bg": "#fb8691"
+            "dark_bg": "#333333"
         }
     },
 
@@ -107,7 +107,7 @@
         "colours":
         {
             "normal_border": "#585C5E",
-            "normal_text": "#FFFFFF,#BBBBBB,90"
+            "normal_text": "#FFFFFF"
         },
         "misc":
         {
@@ -132,7 +132,7 @@
         },
         "font":
         {
-            "name": "fira_code",
+            "name": "montserrat",
             "size": "14"
         }
     },
@@ -142,7 +142,7 @@
         "colours":
         {
             "normal_border": "#585C5E",
-            "normal_text": "#FFFFFF,#BBBBBB,90"
+            "normal_text": "#FFFFFF"
         },
         "misc":
         {
@@ -338,7 +338,7 @@
         },
         "font":
         {
-            "name": "fira_code",
+            "name": "montserrat",
             "size": "32"
         }
     },
@@ -350,7 +350,7 @@
         },
         "font":
         {
-            "name": "fira_code",
+            "name": "montserrat",
             "size": "14"
         }
     }

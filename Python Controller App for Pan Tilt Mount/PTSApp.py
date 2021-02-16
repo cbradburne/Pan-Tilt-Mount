@@ -265,8 +265,8 @@ def initialiseJoysticks():
         available_joysticks.append( joystick )
 
     if ( len( available_joysticks ) == 0 ):
-
-        print( "No joysticks found" )
+        joystickName =  "No joystick found."
+        print( "No joystick found." )
     else:
         for i,joystk in enumerate( available_joysticks ):
             print("Joystick %d is named [%s]" % ( i, joystk.get_name() ) )

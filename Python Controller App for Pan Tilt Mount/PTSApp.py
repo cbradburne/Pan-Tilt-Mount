@@ -223,6 +223,7 @@ class OptionsUIApp:
                                                     (250, 35)),
                                                     self.ui_manager,
                                                     object_id='#main_text_entry')
+        self.serial_text_entry.focus()
 
         self.serial_port_label = UILabel(pygame.Rect(550, 70,
                                                     230, 24),
@@ -396,10 +397,12 @@ class OptionsUIApp:
             self.textBoxSerial.kill()
             serialText = serialNotSel + serialText
             self.serialPortTextBox()
+            self.serial_text_entry.focus()
             #textOUTPUT.insert(END, 'Serial port not selected!\n')
             #textOUTPUT.see(END)
         else:
             ser.write(sendValue.encode())                           # Send button value to coneected com port
+            self.serial_text_entry.focus()
 
     def tohex(self, val, nbits):
         return hex((val + (1 << nbits)) % (1 << nbits))

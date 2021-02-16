@@ -42,9 +42,9 @@ byte invert_pan = 0; //Variables to invert the direction of the axis. Note: Thes
 byte invert_tilt = 0;
 byte invert_slider = 0;
 byte homing_mode = 0; //Note: Gets set from the saved EEPROM value on startup
-float pan_max_speed = 20;     //degrees/second. Note: Gets set from the saved EEPROM value on startup.
-float tilt_max_speed = 20;    //degrees/second.
-float slider_max_speed = 40;  //mm/second.
+float pan_max_speed = 10;     //degrees/second. Note: Gets set from the saved EEPROM value on startup.
+float tilt_max_speed = 10;    //degrees/second.
+float slider_max_speed = 30;  //mm/second.
 float pan_fast_speed = 20;    //degrees/second.
 float tilt_fast_speed = 20;   //degrees/second.
 float slider_fast_speed = 60; //mm/second.
@@ -771,16 +771,16 @@ void interpolateTargetPoint(FloatCoordinate targetPoint) { //The first two keyfr
   step_stepperS.moveAsync(stepper_slider);
 
   while (stepper_pan.getPosition() != final_position[0] || stepper_tilt.getPosition() != final_position[1] || stepper_slider.getPosition() != final_position[2]) {
-  
-  unsigned long currentMillis = millis();
-  unsigned long previousMillis = 0;
-  
+
+    unsigned long currentMillis = millis();
+    unsigned long previousMillis = 0;
+
     if (currentMillis - previousMillis > PID_Interval)
     {
       previousMillis = currentMillis;
-      
+
       currentSliderPosMM = sliderStepsToMillimetres(stepper_slider.getPosition());
-      
+
       if (currentSliderPosMM != previousSliderPosMM) {
         previousSliderPosMM = currentSliderPosMM;
 
@@ -1068,7 +1068,7 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SLIDER_MILLIMETRES_REL: {
-      if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           sliderMMRel(Serial1CommandValueFloat);
         }
       }
@@ -1149,6 +1149,9 @@ void Serial1Data(void) {
         stepper_tilt.setPosition(0);
         stepper_slider.setPosition(0);
       }
+      break;
+    default:
+      // if unrecognised charater, do nothing
       break;
   }
 }

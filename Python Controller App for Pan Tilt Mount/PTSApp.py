@@ -246,7 +246,7 @@ class OptionsUIApp:
         self.drop_down_serial = UIDropDownMenu(available_ports,
                                                     current_serialPort,
                                                     pygame.Rect((620,95),
-                                                    (250, 35)),
+                                                    (250, 30)),
                                                     self.ui_manager)
 
         self.serialPortTextBox()
@@ -269,7 +269,7 @@ class OptionsUIApp:
         self.sliderCircle_draging = False
 
         self.sliderCircle.x = 195
-        self.sliderCircle.y = 405
+        self.sliderCircle.y = 415
 
         # Generate crosshair
         self.crosshairSlider = pygame.surface.Surface((30, 30))
@@ -754,7 +754,7 @@ class OptionsUIApp:
 
                     self.sliderCircle_draging = False
                     self.sliderCircle.x = 195
-                    self.sliderCircle.y = 405
+                    self.sliderCircle.y = 415
 
                     axisX = int(0)
                     axisY = int(0)
@@ -915,10 +915,10 @@ class OptionsUIApp:
             self.window_surface.blit(self.background_surface, (0, 0))           # draw graphics
 
             pygame.draw.circle(self.window_surface, RED, (self.joyCircle.x+15,self.joyCircle.y+radius), radius)
-            pygame.draw.circle(self.window_surface, RED, (self.sliderCircle.x+15,420), radius)
+            pygame.draw.circle(self.window_surface, RED, (self.sliderCircle.x+15,430), radius)
 
             pygame.draw.rect(self.window_surface, [125,0,0], [30,30,360,360],width=3)
-            pygame.draw.rect(self.window_surface, [125,0,0], [30,400,360,40],width=3)
+            pygame.draw.rect(self.window_surface, [125,0,0], [30,400,360,60],width=3)
 
             self.ui_manager.draw_ui(self.window_surface)
 

@@ -293,7 +293,7 @@ ui_manager = UIManager(resolution, file_path)
 
 font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
 ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
-ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 12, 'style': 'regular'}])
+ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 12, 'style': 'regular'}, {'name': 'montserrat', 'point_size': 14, 'style': 'regular'}])
 
 #rel_button_L1 = None
 #rel_button_L10 = None
@@ -660,8 +660,8 @@ def process_events():
                     sendPanoramicLapse()
                 elif event.ui_element == rel_button_REPORT:
                     sendREPORTall()
-                elif event.ui_element == rel_button_REPORTPOS:
-                    sendREPORTpos()
+                #elif event.ui_element == rel_button_REPORTPOS:
+                #    sendREPORTpos()
 
             if (event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED
                 and event.ui_element == drop_down_serial):

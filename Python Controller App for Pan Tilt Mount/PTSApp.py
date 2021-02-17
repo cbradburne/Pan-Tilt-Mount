@@ -114,9 +114,9 @@ def sendREPORTall():
     temp='R'
     sendSerial(temp)
 
-def sendREPORTpos():
-    temp='r'
-    sendSerial(temp)
+#def sendREPORTpos():
+#    temp='r'
+#    sendSerial(temp)
 
 def serialPort_changed():
     global ser
@@ -316,7 +316,7 @@ rel_button_GOBack = None
 rel_button_GOFwd = None
 rel_button_GOLast = None
 rel_button_REPORT = None
-rel_button_REPORTPOS = None
+#rel_button_REPORTPOS = None
 serial_text_entry = None
 drop_down_serial = None
 
@@ -400,17 +400,17 @@ rel_button_PANORAMICLAPSE = UIButton(pygame.Rect((430, 300),
                                             ui_manager,
                                             object_id='#everything_button')
 
-rel_button_REPORT = UIButton(pygame.Rect((460, 440),
+rel_button_REPORT = UIButton(pygame.Rect((460, 560),
                                             (100, 60)),
-                                            'Report All',
+                                            'Report',
                                             ui_manager,
                                             object_id='#everything_button')
 
-rel_button_REPORTPOS = UIButton(pygame.Rect((460, 500),
-                                            (100, 60)),
-                                            'Report Pos',
-                                            ui_manager,
-                                            object_id='#everything_button')
+#rel_button_REPORTPOS = UIButton(pygame.Rect((460, 500),
+#                                            (100, 60)),
+#                                            'Report Pos',
+#                                            ui_manager,
+#                                            object_id='#everything_button')
 
 joystick_label = UILabel(pygame.Rect(540, 10,
                                             230, 24),
@@ -477,8 +477,6 @@ crosshairSlider.fill(pygame.Color("magenta"))
 pygame.draw.circle(crosshairSlider, pygame.Color("blue"), (radius,radius), radius)
 crosshairSlider.set_colorkey(pygame.Color("magenta"))#, pygame.RLEACCEL)
 #crosshair = crosshair.convert()
-
-    
 
 def process_events():
     global arr
@@ -829,8 +827,7 @@ while running:
 
     readSerial()
 
-    ui_manager.update(time_delta)                                  # respond to input
-
+    ui_manager.update(time_delta)                             # respond to input
     window_surface.blit(background_surface, (0, 0))           # draw graphics
 
     ui_manager.draw_ui(window_surface)

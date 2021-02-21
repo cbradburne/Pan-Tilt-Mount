@@ -1,3 +1,5 @@
+#from typing import Container
+#from pygame_gui.core.ui_container import UIContainer
 import pygame
 from pygame.cursors import tri_left
 import pygame_gui
@@ -14,28 +16,41 @@ from pygame_gui.elements.ui_text_box import UITextBox
 from serial import *
 from pathlib import Path
 
+pygame.font.init()
+myfont = pygame.font.SysFont('Trebuchet MS', 30)
 clk = pygame.time.Clock()
 
-baudRate = 57600 #57600 or 38400
+baudRate = 38400 #57600 or 38400
+
+speedFastX = 's20'
+speedFastY = 'S20'
+speedFastZ = 'X60'
+
+speedSlowX = 's10'
+speedSlowY = 'S10'
+speedSlowZ = 'X30'
+
 ser = ''
 serBuffer = ''
 serialText = ''
-
 joystick = ''
 joystickName = ''
-buttonXPressed = None
-buttonSquPressed = None
-buttonTriPressed = None
-buttonCirPressed = None
-buttonL1Pressed = None
-buttonR1Pressed = None
-buttonL2Pressed = None
-buttonR2Pressed = None
-buttonL3Pressed = None
-buttonR3Pressed = None
-buttonShaPressed = None
-buttonOptPressed = None
-textBoxJoystickName = None
+button0Pressed = False
+button1Pressed = False
+button2Pressed = False
+button3Pressed = False
+button4Pressed = False
+button5Pressed = False
+button6Pressed = False
+button7Pressed = False
+button8Pressed = False
+button9Pressed = False
+button10Pressed = False
+button11Pressed = False
+button12Pressed = False
+button13Pressed = False
+button14Pressed = False
+textBoxJoystickNames = None
 joyCircle_draging = False
 sliderCircle_draging = False
 offset_x = 0.0
@@ -62,6 +77,15 @@ mouseMoving = False
 joyXreadDOT = 0.0
 joyYreadDOT = 0.0
 joyZreadDOT = 0.0
+pantiltKeyPresseed = False
+sliderKeyPresseed = False
+
+textsurfaceW = myfont.render('w', False, (89, 89, 89))
+textsurfaceA = myfont.render('a', False, (89, 89, 89))
+textsurfaceS = myfont.render('s', False, (89, 89, 89))
+textsurfaceD = myfont.render('d', False, (89, 89, 89))
+textsurfaceLeft = myfont.render(',', False, (89, 89, 89))
+textsurfaceRight = myfont.render('.', False, (89, 89, 89))
 
 resolution = (1200, 660)
 fullscreen = False
@@ -117,9 +141,19 @@ def sendREPORTall():
     temp='R'
     sendSerial(temp)
 
-#def sendREPORTpos():
-#    temp='r'
-#    sendSerial(temp)
+def sendFAST():
+    sendSerial(speedFastX)
+    clk.tick(10)
+    sendSerial(speedFastY)
+    clk.tick(10)
+    sendSerial(speedFastZ)
+
+def sendSLOW():
+    sendSerial(speedSlowX)
+    clk.tick(10)
+    sendSerial(speedSlowY)
+    clk.tick(10)
+    sendSerial(speedSlowZ)
 
 def serialPort_changed():
     global ser
@@ -175,6 +209,7 @@ def sendJoystick(arr):
         pass
     else:
         ser.write(data)
+        #print(data)
 
 def serialPortTextBox():
     global textBoxSerial
@@ -187,8 +222,8 @@ def serialPortTextBox():
 
 def textBoxJoystickName():
     global joystickName
-    global textBoxJoystickName
-    textBoxJoystickName = UITextBox(joystickName,
+    global textBoxJoystickNames
+    textBoxJoystickNames = UITextBox(joystickName,
                                         pygame.Rect((620, 30), (560, 35)),
                                         ui_manager,
                                         object_id="#text_box_1")
@@ -216,8 +251,11 @@ def readSerial():
             else:
                 c = c.decode('ascii') 
 
-            if ((c == '\r') or (c == '\t')):                                       # check if character is a delimeter
+            if (c == '\r'):                                       # check if character is a delimeter
                 c = ''                                          # don't want returns. chuck it
+
+            if (c == '\t'):                                       # check if character is a tab
+                c = '<br>'#' - '                                          # adjust
                 
             if c == '\n':
                 serBuffer += '<br>'                              # replace \n with HTML <br>
@@ -280,7 +318,26 @@ def initialiseJoysticks():
 def int_to_bytes(number: int) -> bytes:
     return number.to_bytes(length=(8 + (number + (number < 0)).bit_length()) // 8, byteorder='big', signed=True)
 
-all_joysticks = initialiseJoysticks()
+def doRefresh():
+    global drop_down_serial
+    global ser
+    ser = ''
+    current_serialPort = ' - '
+    drop_down_serial.kill()
+    ports = serial.tools.list_ports.comports()
+    available_ports = []
+    for p in ports:
+        available_ports.append(p.device)                        # Append each found serial port to array available_ports
+    drop_down_serial = UIDropDownMenu(available_ports,
+                                current_serialPort,
+                                pygame.Rect((620,95),
+                                (250, 30)),
+                                ui_manager)
+    
+    initialiseJoysticks()
+    textBoxJoystickName()
+
+initialiseJoysticks()
 
 if fullscreen:
     window_surface = pygame.display.set_mode(resolution,
@@ -298,18 +355,10 @@ font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
 ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
 ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 12, 'style': 'regular'}, {'name': 'montserrat', 'point_size': 14, 'style': 'regular'}])
 
-#rel_button_L1 = None
-#rel_button_L10 = None
-#rel_button_R1 = None
-#rel_button_R10 = None
-#rel_button_U1 = None
-#rel_button_U10 = None
-#rel_button_D1 = None
-#rel_button_D10 = None
-#rel_button_GO1 = None
 rel_button_Clear = None
 rel_button_AddPos = None
 rel_button_EditPos = None
+rel_button_Refresh = None
 rel_button_ExecMoves = None
 rel_button_OrbitPoint = None
 rel_button_Timelapse = None
@@ -319,7 +368,6 @@ rel_button_GOBack = None
 rel_button_GOFwd = None
 rel_button_GOLast = None
 rel_button_REPORT = None
-#rel_button_REPORTPOS = None
 serial_text_entry = None
 drop_down_serial = None
 
@@ -379,25 +427,31 @@ rel_button_GOLast = UIButton(pygame.Rect((275, 560),
                                             ui_manager,
                                             object_id='#everything_button')
 
-rel_button_ExecMoves = UIButton(pygame.Rect((430, 120),
+rel_button_Refresh = UIButton(pygame.Rect((430, 35),
+                                            (160, 35)),
+                                            'Refresh Ports',
+                                            ui_manager,
+                                            object_id='#everything_button')
+
+rel_button_ExecMoves = UIButton(pygame.Rect((430, 180),
                                             (160, 60)),
                                             'Exec. Moves',
                                             ui_manager,
                                             object_id='#everything_button')
 
-rel_button_OrbitPoint = UIButton(pygame.Rect((430, 180),
+rel_button_OrbitPoint = UIButton(pygame.Rect((430, 240),
                                             (160, 60)),
                                             'Orbit Point',
                                             ui_manager,
                                             object_id='#everything_button')
 
-rel_button_Timelapse = UIButton(pygame.Rect((430, 240),
+rel_button_Timelapse = UIButton(pygame.Rect((430, 300),
                                             (160, 60)),
                                             'Timelapse',
                                             ui_manager,
                                             object_id='#everything_button')
 
-rel_button_PANORAMICLAPSE = UIButton(pygame.Rect((430, 300),
+rel_button_PANORAMICLAPSE = UIButton(pygame.Rect((430, 360),
                                             (160, 60)),
                                             'Panoramiclapse',
                                             ui_manager,
@@ -408,12 +462,6 @@ rel_button_REPORT = UIButton(pygame.Rect((460, 560),
                                             'Report',
                                             ui_manager,
                                             object_id='#everything_button')
-
-#rel_button_REPORTPOS = UIButton(pygame.Rect((460, 500),
-#                                            (100, 60)),
-#                                            'Report Pos',
-#                                            ui_manager,
-#                                            object_id='#everything_button')
 
 joystick_label = UILabel(pygame.Rect(540, 10,
                                             230, 24),
@@ -426,7 +474,7 @@ serial_text_entry = UITextEntryLine(pygame.Rect((930, 95),
                                             ui_manager,
                                             object_id='#main_text_entry')
 
-serial_text_entry.focus()
+#serial_text_entry.focus()
 
 serial_port_label = UILabel(pygame.Rect(550, 70,
                                             230, 24),
@@ -485,18 +533,21 @@ def process_events():
     global arr
     global joystick
     global joystickName
-    global buttonXPressed
-    global buttonSquPressed
-    global buttonTriPressed
-    global buttonCirPressed
-    global buttonL1Pressed
-    global buttonR1Pressed
-    global buttonL2Pressed
-    global buttonR2Pressed
-    global buttonL3Pressed
-    global buttonR3Pressed
-    global buttonShaPressed
-    global buttonOptPressed
+    global button0Pressed
+    global button1Pressed
+    global button2Pressed
+    global button3Pressed
+    global button4Pressed
+    global button5Pressed
+    global button6Pressed
+    global button7Pressed
+    global button8Pressed
+    global button9Pressed
+    global button10Pressed
+    global button11Pressed
+    global button12Pressed
+    global button13Pressed
+    global button14Pressed
     global oldAxisX
     global oldAxisY
     global oldAxisZ
@@ -517,12 +568,17 @@ def process_events():
     global joyXreadDOT
     global joyYreadDOT
     global joyZreadDOT
+    global pantiltKeyPresseed
+    global sliderKeyPresseed
+    global drop_down_serial
 
     joyPS4 = "Sony"
     joyPS4BT = "Wireless"
     joy360 = "360"
     joyNimbus = "Nimbus"
     joySN30 = "SN30"
+
+    UITextEntry = "UITextEntryLine"
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -531,35 +587,64 @@ def process_events():
         ui_manager.process_events(event)
         deadRangeLow = -0.2
         deadRangeHigh = 0.2
+
+        whereIsFocus = str(ui_manager.get_focus_set())
+        if (event.type == pygame.KEYDOWN) and not (UITextEntry in whereIsFocus):
+            if event.key == ord('a'):
+                axisX = int(-255)
+                pantiltKeyPresseed = True
+                #print('Left')
+            if event.key == ord('d'):
+                axisX = int(255)
+                pantiltKeyPresseed = True
+                #print('Right')
+            if event.key == ord('w'):
+                axisY = int(-255)
+                pantiltKeyPresseed = True
+                #print('Up')
+            if event.key == ord('s'):
+                axisY = int(255)
+                pantiltKeyPresseed = True
+                #print('Down')
+            if event.key == ord(','):
+                axisZ = int(-255)
+                sliderKeyPresseed = True
+                #print('Slider Left')
+            if event.key == ord('.'):
+                axisZ = int(255)
+                sliderKeyPresseed = True
+                #print('Slider Right')
+
+        if (event.type == pygame.KEYUP) and not (UITextEntry in whereIsFocus):
+            if event.key == ord('a'):
+                axisX = int(0)
+                pantiltKeyPresseed = False
+                #print('Left stop')
+            if event.key == ord('d'):
+                axisX = int(0)
+                pantiltKeyPresseed = False
+                #print('Right stop')
+            if event.key == ord('w'):
+                axisY = int(0)
+                pantiltKeyPresseed = False
+                #print('Up stop')
+            if event.key == ord('s'):
+                axisY = int(0)
+                pantiltKeyPresseed = False
+                #print('Down stop')
+            if event.key == ord(','):
+                axisZ = int(0)
+                sliderKeyPresseed = False
+                #print('Slider Left stop')
+            if event.key == ord('.'):
+                axisZ = int(0)
+                sliderKeyPresseed = False
+                #print('Slider Right stop')
+
         if joystick == '':
             pass
         else:
             if (joyPS4 in joystickName) or (joyPS4BT in joystickName):
-                joyXread = joystick.get_axis(0)
-                joyYread = -(joystick.get_axis(1))
-                joyZread = joystick.get_axis(2)
-
-                if (joyXread < deadRangeLow):
-                    axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyXread > deadRangeHigh):
-                    axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisX = 0
-
-                if (joyYread < deadRangeLow):
-                    axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyYread > deadRangeHigh):
-                    axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisY = 0
-
-                if (joyZread < deadRangeLow):
-                    axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyZread > deadRangeHigh):
-                    axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisZ = 0
-                
                 hat = joystick.get_hat(0)
                 hatX = hat[0]
                 hatY = hat[1]
@@ -573,9 +658,9 @@ def process_events():
                 if (hatY != oldHatY):
                     oldHatY = hatY
                     if hatY == 1:                                                       # UP
-                        sendGOLast()
-                    if hatY == -1:                                                      # DOWN
                         sendGOFirst()
+                    if hatY == -1:                                                      # DOWN
+                        sendGOLast()
 
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # PS4 - Square
@@ -588,7 +673,7 @@ def process_events():
                         #print("1 - Cross")
                     elif (joystick.get_button(2) and not button2Pressed):               # PS4 - Circle
                         button2Pressed = True
-                        sendREPORTall()
+                        sendExecMoves()
                         #print("2 - Circle")
                     elif (joystick.get_button(3) and not button3Pressed):               # PS4 - Triangle
                         button3Pressed = True
@@ -596,11 +681,11 @@ def process_events():
                         #print("3 - Triangle")
                     elif (joystick.get_button(4) and not button4Pressed):               # PS4 - L1
                         button4Pressed = True
-                        sendREPORTall()
+                        sendSLOW()
                         #print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # PS4 - R1
                         button5Pressed = True
-                        sendREPORTall()
+                        sendFAST()
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # PS4 - L2
                         button6Pressed = True
@@ -627,32 +712,35 @@ def process_events():
                         sendREPORTall()
                         #print("11 - R3")
 
+                if not pantiltKeyPresseed:
+                    joyXread = joystick.get_axis(0)
+                    joyYread = -(joystick.get_axis(1))
+
+                    if (joyXread < deadRangeLow):
+                        axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyXread > deadRangeHigh):
+                        axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisX = 0
+
+                    if (joyYread < deadRangeLow):
+                        axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyYread > deadRangeHigh):
+                        axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisY = 0
+
+                if not sliderKeyPresseed:
+                    joyZread = joystick.get_axis(2)
+
+                    if (joyZread < deadRangeLow):
+                        axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyZread > deadRangeHigh):
+                        axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisZ = 0
+
             elif joy360 in joystickName:
-                joyXread = joystick.get_axis(0)
-                joyYread = -(joystick.get_axis(1))
-                joyZread = joystick.get_axis(3)
-
-                if (joyXread < deadRangeLow):
-                    axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyXread > deadRangeHigh):
-                    axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisX = 0
-
-                if (joyYread < deadRangeLow):
-                    axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyYread > deadRangeHigh):
-                    axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisY = 0
-
-                if (joyZread < deadRangeLow):
-                    axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyZread > deadRangeHigh):
-                    axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisZ = 0
-
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # 360 - A
                         button0Pressed = True
@@ -664,7 +752,7 @@ def process_events():
                         #print("1 - B")                    
                     elif (joystick.get_button(2) and not button2Pressed):               # 360 - X
                         button2Pressed = True
-                        sendREPORTall()
+                        sendExecMoves()
                         #print("2 - X")
                     elif (joystick.get_button(3) and not button3Pressed):               # 360 - Y
                         button3Pressed = True
@@ -672,11 +760,11 @@ def process_events():
                         #print("3 - Y")
                     elif (joystick.get_button(4) and not button4Pressed):               # 360 - L1
                         button4Pressed = True
-                        sendREPORTall()
+                        sendSLOW()
                         #print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # 360 - R1
                         button5Pressed = True
-                        sendREPORTall()
+                        sendFAST()
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # 360 - L3
                         button6Pressed = True
@@ -700,11 +788,11 @@ def process_events():
                         #print("10 - XBOX")
                     elif (joystick.get_button(11) and not button11Pressed):             # 360 - Up
                         button11Pressed = True
-                        sendGOLast()
+                        sendGOFirst()
                         #print("11 - Up")
                     elif (joystick.get_button(12) and not button12Pressed):             # 360 - Down
                         button12Pressed = True
-                        sendGOFirst()
+                        sendGOLast()
                         #print("12 - Down")
                     elif (joystick.get_button(13) and not button13Pressed):             # 360 - Left
                         button13Pressed = True
@@ -715,32 +803,35 @@ def process_events():
                         sendGOFwd()
                         #print("14 - Right")
 
+                if not pantiltKeyPresseed:
+                    joyXread = joystick.get_axis(0)
+                    joyYread = -(joystick.get_axis(1))
+
+                    if (joyXread < deadRangeLow):
+                        axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyXread > deadRangeHigh):
+                        axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisX = 0
+
+                    if (joyYread < deadRangeLow):
+                        axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyYread > deadRangeHigh):
+                        axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisY = 0
+
+                if not sliderKeyPresseed:
+                    joyZread = joystick.get_axis(3)
+
+                    if (joyZread < deadRangeLow):
+                        axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyZread > deadRangeHigh):
+                        axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisZ = 0
+
             elif joyNimbus in joystickName:
-                joyXread = joystick.get_axis(0)
-                joyYread = -(joystick.get_axis(1))
-                joyZread = joystick.get_axis(2)
-
-                if (joyXread < deadRangeLow):
-                    axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyXread > deadRangeHigh):
-                    axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisX = 0
-
-                if (joyYread < deadRangeLow):
-                    axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyYread > deadRangeHigh):
-                    axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisY = 0
-
-                if (joyZread < deadRangeLow):
-                    axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyZread > deadRangeHigh):
-                    axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisZ = 0
-
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # Nimbus - A
                         button0Pressed = True
@@ -752,7 +843,7 @@ def process_events():
                         #print("1 - B")                    
                     elif (joystick.get_button(2) and not button2Pressed):               # Nimbus - X
                         button2Pressed = True
-                        sendREPORTall()
+                        sendExecMoves()
                         #print("2 - X")
                     elif (joystick.get_button(3) and not button3Pressed):               # Nimbus - Y
                         button3Pressed = True
@@ -760,11 +851,11 @@ def process_events():
                         #print("3 - Y")
                     elif (joystick.get_button(4) and not button4Pressed):               # Nimbus - L1
                         button4Pressed = True
-                        sendREPORTall()
+                        sendSLOW()
                         #print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # Nimbus - R1
                         button5Pressed = True
-                        sendREPORTall()
+                        sendFAST()
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L3
                         button6Pressed = True
@@ -788,11 +879,11 @@ def process_events():
                         #print("10 - XBOX")
                     elif (joystick.get_button(11) and not button11Pressed):             # Nimbus - Up
                         button11Pressed = True
-                        sendGOLast()
+                        sendGOFirst()
                         #print("11 - Up")
                     elif (joystick.get_button(12) and not button12Pressed):             # Nimbus - Down
                         button12Pressed = True
-                        sendGOFirst()
+                        sendGOLast()
                         #print("12 - Down")
                     elif (joystick.get_button(13) and not button13Pressed):             # Nimbus - Left
                         button13Pressed = True
@@ -803,32 +894,36 @@ def process_events():
                         sendGOFwd()
                         #print("14 - Right")
 
+                if not pantiltKeyPresseed:
+                    joyXread = joystick.get_axis(0)
+                    joyYread = -(joystick.get_axis(1))
+
+                    if (joyXread < deadRangeLow):
+                        axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyXread > deadRangeHigh):
+                        axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisX = 0
+
+                    if (joyYread < deadRangeLow):
+                        axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyYread > deadRangeHigh):
+                        axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisY = 0
+
+                if not sliderKeyPresseed:
+                    joyZread = joystick.get_axis(2)
+
+                    if (joyZread < deadRangeLow):
+                        axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyZread > deadRangeHigh):
+                        axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisZ = 0
+
             elif (joySN30 in joystickName):
-                joyXread = joystick.get_axis(0)
-                joyYread = -(joystick.get_axis(1))
-                joyZread = joystick.get_axis(2)
 
-                if (joyXread < deadRangeLow):
-                    axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyXread > deadRangeHigh):
-                    axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisX = 0
-
-                if (joyYread < deadRangeLow):
-                    axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyYread > deadRangeHigh):
-                    axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisY = 0
-
-                if (joyZread < deadRangeLow):
-                    axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyZread > deadRangeHigh):
-                    axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisZ = 0
-                
                 hat = joystick.get_hat(0)
                 hatX = hat[0]
                 hatY = hat[1]
@@ -842,9 +937,9 @@ def process_events():
                 if (hatY != oldHatY):
                     oldHatY = hatY
                     if hatY == 1:                                                       # UP
-                        sendGOLast()
-                    if hatY == -1:                                                      # DOWN
                         sendGOFirst()
+                    if hatY == -1:                                                      # DOWN
+                        sendGOLast()
 
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # SN30 - B
@@ -857,7 +952,7 @@ def process_events():
                         #print("1 - A")
                     elif (joystick.get_button(2) and not button2Pressed):               # SN30 - Heart
                         button2Pressed = True
-                        sendREPORTall()
+                        sendExecMoves()
                         #print("2 - Heart")
                     elif (joystick.get_button(3) and not button3Pressed):               # SN30 - X
                         button3Pressed = True
@@ -873,11 +968,11 @@ def process_events():
                         #print("5 - None")
                     elif (joystick.get_button(6) and not button6Pressed):               # SN30 - L1
                         button6Pressed = True
-                        sendREPORTall()
+                        sendSLOW()
                         #print("6 - L1")
                     elif (joystick.get_button(7) and not button7Pressed):               # SN30 - R1
                         button7Pressed = True
-                        sendREPORTall()
+                        sendFAST()
                         #print("7 - R1")
                     elif (joystick.get_button(8) and not button8Pressed):               # SN30 - L2
                         button8Pressed = True
@@ -900,40 +995,43 @@ def process_events():
                     #    sendREPORTall()
                         #print("12 - None")
                     elif (joystick.get_button(13) and not button13Pressed):             # SN30 - L3
-                        button11Pressed = True
+                        button13Pressed = True
                         sendREPORTall()
                         #print("13 - L3")
                     elif (joystick.get_button(14) and not button14Pressed):             # SN30 - R3
-                        button11Pressed = True
+                        button14Pressed = True
                         sendREPORTall()
                         #print("14 - R3")
 
+                if not pantiltKeyPresseed:
+                    joyXread = joystick.get_axis(0)
+                    joyYread = -(joystick.get_axis(1))
+
+                    if (joyXread < deadRangeLow):
+                        axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyXread > deadRangeHigh):
+                        axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisX = 0
+
+                    if (joyYread < deadRangeLow):
+                        axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyYread > deadRangeHigh):
+                        axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisY = 0
+
+                if not sliderKeyPresseed:
+                    joyZread = joystick.get_axis(2)
+
+                    if (joyZread < deadRangeLow):
+                        axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyZread > deadRangeHigh):
+                        axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisZ = 0
+
             else:
-                joyXread = joystick.get_axis(0)
-                joyYread = -(joystick.get_axis(1))
-                joyZread = joystick.get_axis(2)
-
-                if (joyXread < deadRangeLow):
-                    axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyXread > deadRangeHigh):
-                    axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisX = 0
-
-                if (joyYread < deadRangeLow):
-                    axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyYread > deadRangeHigh):
-                    axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisY = 0
-
-                if (joyZread < deadRangeLow):
-                    axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-254,0)))
-                elif (joyZread > deadRangeHigh):
-                    axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
-                else:
-                    axisZ = 0
-
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):               # Nimbus - A
                         button0Pressed = True
@@ -945,7 +1043,7 @@ def process_events():
                         #print("1 - B")                    
                     elif (joystick.get_button(2) and not button2Pressed):               # Nimbus - X
                         button2Pressed = True
-                        sendREPORTall()
+                        sendExecMoves()
                         #print("2 - X")
                     elif (joystick.get_button(3) and not button3Pressed):               # Nimbus - Y
                         button3Pressed = True
@@ -953,11 +1051,11 @@ def process_events():
                         #print("3 - Y")
                     elif (joystick.get_button(4) and not button4Pressed):               # Nimbus - L1
                         button4Pressed = True
-                        sendREPORTall()
+                        sendSLOW()
                         #print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # Nimbus - R1
                         button5Pressed = True
-                        sendREPORTall()
+                        sendFAST()
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L2
                         button6Pressed = True
@@ -969,24 +1067,52 @@ def process_events():
                         #print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Up
                         button8Pressed = True
-                        sendREPORTall()
+                        sendGOFirst()
                         #print("8 - Up")
                     elif (joystick.get_button(9) and not button9Pressed):               # Nimbus - Down
                         button9Pressed = True
-                        sendREPORTall()
+                        sendGOLast()
                         #print("9 - Down")
                     elif (joystick.get_button(10) and not button10Pressed):               # Nimbus - Right
                         button10Pressed = True
-                        sendREPORTall()
+                        sendGOFwd()
                         #print("10 - Right")
                     elif (joystick.get_button(11) and not button11Pressed):               # Nimbus - Left
                         button11Pressed = True
-                        sendGOLast()
+                        sendGOBack()
                         #print("11 - Left")
                     elif (joystick.get_button(12) and not button12Pressed):               # Nimbus - Menu
                         button12Pressed = True
-                        sendGOFirst()
+                        sendREPORTall()
                         #print("12 - Menu")
+
+                if not pantiltKeyPresseed:
+                    joyXread = joystick.get_axis(0)
+                    joyYread = -(joystick.get_axis(1))
+
+                    if (joyXread < deadRangeLow):
+                        axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyXread > deadRangeHigh):
+                        axisX = int(scale(joyXread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisX = 0
+
+                    if (joyYread < deadRangeLow):
+                        axisY = int(scale(joyYread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyYread > deadRangeHigh):
+                        axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisY = 0
+
+                if not sliderKeyPresseed:
+                    joyZread = joystick.get_axis(2)
+
+                    if (joyZread < deadRangeLow):
+                        axisZ = int(scale(joyZread, (-1.0,deadRangeLow), (-255,0)))
+                    elif (joyZread > deadRangeHigh):
+                        axisZ = int(scale(joyZread, (deadRangeHigh,1.0), (0,255)))
+                    else:
+                        axisZ = 0
 
         if event.type == pygame.JOYBUTTONUP:
             if (button0Pressed and not joystick.get_button(0)):
@@ -1041,6 +1167,8 @@ def process_events():
                     sendGOFwd()
                 elif event.ui_element == rel_button_GOLast:
                     sendGOLast()
+                elif event.ui_element == rel_button_Refresh:
+                    doRefresh()
                 elif event.ui_element == rel_button_ExecMoves:
                     sendExecMoves()
                 elif event.ui_element == rel_button_OrbitPoint:
@@ -1051,12 +1179,10 @@ def process_events():
                     sendPanoramicLapse()
                 elif event.ui_element == rel_button_REPORT:
                     sendREPORTall()
-                #elif event.ui_element == rel_button_REPORTPOS:
-                #    sendREPORTpos()
 
             if (event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED
                 and event.ui_element == drop_down_serial):
-                    serialPort_changed()
+                serialPort_changed()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:            
@@ -1065,28 +1191,27 @@ def process_events():
                     mouse_x, mouse_y = event.pos
                     offset_x = joyCircle.x - mouse_x
                     offset_y = joyCircle.y - mouse_y
-                    #mouseMoving = True
 
                 if sliderCircle.collidepoint(event.pos):
                     sliderCircle_draging = True
                     mouse_x, mouse_y = event.pos
                     sliderOffset_x = sliderCircle.x - mouse_x
                     sliderOffset_y = sliderCircle.y - mouse_y
-                    #mouseMoving = True
 
         if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:            
-                joyCircle_draging = False
-                joyCircle.x = 195
-                joyCircle.y = 195
+            if event.button == 1:
+                if joyCircle_draging:
+                    joyCircle_draging = False
+                    joyCircle.x = 195
+                    joyCircle.y = 195
+                    axisX = int(0)
+                    axisY = int(0)
 
-                sliderCircle_draging = False
-                sliderCircle.x = 195
-                sliderCircle.y = 415
-
-                axisX = int(0)
-                axisY = int(0)
-                axisZ = int(0)
+                if sliderCircle_draging:
+                    sliderCircle_draging = False
+                    sliderCircle.x = 195
+                    sliderCircle.y = 415
+                    axisZ = int(0)
 
                 mouseMoving = False
 
@@ -1132,10 +1257,9 @@ def process_events():
                     joyCircle.x = mouse_x + offset_x
                     joyCircle.y = mouse_y + offset_y
 
-                axisX = int(scale((joyCircle.x), (30,mouseBorder), (-254,255)))
-                axisY = -(int(scale((joyCircle.y), (30,mouseBorder), (-255,254))))
-                axisZ = int(0)
-                
+                axisX = int(scale((joyCircle.x), (30,mouseBorder), (-255,255)))
+                axisY = int(scale((joyCircle.y), (30,mouseBorder), (-255,255)))
+
             if sliderCircle_draging:
                 mouseMoving = True
                 mouse_x, mouse_y = event.pos
@@ -1149,55 +1273,19 @@ def process_events():
 
                 else:
                     sliderCircle.x = mouse_x + sliderOffset_x
-                    
-                axisX = int(0)
-                axisY = int(0)
-                axisZ = int(scale((sliderCircle.x), (30,mouseBorder), (-254,255)))
 
-        if (mouseMoving == False):
-            if joystick == '':
-                pass
-            else:
-                if (joyPS4 in joystickName) or (joyPS4BT in joystickName) or (joyNimbus in joystickName) or (joySN30 in joystickName):
-                    joyXreadDOT = joystick.get_axis(0)
-                    joyYreadDOT = joystick.get_axis(1)
-                    joyZreadDOT = joystick.get_axis(2)
-                elif joy360 in joystickName:
-                    joyXreadDOT = joystick.get_axis(0)
-                    joyYreadDOT = joystick.get_axis(1)
-                    joyZreadDOT = joystick.get_axis(3)
-                else:
-                    joyXreadDOT = joystick.get_axis(0)
-                    joyYreadDOT = joystick.get_axis(1)
-                    joyZreadDOT = joystick.get_axis(2)
+                axisZ = int(scale((sliderCircle.x), (30,mouseBorder), (-255,255)))
 
-                if (joyXreadDOT < deadRangeLow):
-                    axisXDOT = scale(joyXreadDOT, (-1.0,deadRangeLow), (-1.0,0.0))
-                elif (joyXread > deadRangeHigh):
-                    axisXDOT = scale(joyXreadDOT, (deadRangeHigh,1.0), (0.0,1.0))
-                else:
-                    axisXDOT = 0
+        axisXDOT = scale(axisX, (-255,255), (-1.0,1.0))
+        axisYDOT = scale(axisY, (-255,255), (-1.0,1.0))
+        axisZDOT = scale(axisZ, (-255,255), (-1.0,1.0))
 
-                if (joyYreadDOT < deadRangeLow):
-                    axisYDOT = scale(joyYreadDOT, (-1.0,deadRangeLow), (-1.0,0.0))
-                elif (joyYreadDOT > deadRangeHigh):
-                    axisYDOT = scale(joyYreadDOT, (deadRangeHigh,1.0), (0.0,1.0))
-                else:
-                    axisYDOT = 0
-
-                if (joyZreadDOT < deadRangeLow):
-                    axisZDOT = scale(joyZreadDOT, (-1.0,deadRangeLow), (-1.0,0.0))
-                elif (joyZreadDOT > deadRangeHigh):
-                    axisZDOT = scale(joyZreadDOT, (deadRangeHigh,1.0), (0.0,1.0))
-                else:
-                    axisZDOT = 0
-                
-                joyCircle.x = (axisXDOT*165)+210-radius
-                joyCircle.y = (axisYDOT*165)+210-radius
-                sliderCircle.x = (axisZDOT*165)+210-radius
+        joyCircle.x = (axisXDOT*165)+210-radius
+        joyCircle.y = (axisYDOT*165)+210-radius
+        sliderCircle.x = (axisZDOT*165)+210-radius
 
 while running:
-    pygame.event.pump()
+    #pygame.event.pump()
     time_delta = clock.tick() / 1000.0
     time_delta_stack.append(time_delta)
     
@@ -1209,21 +1297,30 @@ while running:
         oldAxisY = axisY
         oldAxisZ = axisZ
         axisXh = tohex(axisX, 16)
-        axisYh = tohex(axisY, 16)
+        axisYh = tohex(-axisY, 16)
         axisZh = tohex(axisZ, 16)
 
         arr = [4, axisZh, axisXh, axisYh]
         sendJoystick(arr)
+        #print(4,' - ', axisZh, ' - ', axisXh, ' - ', axisYh)
 
     readSerial()
 
-    ui_manager.update(time_delta)                             # respond to input
-    window_surface.blit(background_surface, (0, 0))           # draw graphics
+    ui_manager.update(time_delta)                               # respond to input
 
-    ui_manager.draw_ui(window_surface)
+    window_surface.blit(background_surface, (0, 0))             # draw graphics
 
-    pygame.draw.circle(window_surface, RED, (joyCircle.x+15,joyCircle.y+radius), radius)
-    pygame.draw.circle(window_surface, RED, (sliderCircle.x+15,430), radius)
+    ui_manager.draw_ui(window_surface)                          # draw UI
+
+    window_surface.blit(textsurfaceW,(198,28))                  # W
+    window_surface.blit(textsurfaceA,(35,190))                  # A
+    window_surface.blit(textsurfaceS,(205,355))                 # S
+    window_surface.blit(textsurfaceD,(365,190))                 # D
+    window_surface.blit(textsurfaceLeft,(35,415))               # ,
+    window_surface.blit(textsurfaceRight,(375,415))             # .
+    
+    pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
+    pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)
 
     pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
     pygame.draw.rect(window_surface, [125,0,0], [30,400,360,60],width=3)

@@ -25,7 +25,27 @@
             "unfilled_bar": "#CCCCCC"
         }
     },
-
+    "dummy_load_montserrat": {
+        "font": {
+            "name": "montserrat",
+            "size": "12",
+            "regular_path": "./Montserrat-Regular.ttf"
+        }
+    },
+    "dummy_load_montserrat14": {
+        "font": {
+            "name": "montserrat",
+            "size": "14",
+            "regular_path": "./Montserrat-Regular.ttf"
+        }
+    },
+    "dummy_load_montserrat32": {
+        "font": {
+            "name": "montserrat",
+            "size": "32",
+            "regular_path": "./Montserrat-Regular.ttf"
+        }
+    },
     "#test_prototype_colours":
     {
         "colours":

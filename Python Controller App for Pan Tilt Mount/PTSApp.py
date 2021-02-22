@@ -93,6 +93,16 @@ fullscreen = False
 pygame.init()
 pygame.display.set_caption("PTSApp")
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller's 'onefile' mode """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 def sendClearArray():
     temp='C'
     sendSerial(temp)
@@ -216,17 +226,14 @@ def serialPortTextBox():
     textBoxSerial = UITextBox(serialText,
                                         pygame.Rect((620, 130), (560, 510)),
                                         ui_manager,
-                                        wrap_to_height=False,
-                                        object_id="#text_box_1")
-    ui_manager.set_focus_set(textBoxSerial.get_focus_set())
-
+                                        wrap_to_height=False)
+    
 def textBoxJoystickName():
     global joystickName
     global textBoxJoystickNames
     textBoxJoystickNames = UITextBox(joystickName,
                                         pygame.Rect((620, 30), (560, 35)),
-                                        ui_manager,
-                                        object_id="#text_box_1")
+                                        ui_manager)
 
 def readSerial():
     global ser
@@ -277,12 +284,12 @@ def sendSerial(sendValue):
         textBoxSerial.kill()
         serialText = serialNotSel + serialText
         serialPortTextBox()
-        serial_text_entry.focus()
+        #serial_text_entry.focus()
         #textOUTPUT.insert(END, 'Serial port not selected!\n')
         #textOUTPUT.see(END)
     else:
         ser.write(sendValue.encode())                           # Send button value to coneected com port
-        serial_text_entry.focus()
+        #serial_text_entry.focus()
         
 def scale(val, src, dst):
     """
@@ -347,13 +354,19 @@ else:
 
 background_surface = None
 
-base_path = Path(__file__).parent
-file_path = (base_path / "./theme.json").resolve()
-ui_manager = UIManager(resolution, file_path)
+try:
+    base_path = Path(__file__).parent
+    file_path = (base_path / "./theme.json").resolve()
+    ui_manager = UIManager(resolution, file_path)
+except:
+    localPath = (resource_path('theme.json'))
+    ui_manager = UIManager(resolution, localPath)
 
-font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
-ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
-ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 12, 'style': 'regular'}, {'name': 'montserrat', 'point_size': 14, 'style': 'regular'}])
+
+#font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
+#ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
+#ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 14, 'style': 'regular'}, 
+#                            {'name': 'montserrat', 'point_size': 32, 'style': 'regular'}])
 
 rel_button_Clear = None
 rel_button_AddPos = None
@@ -1147,10 +1160,10 @@ def process_events():
                 button14Pressed = False
 
         if event.type == pygame.USEREVENT:
-            if (event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
-                    event.ui_object_id == '#main_text_entry'):
+            if (event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED):# and event.ui_object_id == '#main_text_entry'):
                 sendSerial(event.text)
                 serial_text_entry.set_text('')
+                #serial_text_entry.focus()
 
             if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == rel_button_Clear:
@@ -1283,6 +1296,8 @@ def process_events():
         joyCircle.x = (axisXDOT*165)+210-radius
         joyCircle.y = (axisYDOT*165)+210-radius
         sliderCircle.x = (axisZDOT*165)+210-radius
+
+ui_manager.set_focus_set(textBoxSerial)
 
 while running:
     #pygame.event.pump()

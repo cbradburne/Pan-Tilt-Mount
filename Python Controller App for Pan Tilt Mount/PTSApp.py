@@ -20,7 +20,7 @@ pygame.font.init()
 myfont = pygame.font.SysFont('Trebuchet MS', 30)
 clk = pygame.time.Clock()
 
-baudRate = 38400 #57600 or 38400
+baudRate = 57600 #57600 or 38400
 
 speedFastX = 's20'
 speedFastY = 'S20'

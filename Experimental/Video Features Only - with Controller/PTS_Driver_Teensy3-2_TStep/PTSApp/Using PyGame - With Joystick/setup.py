@@ -7,7 +7,7 @@ Usage:
 
 from setuptools import setup
 
-APP = ['PSTApp4.py']
+APP = ['PTSApp - PyGame.py']
 DATA_FILES = []
 OPTIONS = {}
 

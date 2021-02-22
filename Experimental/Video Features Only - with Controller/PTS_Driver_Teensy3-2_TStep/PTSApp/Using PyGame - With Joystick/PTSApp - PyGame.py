@@ -695,7 +695,7 @@ for p in ports:
 drop_down_serial = UIDropDownMenu(available_ports,
                                             current_serialPort,
                                             pygame.Rect((620,95),
-                                            (250, 25)),
+                                            (250, 30)),
                                             ui_manager)
 
 serialPortTextBox()

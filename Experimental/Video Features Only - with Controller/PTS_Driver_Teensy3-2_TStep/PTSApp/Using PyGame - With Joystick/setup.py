@@ -7,7 +7,7 @@ Usage:
 
 from setuptools import setup
 
-APP = ['PTSApp - PyGame.py']
+APP = ['PTSApp.py']
 DATA_FILES = ['theme.json', 'Montserrat-Regular.ttf']
 OPTIONS = {'iconfile': 'PTSApp-Icon.icns'}
 

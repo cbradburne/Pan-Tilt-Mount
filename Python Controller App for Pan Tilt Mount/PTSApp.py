@@ -586,7 +586,7 @@ def process_events():
     global drop_down_serial
 
     joyPS4 = "Sony"
-    joyPS4BT = "Wireless"
+    joyPS4BT = "DUALSHOCK"
     joy360 = "360"
     joyNimbus = "Nimbus"
     joySN30 = "SN30"

@@ -588,6 +588,7 @@ def process_events():
     joy360 = "360"
     joyNimbus = "Nimbus"
     joySN30 = "SN30"
+    joySN30BT = "Unknown Wireless Controller"
 
     UITextEntry = "UITextEntryLine"
     
@@ -730,7 +731,7 @@ def process_events():
 
                 if not pantiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
-                    joyYread = -(joystick.get_axis(1))
+                    joyYread = joystick.get_axis(1)
 
                     if (joyXread < deadRangeLow):
                         axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
@@ -821,7 +822,7 @@ def process_events():
 
                 if not pantiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
-                    joyYread = -(joystick.get_axis(1))
+                    joyYread = joystick.get_axis(1)
 
                     if (joyXread < deadRangeLow):
                         axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
@@ -938,7 +939,7 @@ def process_events():
                     else:
                         axisZ = 0
 
-            elif (joySN30 in joystickName):
+            elif (joySN30 in joystickName) or (joySN30BT in joystickName):
 
                 hat = joystick.get_hat(0)
                 hatX = hat[0]
@@ -1021,7 +1022,7 @@ def process_events():
 
                 if not pantiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
-                    joyYread = -(joystick.get_axis(1))
+                    joyYread = joystick.get_axis(1)
 
                     if (joyXread < deadRangeLow):
                         axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
@@ -1104,7 +1105,7 @@ def process_events():
 
                 if not pantiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
-                    joyYread = -(joystick.get_axis(1))
+                    joyYread = joystick.get_axis(1)
 
                     if (joyXread < deadRangeLow):
                         axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))

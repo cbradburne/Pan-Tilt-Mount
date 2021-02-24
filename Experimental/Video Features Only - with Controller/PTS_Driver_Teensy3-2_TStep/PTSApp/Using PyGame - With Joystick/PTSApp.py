@@ -309,37 +309,44 @@ def readSerial():
             if len(c) == 0:
                 break
 
-            if (c == b'\xb0'):                                  # Change / remove characters that cause error
+            if (c == b'\xb0'):                                      # Change / remove characters that cause error
                 c = '°'
             elif (c == b'\xb2'):
                 c = '²'
             elif (c == b'\xba') or (c == b'\xc2') or (c == b'\xc9'):
                 c = ''
+            elif (c == b'\x23'):                                    # c = #
+                c = ser.read()
+                c = '\n'
+                #if (c == b'\x56'):                                 # c = V Fast
+                    #serBuffer += 'Fast<br>'
+                #if (c == b'\x76'):                                 # c = v Slow
+                    #serBuffer += 'Slow<br>'
             else:
                 c = c.decode('ascii') 
 
-            if (c == '\r'):                                       # check if character is a delimeter
-                c = ''                                          # don't want returns. chuck it
+            if (c == '\r'):                                         # check if character is a delimeter
+                c = ''                                              # don't want returns. chuck it
 
-            if (c == '\t'):                                       # check if character is a tab
-                c = '<br>'#' - '                                          # adjust
+            if (c == '\t'):                                         # check if character is a tab
+                c = '<br>'#' - '                                    # adjust
                 
             if c == '\n':
-                serBuffer += '<br>'                              # replace \n with HTML <br>
-                #textOUTPUT.insert(END, serBuffer)               #add the line to the TOP of the log
+                serBuffer += '<br>'                                 # replace \n with HTML <br>
+                #textOUTPUT.insert(END, serBuffer)                  #add the line to the TOP of the log
                 #textOUTPUT.see(END)
                 textBoxSerial.kill()
                 #serialText += serBuffer
                 serialText = serBuffer + serialText
                 serialPortTextBox()     # check this
-                serBuffer = ''                                  # empty the buffer
+                serBuffer = ''                                      # empty the buffer
             else:
-                serBuffer += c                                  # add to the buffer
+                serBuffer += c                                      # add to the buffer
 
 def sendSerial(sendValue):
     global ser
     global serialText
-    if (ser == ''):                                             # Checks to see if com port has been selected
+    if (ser == ''):                                                 # Checks to see if com port has been selected
         serialNotSel = 'Serial port not selected!<br>'
         textBoxSerial.kill()
         serialText = serialNotSel + serialText
@@ -348,7 +355,7 @@ def sendSerial(sendValue):
         #textOUTPUT.insert(END, 'Serial port not selected!\n')
         #textOUTPUT.see(END)
     else:
-        ser.write(sendValue.encode())                           # Send button value to coneected com port
+        ser.write(sendValue.encode())                               # Send button value to coneected com port
         #serial_text_entry.focus()
         
 def scale(val, src, dst):

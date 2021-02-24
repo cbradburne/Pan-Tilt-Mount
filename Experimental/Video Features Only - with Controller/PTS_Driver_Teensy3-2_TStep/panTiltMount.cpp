@@ -973,6 +973,7 @@ void Serial1Data(void) {
           stepper_pan.setMaxSpeed(panDegreesToSteps(pan_fast_speed));
           stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_fast_speed));
           stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_fast_speed));
+          Serial1.println(String("#V"));
           Serial1.println(String("Speeds set (fast):"));
           Serial1.println(String("Pan   : ") + pan_fast_speed + String(" °/s."));
           Serial1.println(String("Tilt  : ") + tilt_fast_speed + String(" °/s."));
@@ -985,6 +986,7 @@ void Serial1Data(void) {
           stepper_pan.setMaxSpeed(panDegreesToSteps(pan_slow_speed));
           stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_slow_speed));
           stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_slow_speed));
+          Serial1.println(String("#v"));
           Serial1.println(String("Speeds set (slow):"));
           Serial1.println(String("Pan   : ") + pan_slow_speed + String(" °/s."));
           Serial1.println(String("Tilt  : ") + tilt_slow_speed + String(" °/s."));

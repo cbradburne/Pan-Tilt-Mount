@@ -1,5 +1,3 @@
-#from typing import Container
-#from pygame_gui.core.ui_container import UIContainer
 import pygame
 from pygame.cursors import tri_left
 import pygame_gui
@@ -654,6 +652,11 @@ def process_events():
                 sliderKeyPresseed = False
                 #print('Slider Right stop')
 
+        # left 1
+        # right 2
+        # down 3
+        # up 4
+
         if joystick == '':
             pass
         else:
@@ -663,16 +666,16 @@ def process_events():
                 hatY = hat[1]
                 if (hatX != oldHatX):
                     oldHatX = hatX
-                    if hatX == 1:                                                       # RIGHT
+                    if hatX == 1:                                                       # PS4 - RIGHT
                         sendGOFwd()
-                    if hatX == -1:                                                      # LEFT
+                    if hatX == -1:                                                      # PS4 - LEFT
                         sendGOBack()
 
                 if (hatY != oldHatY):
                     oldHatY = hatY
-                    if hatY == 1:                                                       # UP
+                    if hatY == 1:                                                       # PS4 - UP
                         sendGOFirst()
-                    if hatY == -1:                                                      # DOWN
+                    if hatY == -1:                                                      # PS4 - DOWN
                         sendGOLast()
 
                 if event.type == pygame.JOYBUTTONDOWN:
@@ -1046,55 +1049,55 @@ def process_events():
 
             else:
                 if event.type == pygame.JOYBUTTONDOWN:
-                    if (joystick.get_button(0) and not button0Pressed):               # Nimbus - A
+                    if (joystick.get_button(0) and not button0Pressed):                 # A
                         button0Pressed = True
                         sendEditPos()
                         #print("0 - A") 
-                    elif (joystick.get_button(1) and not button1Pressed):               # Nimbus - B
+                    elif (joystick.get_button(1) and not button1Pressed):               # B
                         button1Pressed = True
                         sendAddPos()
                         #print("1 - B")                    
-                    elif (joystick.get_button(2) and not button2Pressed):               # Nimbus - X
+                    elif (joystick.get_button(2) and not button2Pressed):               # X
                         button2Pressed = True
                         sendExecMoves()
                         #print("2 - X")
-                    elif (joystick.get_button(3) and not button3Pressed):               # Nimbus - Y
+                    elif (joystick.get_button(3) and not button3Pressed):               # Y
                         button3Pressed = True
                         sendClearArray()
                         #print("3 - Y")
-                    elif (joystick.get_button(4) and not button4Pressed):               # Nimbus - L1
+                    elif (joystick.get_button(4) and not button4Pressed):               # L1
                         button4Pressed = True
                         sendSLOW()
                         #print("4 - L1")
-                    elif (joystick.get_button(5) and not button5Pressed):               # Nimbus - R1
+                    elif (joystick.get_button(5) and not button5Pressed):               # R1
                         button5Pressed = True
                         sendFAST()
                         #print("5 - R1")
-                    elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L2
+                    elif (joystick.get_button(6) and not button6Pressed):               # L2
                         button6Pressed = True
                         sendREPORTall()
                         #print("6 - L2")
-                    elif (joystick.get_button(7) and not button7Pressed):               # Nimbus - R2
+                    elif (joystick.get_button(7) and not button7Pressed):               # R2
                         button7Pressed = True
                         sendREPORTall()
                         #print("7 - R2")
-                    elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Up
+                    elif (joystick.get_button(8) and not button8Pressed):               # Up
                         button8Pressed = True
                         sendGOFirst()
                         #print("8 - Up")
-                    elif (joystick.get_button(9) and not button9Pressed):               # Nimbus - Down
+                    elif (joystick.get_button(9) and not button9Pressed):               # Down
                         button9Pressed = True
                         sendGOLast()
                         #print("9 - Down")
-                    elif (joystick.get_button(10) and not button10Pressed):               # Nimbus - Right
+                    elif (joystick.get_button(10) and not button10Pressed):               # Right
                         button10Pressed = True
                         sendGOFwd()
                         #print("10 - Right")
-                    elif (joystick.get_button(11) and not button11Pressed):               # Nimbus - Left
+                    elif (joystick.get_button(11) and not button11Pressed):               # Left
                         button11Pressed = True
                         sendGOBack()
                         #print("11 - Left")
-                    elif (joystick.get_button(12) and not button12Pressed):               # Nimbus - Menu
+                    elif (joystick.get_button(12) and not button12Pressed):               # Menu
                         button12Pressed = True
                         sendREPORTall()
                         #print("12 - Menu")

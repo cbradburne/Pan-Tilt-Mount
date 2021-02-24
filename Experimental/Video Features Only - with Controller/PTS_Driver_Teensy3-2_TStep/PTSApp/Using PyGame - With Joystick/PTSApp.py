@@ -839,76 +839,82 @@ def process_events():
                 sliderKeyPresseed = False
                 #print('Slider Right stop')
 
+        # left 1
+        # right 2
+        # down 3
+        # up 4
+
         if joystick == '':
             pass
         else:
             if (joyPS4 in joystickName) or (joyPS4BT in joystickName):
+                #print ("PS4 Controller Found")
                 hat = joystick.get_hat(0)
                 hatX = hat[0]
                 hatY = hat[1]
                 if (hatX != oldHatX):
                     oldHatX = hatX
-                    if hatX == 1:                                        # RIGHT
-                        sendSET1()
-                    if hatX == -1:                                       # LEFT
+                    if hatX == 1:                                                       # PS4 RIGHT
                         sendSET2()
+                    if hatX == -1:                                                      # PS4 LEFT
+                        sendSET1()
 
                 if (hatY != oldHatY):
                     oldHatY = hatY
-                    if hatY == 1:                                        # UP
-                        sendSET3()
-                    if hatY == -1:                                       # DOWN
+                    if hatY == 1:                                                       # PS4 UP
                         sendSET4()
+                    if hatY == -1:                                                      # PS4 DOWN
+                        sendSET3()
 
                 if event.type == pygame.JOYBUTTONDOWN: 
-                    if (joystick.get_button(0) and not button0Pressed):
-                        buttonSquPressed = True
-                        sendGO2()
-                        #print("0") 
-                    elif (joystick.get_button(1) and not button1Pressed):
-                        buttonXPressed = True
-                        sendGO4()
-                        #print("1")                    
-                    elif (joystick.get_button(2) and not button2Pressed):
-                        buttonCirPressed = True
+                    if (joystick.get_button(0) and not button0Pressed):                 # PS4 Square
+                        button0Pressed = True
                         sendGO1()
-                        #print("2")
-                    elif (joystick.get_button(3) and not button3Pressed):
-                        buttonTriPressed = True
+                        #print("0 - Squ") 
+                    elif (joystick.get_button(1) and not button1Pressed):               # PS4 Cross
+                        button1Pressed = True
                         sendGO3()
-                        #print("3")
-                    elif (joystick.get_button(4) and not button4Pressed):
-                        buttonL1Pressed = True
+                        #print("1 - Cro")                    
+                    elif (joystick.get_button(2) and not button2Pressed):               # PS4 Circle
+                        button2Pressed = True
+                        sendGO2()
+                        #print("2" - Cir)
+                    elif (joystick.get_button(3) and not button3Pressed):               # PS4 Triangle
+                        button3Pressed = True
+                        sendGO4()
+                        #print("3 - Tri")
+                    elif (joystick.get_button(4) and not button4Pressed):               # PS4 L1
+                        button4Pressed = True
                         sendSPEEDslow()
-                        #print("4")
-                    elif (joystick.get_button(5) and not button5Pressed):
-                        buttonR1Pressed = True
+                        #print("4 - L1")
+                    elif (joystick.get_button(5) and not button5Pressed):               # PS4 R1
+                        button5Pressed = True
                         sendSPEEDfast()
-                        #print("5")
-                    elif (joystick.get_button(6) and not button6Pressed):
-                        buttonL2Pressed = True
+                        #print("5 - R1")
+                    elif (joystick.get_button(6) and not button6Pressed):               # PS4 L2
+                        button6Pressed = True
+                        sendZOOMin()
+                        #print("6 - L2")
+                    elif (joystick.get_button(7) and not button7Pressed):               # PS4 R2
+                        button7Pressed = True
+                        sendZOOMout()
+                        #print("7 - R2")
+                    elif (joystick.get_button(8) and not button8Pressed):               # PS4 Share
+                        button8Pressed = True
                         sendREPORTpos()
-                        ##print("6")
-                    elif (joystick.get_button(7) and not button7Pressed):
-                        buttonR2Pressed = True
+                        #print("8 - Sha")
+                    elif (joystick.get_button(9) and not button9Pressed):               # PS4 Option
+                        button9Pressed = True
                         sendREPORTpos()
-                        #print("7")
-                    elif (joystick.get_button(8) and not button8Pressed):
-                        buttonShaPressed = True
+                        #print("9 - Opt")
+                    elif (joystick.get_button(10) and not button10Pressed):             # PS4 L3
+                        buttonL10ressed = True
                         sendREPORTpos()
-                        #print("8")
-                    elif (joystick.get_button(9) and not button9Pressed):
-                        buttonOptPressed = True
+                        #print("10 - L3")
+                    elif (joystick.get_button(11) and not button11Pressed):             # PS4 R3
+                        button11Pressed = True
                         sendREPORTpos()
-                        #print("9")
-                    elif (joystick.get_button(10) and not button10Pressed):
-                        buttonL3Pressed = True
-                        sendREPORTpos()
-                        #print("10")
-                    elif (joystick.get_button(11) and not button11Pressed):
-                        buttonR3Pressed = True
-                        sendREPORTpos()
-                        #print("11")
+                        #print("11 - R3")
                 if not pantiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = -(joystick.get_axis(1))
@@ -938,30 +944,31 @@ def process_events():
                         axisZ = 0
 
             elif joy360 in joystickName:
+                #print ("360 Controller Found")
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # 360 - A
                         button0Pressed = True
-                        sendEditPos()
+                        sendGO3()
                         #print("0 - A") 
                     elif (joystick.get_button(1) and not button1Pressed):               # 360 - B
                         button1Pressed = True
-                        sendAddPos()
+                        sendGO2()
                         #print("1 - B")                    
                     elif (joystick.get_button(2) and not button2Pressed):               # 360 - X
                         button2Pressed = True
-                        sendExecMoves()
+                        sendGO1()
                         #print("2 - X")
                     elif (joystick.get_button(3) and not button3Pressed):               # 360 - Y
                         button3Pressed = True
-                        sendClearArray()
+                        sendGO4()
                         #print("3 - Y")
                     elif (joystick.get_button(4) and not button4Pressed):               # 360 - L1
                         button4Pressed = True
-                        sendSLOW()
+                        sendSPEEDslow()
                         #print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # 360 - R1
                         button5Pressed = True
-                        sendFAST()
+                        sendSPEEDfast()
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # 360 - L3
                         button6Pressed = True
@@ -985,19 +992,19 @@ def process_events():
                         #print("10 - XBOX")
                     elif (joystick.get_button(11) and not button11Pressed):             # 360 - Up
                         button11Pressed = True
-                        sendSET3()
+                        sendSET4()
                         #print("11 - Up")
                     elif (joystick.get_button(12) and not button12Pressed):             # 360 - Down
                         button12Pressed = True
-                        sendSET4()
+                        sendSET3()
                         #print("12 - Down")
                     elif (joystick.get_button(13) and not button13Pressed):             # 360 - Left
                         button13Pressed = True
-                        sendSET2()
+                        sendSET1()
                         #print("13 - Left")
                     elif (joystick.get_button(14) and not button14Pressed):             # 360 - Right
                         button14Pressed = True
-                        sendSET1()
+                        sendSET2()
                         #print("14 - Right")
 
                 if not pantiltKeyPresseed:
@@ -1029,67 +1036,60 @@ def process_events():
                         axisZ = 0
 
             elif joyNimbus in joystickName:
+                #print ("Nimbus Controller Found")
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # Nimbus - A
                         button0Pressed = True
-                        sendEditPos()
-                        #print("0 - A") 
+                        sendGO3()
+                        print("0 - A") 
                     elif (joystick.get_button(1) and not button1Pressed):               # Nimbus - B
                         button1Pressed = True
-                        sendAddPos()
-                        #print("1 - B")                    
+                        sendGO2()
+                        print("1 - B")                    
                     elif (joystick.get_button(2) and not button2Pressed):               # Nimbus - X
                         button2Pressed = True
-                        sendExecMoves()
-                        #print("2 - X")
+                        sendGO1()
+                        print("2 - X")
                     elif (joystick.get_button(3) and not button3Pressed):               # Nimbus - Y
                         button3Pressed = True
-                        sendClearArray()
-                        #print("3 - Y")
+                        sendGO4()
+                        print("3 - Y")
                     elif (joystick.get_button(4) and not button4Pressed):               # Nimbus - L1
                         button4Pressed = True
-                        sendSLOW()
-                        #print("4 - L1")
+                        sendSPEEDslow()
+                        print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # Nimbus - R1
                         button5Pressed = True
-                        sendFAST()
-                        #print("5 - R1")
-                    elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L3
+                        sendSPEEDfast()
+                        print("5 - R1")
+                    elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L2
                         button6Pressed = True
-                        sendREPORTall()
-                        #print("6 - L3")
-                    elif (joystick.get_button(7) and not button7Pressed):               # Nimbus - R3
+                        sendZOOMin()
+                        print("6 - L2")
+                    elif (joystick.get_button(7) and not button7Pressed):               # Nimbus - R2
                         button7Pressed = True
-                        sendREPORTall()
-                        #print("7 - R3")
-                    elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Start
+                        sendZOOMout()
+                        print("7 - R2")
+                    elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Up
                         button8Pressed = True
-                        sendREPORTall()
-                        #print("8 - Start")
-                    elif (joystick.get_button(9) and not button9Pressed):               # Nimbus - Back
-                        button9Pressed = True
-                        sendREPORTall()
-                        #print("9 - Back")
-                    elif (joystick.get_button(10) and not button10Pressed):             # Nimbus - XBOX
-                        button10Pressed = True
-                        sendREPORTall()
-                        #print("10 - XBOX")
-                    elif (joystick.get_button(11) and not button11Pressed):             # Nimbus - Up
-                        button11Pressed = True
-                        sendSET3()
-                        #print("11 - Up")
-                    elif (joystick.get_button(12) and not button12Pressed):             # Nimbus - Down
-                        button12Pressed = True
                         sendSET4()
-                        #print("12 - Down")
-                    elif (joystick.get_button(13) and not button13Pressed):             # Nimbus - Left
-                        button13Pressed = True
+                        print("8 - Up")
+                    elif (joystick.get_button(9) and not button9Pressed):               # Nimbus - Down
+                        button9Pressed = True
+                        sendSET3()
+                        print("9 - Down")
+                    elif (joystick.get_button(10) and not button10Pressed):             # Nimbus - Right
+                        button10Pressed = True
                         sendSET2()
-                        #print("13 - Left")
-                    elif (joystick.get_button(14) and not button14Pressed):             # Nimbus - Right
-                        button14Pressed = True
+                        print("10 - Right")
+                    elif (joystick.get_button(11) and not button11Pressed):             # Nimbus - Left
+                        button11Pressed = True
                         sendSET1()
-                        #print("14 - Right")
+                        print("11 - Left")
+                    elif (joystick.get_button(12) and not button12Pressed):             # Nimbus - Menu
+                        button12Pressed = True
+                        sendREPORTall()
+                        print("12 - Menu")
 
                 if not pantiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
@@ -1120,44 +1120,44 @@ def process_events():
                         axisZ = 0
 
             elif (joySN30 in joystickName):
-
+                #print ("SN30 Controller Found")
                 hat = joystick.get_hat(0)
                 hatX = hat[0]
                 hatY = hat[1]
                 if (hatX != oldHatX):
                     oldHatX = hatX
-                    if hatX == 1:                                                       # RIGHT
-                        sendSET1()
-                    if hatX == -1:                                                      # LEFT
+                    if hatX == 1:                                                       # SN30 RIGHT
                         sendSET2()
+                    if hatX == -1:                                                      # SN30 LEFT
+                        sendSET1()
 
                 if (hatY != oldHatY):
                     oldHatY = hatY
-                    if hatY == 1:                                                       # UP
-                        sendSET3()
-                    if hatY == -1:                                                      # DOWN
+                    if hatY == 1:                                                       # SN30 UP
                         sendSET4()
+                    if hatY == -1:                                                      # SN30 DOWN
+                        sendSET3()
 
                 if event.type == pygame.JOYBUTTONDOWN:
                     if (joystick.get_button(0) and not button0Pressed):                 # SN30 - B
                         button0Pressed = True
-                        sendEditPos()
+                        sendGO3()
                         #print("0 - B") 
                     elif (joystick.get_button(1) and not button1Pressed):               # SN30 - A
                         button1Pressed = True
-                        sendAddPos()
+                        sendGO2()
                         #print("1 - A")
                     elif (joystick.get_button(2) and not button2Pressed):               # SN30 - Heart
                         button2Pressed = True
-                        sendExecMoves()
+                        sendREPORTall()
                         #print("2 - Heart")
                     elif (joystick.get_button(3) and not button3Pressed):               # SN30 - X
                         button3Pressed = True
-                        sendClearArray()
+                        sendGO4()
                         #print("3 - X")
                     elif (joystick.get_button(4) and not button4Pressed):               # SN30 - Y
                         button4Pressed = True
-                        sendREPORTall()
+                        sendGO1()
                         #print("4 - Y")
                     #elif (joystick.get_button(5) and not button5Pressed):               # SN30 - None
                     #    button5Pressed = True
@@ -1165,19 +1165,19 @@ def process_events():
                         #print("5 - None")
                     elif (joystick.get_button(6) and not button6Pressed):               # SN30 - L1
                         button6Pressed = True
-                        sendSLOW()
+                        sendSPEEDslow()
                         #print("6 - L1")
                     elif (joystick.get_button(7) and not button7Pressed):               # SN30 - R1
                         button7Pressed = True
-                        sendFAST()
+                        sendSPEEDfast()
                         #print("7 - R1")
                     elif (joystick.get_button(8) and not button8Pressed):               # SN30 - L2
                         button8Pressed = True
-                        sendREPORTall()
+                        sendZOOMin()
                         #print("8 - L2")
                     elif (joystick.get_button(9) and not button9Pressed):               # SN30 - R2
                         button9Pressed = True
-                        sendREPORTall()
+                        sendZOOMout()
                         #print("9 - R2")
                     elif (joystick.get_button(10) and not button10Pressed):             # SN30 - Select
                         button10Pressed = True
@@ -1229,56 +1229,57 @@ def process_events():
                         axisZ = 0
 
             else:
+                #print ("Other Controller Found")
                 if event.type == pygame.JOYBUTTONDOWN:
-                    if (joystick.get_button(0) and not button0Pressed):               # Nimbus - A
+                    if (joystick.get_button(0) and not button0Pressed):                 # A
                         button0Pressed = True
-                        sendEditPos()
+                        sendGO4()
                         #print("0 - A") 
-                    elif (joystick.get_button(1) and not button1Pressed):               # Nimbus - B
+                    elif (joystick.get_button(1) and not button1Pressed):               # B
                         button1Pressed = True
-                        sendAddPos()
+                        sendGO1()
                         #print("1 - B")                    
-                    elif (joystick.get_button(2) and not button2Pressed):               # Nimbus - X
+                    elif (joystick.get_button(2) and not button2Pressed):               # X
                         button2Pressed = True
-                        sendExecMoves()
+                        sendGO2()
                         #print("2 - X")
-                    elif (joystick.get_button(3) and not button3Pressed):               # Nimbus - Y
+                    elif (joystick.get_button(3) and not button3Pressed):               # Y
                         button3Pressed = True
-                        sendClearArray()
+                        sendGO3()
                         #print("3 - Y")
-                    elif (joystick.get_button(4) and not button4Pressed):               # Nimbus - L1
+                    elif (joystick.get_button(4) and not button4Pressed):               # L1
                         button4Pressed = True
-                        sendSLOW()
+                        sendSPEEDslow()
                         #print("4 - L1")
-                    elif (joystick.get_button(5) and not button5Pressed):               # Nimbus - R1
+                    elif (joystick.get_button(5) and not button5Pressed):               # R1
                         button5Pressed = True
-                        sendFAST()
+                        sendSPEEDfast()
                         #print("5 - R1")
-                    elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L2
+                    elif (joystick.get_button(6) and not button6Pressed):               # L2
                         button6Pressed = True
-                        sendREPORTall()
+                        sendZOOMin()
                         #print("6 - L2")
-                    elif (joystick.get_button(7) and not button7Pressed):               # Nimbus - R2
+                    elif (joystick.get_button(7) and not button7Pressed):               # R2
                         button7Pressed = True
-                        sendREPORTall()
+                        sendZOOMout()
                         #print("7 - R2")
-                    elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Up
+                    elif (joystick.get_button(8) and not button8Pressed):               # Up
                         button8Pressed = True
                         sendSET3()
                         #print("8 - Up")
-                    elif (joystick.get_button(9) and not button9Pressed):               # Nimbus - Down
+                    elif (joystick.get_button(9) and not button9Pressed):               # Down
                         button9Pressed = True
                         sendSET4()
                         #print("9 - Down")
-                    elif (joystick.get_button(10) and not button10Pressed):               # Nimbus - Right
+                    elif (joystick.get_button(10) and not button10Pressed):             # Right
                         button10Pressed = True
                         sendSET1()
                         #print("10 - Right")
-                    elif (joystick.get_button(11) and not button11Pressed):               # Nimbus - Left
+                    elif (joystick.get_button(11) and not button11Pressed):             # Left
                         button11Pressed = True
                         sendSET2()
                         #print("11 - Left")
-                    elif (joystick.get_button(12) and not button12Pressed):               # Nimbus - Menu
+                    elif (joystick.get_button(12) and not button12Pressed):             # Menu
                         button12Pressed = True
                         sendREPORTall()
                         #print("12 - Menu")

@@ -48,6 +48,8 @@ button11Pressed = False
 button12Pressed = False
 button13Pressed = False
 button14Pressed = False
+button15Pressed = False
+button16Pressed = False
 textBoxJoystickNames = None
 joyCircle_draging = False
 sliderCircle_draging = False
@@ -753,6 +755,8 @@ def process_events():
     global button12Pressed
     global button13Pressed
     global button14Pressed
+    global button15Pressed
+    global button16Pressed
     global oldAxisX
     global oldAxisY
     global oldAxisZ
@@ -901,11 +905,11 @@ def process_events():
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # PS4 L2
                         button6Pressed = True
-                        sendZOOMin()
+                        sendZOOMout()
                         #print("6 - L2")
                     elif (joystick.get_button(7) and not button7Pressed):               # PS4 R2
                         button7Pressed = True
-                        sendZOOMout()
+                        sendZOOMin()
                         #print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # PS4 Share
                         button8Pressed = True
@@ -1019,6 +1023,9 @@ def process_events():
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
+                    joyL2read = joystick.get_axis(2)
+                    joyR2read = joystick.get_axis(5)
+
                     if (joyXread < deadRangeLow):
                         axisX = int(scale(joyXread, (-1.0,deadRangeLow), (-255,0)))
                     elif (joyXread > deadRangeHigh):
@@ -1032,6 +1039,20 @@ def process_events():
                         axisY = int(scale(joyYread, (deadRangeHigh,1.0), (0,255)))
                     else:
                         axisY = 0
+
+                    if (joyL2read > 0) and not button15Pressed:
+                        button15Pressed = True
+                        sendZOOMout()
+
+                    if (joyR2read > 0) and not button16Pressed:
+                        button16Pressed = True
+                        sendZOOMin()
+                    
+                    if (button15Pressed and (joyL2read < 0)):
+                        button15Pressed = False
+
+                    if (button16Pressed and (joyR2read < 0)):
+                        button16Pressed = False
 
                 if not sliderKeyPresseed:
                     joyZread = joystick.get_axis(3)
@@ -1072,11 +1093,11 @@ def process_events():
                         print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L2
                         button6Pressed = True
-                        sendZOOMin()
+                        sendZOOMout()
                         print("6 - L2")
                     elif (joystick.get_button(7) and not button7Pressed):               # Nimbus - R2
                         button7Pressed = True
-                        sendZOOMout()
+                        sendZOOMin()
                         print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Up
                         button8Pressed = True
@@ -1181,11 +1202,11 @@ def process_events():
                         #print("7 - R1")
                     elif (joystick.get_button(8) and not button8Pressed):               # SN30 - L2
                         button8Pressed = True
-                        sendZOOMin()
+                        sendZOOMout()
                         #print("8 - L2")
                     elif (joystick.get_button(9) and not button9Pressed):               # SN30 - R2
                         button9Pressed = True
-                        sendZOOMout()
+                        sendZOOMin()
                         #print("9 - R2")
                     elif (joystick.get_button(10) and not button10Pressed):             # SN30 - Select
                         button10Pressed = True
@@ -1265,11 +1286,11 @@ def process_events():
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # L2
                         button6Pressed = True
-                        sendZOOMin()
+                        sendZOOMout()
                         #print("6 - L2")
                     elif (joystick.get_button(7) and not button7Pressed):               # R2
                         button7Pressed = True
-                        sendZOOMout()
+                        sendZOOMin()
                         #print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # Up
                         button8Pressed = True
@@ -1419,6 +1440,10 @@ def process_events():
                     sendSPEEDslow()
                 elif event.ui_element == rel_button_FAST:
                     sendSPEEDfast()
+                elif event.ui_element == rel_button_ZOOMin:
+                    sendZOOMin()
+                elif event.ui_element == rel_button_ZOOMout:
+                    sendZOOMout()
                 elif event.ui_element == rel_button_REPORT:
                     sendREPORTall()
                 elif event.ui_element == rel_button_REPORTPOS:

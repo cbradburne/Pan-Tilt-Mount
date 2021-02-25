@@ -14,6 +14,14 @@ from pygame_gui.elements.ui_text_box import UITextBox
 from serial import *
 from pathlib import Path
 
+try:
+    base_path = Path(__file__).parent
+    image_path = (base_path / "./PTSApp-Icon.png").resolve()
+    gameIcon = pygame.image.load(image_path)
+    pygame.display.set_icon(gameIcon)
+except:
+    pass
+
 pygame.font.init()
 myfont = pygame.font.SysFont('Trebuchet MS', 30)
 clk = pygame.time.Clock()

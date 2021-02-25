@@ -14,6 +14,14 @@ from pygame_gui.elements.ui_text_box import UITextBox
 from serial import *
 from pathlib import Path
 
+try:
+    base_path = Path(__file__).parent
+    image_path = (base_path / "./PTSApp-Icon.png").resolve()
+    gameIcon = pygame.image.load(image_path)
+    pygame.display.set_icon(gameIcon)
+except:
+    pass
+
 pygame.font.init()
 myfont = pygame.font.SysFont('Trebuchet MS', 30)
 clk = pygame.time.Clock()
@@ -426,11 +434,14 @@ background_surface = None
 try:
     base_path = Path(__file__).parent
     file_path = (base_path / "./theme.json").resolve()
+    image_path = (base_path / "./PTSApp-Icon.png").resolve()
     ui_manager = UIManager(resolution, file_path)
+    #pygame.display.set_icon(get_image(image_path))
+    gameIcon = pygame.image.load(base_path(image_path))
+    pygame.display.set_icon(gameIcon)
 except:
     localPath = (resource_path('theme.json'))
     ui_manager = UIManager(resolution, localPath)
-
 
 #font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
 #ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)

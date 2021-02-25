@@ -85,7 +85,8 @@ mouseMoving = False
 joyXreadDOT = 0.0
 joyYreadDOT = 0.0
 joyZreadDOT = 0.0
-pantiltKeyPresseed = False
+panKeyPresseed = False
+tiltKeyPresseed = False
 sliderKeyPresseed = False
 
 textsurfaceW = myfont.render('w', False, (89, 89, 89))
@@ -788,7 +789,8 @@ def process_events():
     global joyXreadDOT
     global joyYreadDOT
     global joyZreadDOT
-    global pantiltKeyPresseed
+    global panKeyPresseed
+    global tiltKeyPresseed
     global sliderKeyPresseed
     global drop_down_serial
 
@@ -813,19 +815,19 @@ def process_events():
         if (event.type == pygame.KEYDOWN) and not (UITextEntry in whereIsFocus):
             if event.key == ord('a'):
                 axisX = int(-255)
-                pantiltKeyPresseed = True
+                panKeyPresseed = True
                 #print('Left')
             if event.key == ord('d'):
                 axisX = int(255)
-                pantiltKeyPresseed = True
+                panKeyPresseed = True
                 #print('Right')
             if event.key == ord('w'):
                 axisY = int(-255)
-                pantiltKeyPresseed = True
+                tiltKeyPresseed = True
                 #print('Up')
             if event.key == ord('s'):
                 axisY = int(255)
-                pantiltKeyPresseed = True
+                tiltKeyPresseed = True
                 #print('Down')
             if event.key == ord(','):
                 axisZ = int(-255)
@@ -839,28 +841,28 @@ def process_events():
         if (event.type == pygame.KEYUP) and not (UITextEntry in whereIsFocus):
             if event.key == ord('a'):
                 axisX = int(0)
-                pantiltKeyPresseed = False
-                #print('Left stop')
+                panKeyPresseed = False
+                print('Left stop')
             if event.key == ord('d'):
                 axisX = int(0)
-                pantiltKeyPresseed = False
-                #print('Right stop')
+                panKeyPresseed = False
+                print('Right stop')
             if event.key == ord('w'):
                 axisY = int(0)
-                pantiltKeyPresseed = False
-                #print('Up stop')
+                tiltKeyPresseed = False
+                print('Up stop')
             if event.key == ord('s'):
                 axisY = int(0)
-                pantiltKeyPresseed = False
-                #print('Down stop')
+                tiltKeyPresseed = False
+                print('Down stop')
             if event.key == ord(','):
                 axisZ = int(0)
                 sliderKeyPresseed = False
-                #print('Slider Left stop')
+                print('Slider Left stop')
             if event.key == ord('.'):
                 axisZ = int(0)
                 sliderKeyPresseed = False
-                #print('Slider Right stop')
+                print('Slider Right stop')
 
         # left 1
         # right 2
@@ -938,7 +940,7 @@ def process_events():
                         button11Pressed = True
                         sendREPORTpos()
                         #print("11 - R3")
-                if not pantiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1030,7 +1032,7 @@ def process_events():
                         sendSET2()
                         #print("14 - Right")
 
-                if not pantiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1131,7 +1133,7 @@ def process_events():
                         sendREPORTall()
                         print("12 - Menu")
 
-                if not pantiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = -(joystick.get_axis(1))
 
@@ -1240,7 +1242,7 @@ def process_events():
                         sendREPORTall()
                         #print("14 - R3")
 
-                if not pantiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1324,7 +1326,7 @@ def process_events():
                         sendREPORTall()
                         #print("12 - Menu")
 
-                if not pantiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 

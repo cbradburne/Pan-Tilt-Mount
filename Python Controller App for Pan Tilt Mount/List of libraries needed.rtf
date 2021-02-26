@@ -7,8 +7,7 @@
 
 \f0\fs24 \cf0   
 \fs36 Necessary libraries:\
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
-\cf0 \
+\
 python 3.9:\
 https://www.python.org/downloads/\
 \
@@ -27,11 +26,21 @@ python3 -m pip install -U pyserial --user\
 \
 How to build app file for macOS:\
 \
-py2app:\
+Install py2app:\
 python3 -m pip install -U py2app --user\
 \
-if no setup.py file run:\
-py2applet --make-setup PTSApp.py\
+Run to build app:\
+python3 setup.py py2app\
+\
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\
+How to build app file for Windows:\
+\
+Install cx_freeze:\
+python -m pip install -U cx_freeze --user\
 \
 Run to build app:\
-python3 setup.py py2app}
+python setupcx.py build\
+\
+\
+}

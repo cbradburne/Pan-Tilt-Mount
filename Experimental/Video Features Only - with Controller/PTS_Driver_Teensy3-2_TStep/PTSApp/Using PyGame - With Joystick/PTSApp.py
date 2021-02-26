@@ -3,6 +3,7 @@ from pygame.cursors import tri_left
 import pygame_gui
 import time
 import serial.tools.list_ports
+import os, sys
 
 from collections import deque
 from pygame_gui import UIManager
@@ -14,13 +15,23 @@ from pygame_gui.elements.ui_text_box import UITextBox
 from serial import *
 from pathlib import Path
 
+def find_data_file(filename):
+    if getattr(sys, "frozen", False):
+        datadir = os.path.dirname(sys.executable)
+    else:
+        datadir = os.path.dirname(__file__)
+    return os.path.join(datadir, filename)
+
 try:
     base_path = Path(__file__).parent
     image_path = (base_path / "./PTSApp-Icon.png").resolve()
     gameIcon = pygame.image.load(image_path)
     pygame.display.set_icon(gameIcon)
 except:
-    pass
+    imagefile = "PTSApp-Icon.png"
+    imagefilepath = find_data_file(imagefile)
+    gameIcon = pygame.image.load(imagefilepath)
+    pygame.display.set_icon(gameIcon)
 
 pygame.font.init()
 myfont = pygame.font.SysFont('Trebuchet MS', 30)
@@ -101,16 +112,6 @@ fullscreen = False
 
 pygame.init()
 pygame.display.set_caption("PTSApp")
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller's 'onefile' mode """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
 
 def sendUP1():
     temp='T1'
@@ -435,19 +436,11 @@ background_surface = None
 try:
     base_path = Path(__file__).parent
     file_path = (base_path / "./theme.json").resolve()
-    image_path = (base_path / "./PTSApp-Icon.png").resolve()
     ui_manager = UIManager(resolution, file_path)
-    #pygame.display.set_icon(get_image(image_path))
-    gameIcon = pygame.image.load(base_path(image_path))
-    pygame.display.set_icon(gameIcon)
 except:
-    localPath = (resource_path('theme.json'))
-    ui_manager = UIManager(resolution, localPath)
-
-#font_file_path = (base_path / "./Montserrat-Regular.ttf").resolve()
-#ui_manager.add_font_paths(font_name= 'montserrat', regular_path= font_file_path)
-#ui_manager.preload_fonts([{'name': 'montserrat', 'point_size': 14, 'style': 'regular'}, 
-#                            {'name': 'montserrat', 'point_size': 32, 'style': 'regular'}])
+    themefile = "theme.json"
+    full_path = find_data_file(themefile)
+    ui_manager = UIManager(resolution, full_path)
 
 rel_button_L1 = None
 rel_button_L10 = None
@@ -796,6 +789,7 @@ def process_events():
 
     joyPS4 = "Sony"
     joyPS4BT = "DUALSHOCK"
+    joyPS4Win = "PS4"
     joy360 = "360"
     joyNimbus = "Nimbus"
     joySN30 = "SN30"
@@ -872,7 +866,7 @@ def process_events():
         if joystick == '':
             pass
         else:
-            if (joyPS4 in joystickName) or (joyPS4BT in joystickName):
+            if (joyPS4 in joystickName) or (joyPS4BT in joystickName) or (joyPS4Win in joystickName):
                 #print ("PS4 Controller Found")
                 hat = joystick.get_hat(0)
                 hatX = hat[0]

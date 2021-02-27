@@ -28,9 +28,9 @@ try:
     gameIcon = pygame.image.load(image_path)
     pygame.display.set_icon(gameIcon)
 except:
-    imagefile = "PTSApp-Icon.png"
-    imagefilepath = find_data_file(imagefile)
-    gameIcon = pygame.image.load(imagefilepath)
+    imageFile = "PTSApp-Icon.png"
+    imageFilePath = find_data_file(imageFile)
+    gameIcon = pygame.image.load(imageFilePath)
     pygame.display.set_icon(gameIcon)
 
 pygame.font.init()
@@ -438,9 +438,9 @@ try:
     file_path = (base_path / "./theme.json").resolve()
     ui_manager = UIManager(resolution, file_path)
 except:
-    themefile = "theme.json"
-    full_path = find_data_file(themefile)
-    ui_manager = UIManager(resolution, full_path)
+    themeFile = "theme.json"
+    themeFilePath = find_data_file(themeFile)
+    ui_manager = UIManager(resolution, themeFilePath)
 
 rel_button_L1 = None
 rel_button_L10 = None

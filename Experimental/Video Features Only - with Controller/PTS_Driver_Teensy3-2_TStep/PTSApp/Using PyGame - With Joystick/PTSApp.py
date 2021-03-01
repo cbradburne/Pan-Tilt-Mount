@@ -22,7 +22,7 @@ def find_data_file(filename):
         datadir = os.path.dirname(__file__)
     return os.path.join(datadir, filename)
 
-try:
+try:                                                                                                # Needed for macOS "py2app"
     base_path = Path(__file__).parent
     image_path = (base_path / "./PTSApp-Icon.png").resolve()
     gameIcon = pygame.image.load(image_path)
@@ -327,13 +327,9 @@ def readSerial():
                 c = '²'
             elif (c == b'\xba') or (c == b'\xc2') or (c == b'\xc9'):
                 c = ''
-            elif (c == b'\x23'):                                    # c = #
+            elif (c == b'\x23'):                                    # c = # Remove zoom in / out commands
                 c = ser.read()
                 c = '\n'
-                #if (c == b'\x56'):                                 # c = V Fast
-                    #serBuffer += 'Fast<br>'
-                #if (c == b'\x76'):                                 # c = v Slow
-                    #serBuffer += 'Slow<br>'
             else:
                 c = c.decode('ascii') 
 
@@ -345,12 +341,12 @@ def readSerial():
                 
             if c == '\n':
                 serBuffer += '<br>'                                 # replace \n with HTML <br>
-                #textOUTPUT.insert(END, serBuffer)                  #add the line to the TOP of the log
-                #textOUTPUT.see(END)
+                #textOUTPUT.insert(END, serBuffer)                  # code for tkinter
+                #textOUTPUT.see(END)                                # code for tkinter
+                #serialText += serBuffer                            # code for tkinter
                 textBoxSerial.kill()
-                #serialText += serBuffer
                 serialText = serBuffer + serialText
-                serialPortTextBox()     # check this
+                serialPortTextBox()
                 serBuffer = ''                                      # empty the buffer
             else:
                 serBuffer += c                                      # add to the buffer
@@ -363,29 +359,22 @@ def sendSerial(sendValue):
         textBoxSerial.kill()
         serialText = serialNotSel + serialText
         serialPortTextBox()
-        #serial_text_entry.focus()
-        #textOUTPUT.insert(END, 'Serial port not selected!\n')
-        #textOUTPUT.see(END)
+        #textOUTPUT.insert(END, 'Serial port not selected!\n')      # code for tkinter
+        #textOUTPUT.see(END)                                        # code for tkinter
     else:
         ser.write(sendValue.encode())                               # Send button value to coneected com port
-        #serial_text_entry.focus()
         
 def scale(val, src, dst):
-    """
-    Scale the given value from the scale of src to the scale of dst.
-    """
+    #Scale the given value from the scale of src to the scale of dst.
     return ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
     
 def initialiseJoysticks():
     global joystick
     global joystickName
-    """Initialise all joysticks, returning a list of pygame.joystick.Joystick"""
     available_joysticks = []                                            # for returning
-    
     pygame.joystick.init()                                              # Initialise the Joystick sub-module
-
     joystick_count = pygame.joystick.get_count()                        # Get count of joysticks
-    
+
     for i in range( joystick_count ):                                   # For each joystick:
         joystick = pygame.joystick.Joystick( i )
         joystick.init()
@@ -393,11 +382,11 @@ def initialiseJoysticks():
 
     if ( len( available_joysticks ) == 0 ):
         joystickName =  "No joystick found."
-        print( "No joystick found." )
+        #print( "No joystick found." )
     else:
         for i,joystk in enumerate( available_joysticks ):
-            print("Joystick %d is named [%s]" % ( i, joystk.get_name() ) )
             joystickName = joystk.get_name()
+            #print("Joystick %d is named [%s]" % ( i, joystickName ) )
 
     return available_joysticks
 
@@ -407,15 +396,32 @@ def int_to_bytes(number: int) -> bytes:
 def doRefresh():
     global drop_down_serial
     global ser
-    ser = ''
+    global current_serialPort
+    global baudRate
+    #ser = ''
+    usb_port = 'usbserial'
+    wchusb_port = 'wchusbserial'
     current_serialPort = ' - '
-    drop_down_serial.kill()
-    ports = serial.tools.list_ports.comports()
+    drop_down_serial.kill()                                             # Clear serial port drop down box
+    ports = serial.tools.list_ports.comports()                          # Search for attached serial ports
     available_ports = []
     for p in ports:
-        available_ports.append(p.device)                        # Append each found serial port to array available_ports
-    drop_down_serial = UIDropDownMenu(available_ports,
-                                current_serialPort,
+        available_ports.append(p.device)                                # Append each found serial port to array available_ports
+
+    if current_serialPort == ' - ':
+        if (wchusb_port in '\t'.join(available_ports)):
+            current_serialPort = [string for string in available_ports if wchusb_port in string]
+            ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+            readSerial()
+        elif (usb_port in '\t'.join(available_ports)):
+            current_serialPort = [string for string in available_ports if usb_port in string]
+            ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+            readSerial()
+        else:
+            current_serialPort = [' - ']
+
+    drop_down_serial = UIDropDownMenu(available_ports,                  # Recreate serial port drop down list
+                                current_serialPort[0],                  # Currently selected port
                                 pygame.Rect((620,95),
                                 (250, 30)),
                                 ui_manager)
@@ -434,7 +440,7 @@ else:
 background_surface = None
 
 try:
-    base_path = Path(__file__).parent
+    base_path = Path(__file__).parent                                                   # Needed for macOS "py2app"
     file_path = (base_path / "./theme.json").resolve()
     ui_manager = UIManager(resolution, file_path)
 except:
@@ -483,234 +489,76 @@ ui_manager.clear_and_reset()
 background_surface = pygame.Surface(resolution)
 background_surface.fill(ui_manager.get_theme().get_colour('dark_bg'))
 
-rel_button_L1 = UIButton(pygame.Rect((120, 180),
-                                            (60, 60)),
-                                '.5',
-                                ui_manager,
-                                object_id='#everything_button')
+rel_button_L1 = UIButton(pygame.Rect((120, 180), (60, 60)), '.5', ui_manager)
+rel_button_L10 = UIButton(pygame.Rect((60, 180), (60, 60)), '10', ui_manager)
+rel_button_R1 = UIButton(pygame.Rect((240, 180), (60, 60)), '.5', ui_manager)
+rel_button_R10 = UIButton(pygame.Rect((300, 180), (60, 60)), '10', ui_manager)
+rel_button_U1 = UIButton(pygame.Rect((180, 120), (60, 60)), '.5', ui_manager)
+rel_button_U10 = UIButton(pygame.Rect((180, 60), (60, 60)), '10', ui_manager)
+rel_button_D1 = UIButton(pygame.Rect((180, 240), (60, 60)), '.5', ui_manager)
+rel_button_D10 = UIButton(pygame.Rect((180, 300), (60, 60)), '10', ui_manager)
+#rel_button_set0 = UIButton(pygame.Rect((190, 190), (40, 40)), '0', ui_manager)             # Resets position back to zero
+rel_button_SL10 = UIButton(pygame.Rect((120, 400), (60, 60)), '10', ui_manager)
+rel_button_SL100 = UIButton(pygame.Rect((60, 400), (60, 60)), '100', ui_manager)
+rel_button_SR10 = UIButton(pygame.Rect((240, 400), (60, 60)), '10', ui_manager)
+rel_button_SR100 = UIButton(pygame.Rect((300, 400), (60, 60)), '100', ui_manager)
 
-rel_button_L10 = UIButton(pygame.Rect((60, 180),
-                                            (60, 60)),
-                                '10',
-                                ui_manager,
-                                object_id='#everything_button')
-                                
-rel_button_R1 = UIButton(pygame.Rect((240, 180),
-                                            (60, 60)),
-                                '.5',
-                                ui_manager,
-                                object_id='#everything_button')
+rel_button_SET1 = UIButton(pygame.Rect((30, 560), (60, 60)), 'SET 1', ui_manager)
+rel_button_SET2 = UIButton(pygame.Rect((90, 560), (60, 60)), 'SET 2', ui_manager)
+rel_button_SET3 = UIButton(pygame.Rect((150, 560), (60, 60)), 'SET 3', ui_manager)
+rel_button_SET4 = UIButton(pygame.Rect((210, 560), (60, 60)), 'SET 4', ui_manager)
+rel_button_SET5 = UIButton(pygame.Rect((270, 560), (60, 60)), 'SET 5', ui_manager)
+rel_button_SET6 = UIButton(pygame.Rect((330, 560), (60, 60)), 'SET 6', ui_manager)
 
-rel_button_R10 = UIButton(pygame.Rect((300, 180),
-                                            (60, 60)),
-                                '10',
-                                ui_manager,
-                                object_id='#everything_button')
+rel_button_GO1 = UIButton(pygame.Rect((30, 500), (60, 60)), 'GO 1', ui_manager)
+rel_button_GO2 = UIButton(pygame.Rect((90, 500), (60, 60)), 'GO 2', ui_manager)
+rel_button_GO3 = UIButton(pygame.Rect((150, 500), (60, 60)), 'GO 3', ui_manager)
+rel_button_GO4 = UIButton(pygame.Rect((210, 500), (60, 60)), 'GO 4', ui_manager)
+rel_button_GO5 = UIButton(pygame.Rect((270, 500), (60, 60)), 'GO 5', ui_manager)
+rel_button_GO6 = UIButton(pygame.Rect((330, 500), (60, 60)), 'GO 6', ui_manager)
 
-rel_button_U1 = UIButton(pygame.Rect((180, 120),
-                                            (60, 60)),
-                                '.5',
-                                ui_manager,
-                                object_id='#everything_button')
+rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports', ui_manager)
 
-rel_button_U10 = UIButton(pygame.Rect((180, 60),
-                                            (60, 60)),
-                                '10',
-                                ui_manager,
-                                object_id='#everything_button')
+rel_button_SLOW = UIButton(pygame.Rect((480, 100), (60, 60)), 'SLOW', ui_manager)
+rel_button_FAST = UIButton(pygame.Rect((480, 160), (60, 60)), 'FAST', ui_manager)
 
-rel_button_D1 = UIButton(pygame.Rect((180, 240),
-                                            (60, 60)),
-                                '.5',
-                                ui_manager,
-                                object_id='#everything_button')
+rel_button_ZOOMin = UIButton(pygame.Rect((480, 260), (60, 60)), 'IN', ui_manager)
+rel_button_ZOOMout = UIButton(pygame.Rect((480, 320), (60, 60)), 'OUT', ui_manager)
 
-rel_button_D10 = UIButton(pygame.Rect((180, 300),
-                                            (60, 60)),
-                                '10',
-                                ui_manager,
-                                object_id='#everything_button')
-                               
-#rel_button_set0 = UIButton(pygame.Rect((190, 190),
-#                                          (40, 40)),
-#                              '0',
-#                              ui_manager,
-#                              object_id='#everything_button')
+rel_button_REPORT = UIButton(pygame.Rect((510, 500), (100, 60)), 'Report All', ui_manager)
+rel_button_REPORTPOS = UIButton(pygame.Rect((510, 560), (100, 60)), 'Report Pos', ui_manager)
 
-rel_button_SL10 = UIButton(pygame.Rect((120, 400),
-                                            (60, 60)),
-                                '10',
-                                ui_manager,
-                                object_id='#everything_button')
+joystick_label = UILabel(pygame.Rect(540, 10, 230, 24), "Joystick", ui_manager, object_id='#main_text_entry')
+serial_text_entry = UITextEntryLine(pygame.Rect((930, 95), (250, 35)), ui_manager, object_id='#main_text_entry')
+serial_port_label = UILabel(pygame.Rect(550, 70, 230, 24), "Serial Port", ui_manager)
+serial_command_label = UILabel(pygame.Rect(870, 70, 230, 24), "Serial Command", ui_manager)
 
-rel_button_SL100 = UIButton(pygame.Rect((60, 400),
-                                            (60, 60)),
-                                '100',
-                                ui_manager,
-                                object_id='#everything_button')
 
-rel_button_SR10 = UIButton(pygame.Rect((240, 400),
-                                            (60, 60)),
-                                '10',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SR100 = UIButton(pygame.Rect((300, 400),
-                                            (60, 60)),
-                                '100',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SET1 = UIButton(pygame.Rect((30, 560),
-                                            (60, 60)),
-                                'SET 1',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SET2 = UIButton(pygame.Rect((90, 560),
-                                            (60, 60)),
-                                'SET 2',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SET3 = UIButton(pygame.Rect((150, 560),
-                                            (60, 60)),
-                                'SET 3',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SET4 = UIButton(pygame.Rect((210, 560),
-                                            (60, 60)),
-                                'SET 4',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SET5 = UIButton(pygame.Rect((270, 560),
-                                            (60, 60)),
-                                'SET 5',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_SET6 = UIButton(pygame.Rect((330, 560),
-                                            (60, 60)),
-                                'SET 6',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_GO1 = UIButton(pygame.Rect((30, 500),
-                                            (60, 60)),
-                                'GO 1',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_GO2 = UIButton(pygame.Rect((90, 500),
-                                            (60, 60)),
-                                'GO 2',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_GO3 = UIButton(pygame.Rect((150, 500),
-                                            (60, 60)),
-                                'GO 3',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_GO4 = UIButton(pygame.Rect((210, 500),
-                                            (60, 60)),
-                                'GO 4',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_GO5 = UIButton(pygame.Rect((270, 500),
-                                            (60, 60)),
-                                'GO 5',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_GO6 = UIButton(pygame.Rect((330, 500),
-                                            (60, 60)),
-                                'GO 6',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_Refresh = UIButton(pygame.Rect((430, 35),
-                                            (160, 35)),
-                                            'Refresh Ports',
-                                            ui_manager,
-                                            object_id='#everything_button')
-
-rel_button_SLOW = UIButton(pygame.Rect((480, 100),
-                                            (60, 60)),
-                                'SLOW',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_FAST = UIButton(pygame.Rect((480, 160),
-                                            (60, 60)),
-                                'FAST',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_ZOOMin = UIButton(pygame.Rect((480, 260),
-                                            (60, 60)),
-                                'IN',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_ZOOMout = UIButton(pygame.Rect((480, 320),
-                                            (60, 60)),
-                                'OUT',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_REPORT = UIButton(pygame.Rect((510, 500),
-                                            (100, 60)),
-                                'Report All',
-                                ui_manager,
-                                object_id='#everything_button')
-
-rel_button_REPORTPOS = UIButton(pygame.Rect((510, 560),
-                                            (100, 60)),
-                                'Report Pos',
-                                ui_manager,
-                                object_id='#everything_button')
-
-joystick_label = UILabel(pygame.Rect(540, 10,
-                                            230, 24),
-                                            "Joystick",
-                                            ui_manager,
-                                            object_id='#main_text_entry')
-
-serial_text_entry = UITextEntryLine(pygame.Rect((930, 95),
-                                            (250, 35)),
-                                            ui_manager,
-                                            object_id='#main_text_entry')
-
-#serial_text_entry.focus()
-
-serial_port_label = UILabel(pygame.Rect(550, 70,
-                                            230, 24),
-                                            "Serial Port",
-                                            ui_manager,
-                                            object_id='#main_text_entry')
-
-serial_command_label = UILabel(pygame.Rect(870, 70,
-                                            230, 24),
-                                            "Serial Command",
-                                            ui_manager,
-                                            object_id='#main_text_entry')
-
+usb_port = 'usbserial'
+wchusb_port = 'wchusbserial'
 current_serialPort = ' - '
-ports = serial.tools.list_ports.comports()
+ports = serial.tools.list_ports.comports()                          # Search for attached serial ports
 available_ports = []
 for p in ports:
-    available_ports.append(p.device)                        # Append each found serial port to array available_ports
+    available_ports.append(p.device)                                # Append each found serial port to array available_ports
 
-drop_down_serial = UIDropDownMenu(available_ports,
-                                            current_serialPort,
-                                            pygame.Rect((620,95),
-                                            (250, 30)),
-                                            ui_manager)
+if current_serialPort == ' - ':
+    if (wchusb_port in '\t'.join(available_ports)):
+        current_serialPort = [string for string in available_ports if wchusb_port in string]
+        ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+        readSerial()
+    elif (usb_port in '\t'.join(available_ports)):
+        current_serialPort = [string for string in available_ports if usb_port in string]
+        ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+        readSerial()
+    else:
+        current_serialPort = [' - ']
+
+drop_down_serial = UIDropDownMenu(available_ports,                  # Recreate serial port drop down list
+                            current_serialPort[0],                  # Currently selected port
+                            pygame.Rect((620,95),
+                            (250, 30)),
+                            ui_manager)
 
 serialPortTextBox()
 textBoxJoystickName()
@@ -740,6 +588,8 @@ crosshairSlider.fill(pygame.Color("magenta"))
 pygame.draw.circle(crosshairSlider, pygame.Color("blue"), (radius,radius), radius)
 crosshairSlider.set_colorkey(pygame.Color("magenta"))#, pygame.RLEACCEL)
 #crosshair = crosshair.convert()
+
+ui_manager.set_focus_set(textBoxSerial)                                                                     # Sets focus so focus can be tested
 
 def process_events():
     global arr
@@ -810,27 +660,21 @@ def process_events():
             if event.key == ord('a'):
                 axisX = int(-255)
                 panKeyPresseed = True
-                #print('Left')
             if event.key == ord('d'):
                 axisX = int(255)
                 panKeyPresseed = True
-                #print('Right')
             if event.key == ord('w'):
                 axisY = int(-255)
                 tiltKeyPresseed = True
-                #print('Up')
             if event.key == ord('s'):
                 axisY = int(255)
                 tiltKeyPresseed = True
-                #print('Down')
             if event.key == ord(','):
                 axisZ = int(-255)
                 sliderKeyPresseed = True
-                #print('Slider Left')
             if event.key == ord('.'):
                 axisZ = int(255)
                 sliderKeyPresseed = True
-                #print('Slider Right')
 
         if (event.type == pygame.KEYUP) and not (UITextEntry in whereIsFocus):
             if event.key == ord('a'):
@@ -1384,7 +1228,6 @@ def process_events():
             if (event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED):# and event.ui_object_id == '#main_text_entry'):
                 sendSerial(event.text)
                 serial_text_entry.set_text('')
-                #serial_text_entry.focus()
 
             if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == rel_button_L1:
@@ -1497,40 +1340,40 @@ def process_events():
                 mouse_x, mouse_y = event.pos
                 joyCircle.x = mouse_x
                 joyCircle.y = mouse_y
-                if ((mouse_x + offset_x) > mouseBorder) and ((mouse_y + offset_y) > mouseBorder):
+                if ((mouse_x + offset_x) > mouseBorder) and ((mouse_y + offset_y) > mouseBorder):           # XY Dot out of box: right & bottom
                     joyCircle.x = mouseBorder
                     joyCircle.y = mouseBorder
 
-                elif (((mouse_x + offset_x) > mouseBorder) and ((mouse_y + offset_y) < 30)):
+                elif (((mouse_x + offset_x) > mouseBorder) and ((mouse_y + offset_y) < 30)):                # XY Dot out of box: right & top
                     joyCircle.x = mouseBorder
                     joyCircle.y = 30
 
-                elif (((mouse_x + offset_x) < 30) and ((mouse_y + offset_y) > mouseBorder)):
+                elif (((mouse_x + offset_x) < 30) and ((mouse_y + offset_y) > mouseBorder)):                # XY Dot out of box: left & bottom
                     joyCircle.x = 30
                     joyCircle.y = mouseBorder
 
-                elif (((mouse_x + offset_x) < 30) and ((mouse_y + offset_y) < 30)):
+                elif (((mouse_x + offset_x) < 30) and ((mouse_y + offset_y) < 30)):                         # XY Dot out of box: left & top
                     joyCircle.x = 30
                     joyCircle.y = 30
 
-                elif ((mouse_x + offset_x) > (mouseBorder)):
+                elif ((mouse_x + offset_x) > (mouseBorder)):                                                # XY Dot out of box: right
                     joyCircle.x = mouseBorder
                     joyCircle.y = mouse_y + offset_y
 
-                elif ((mouse_x + offset_x) < 30):
+                elif ((mouse_x + offset_x) < 30):                                                           # XY Dot out of box: left
                     joyCircle.x = 30
                     joyCircle.y = mouse_y + offset_y
 
-                elif ((mouse_y + offset_y) > (mouseBorder)):
+                elif ((mouse_y + offset_y) > (mouseBorder)):                                                # XY Dot out of box: bottom
                     joyCircle.y = mouseBorder
                     joyCircle.x = mouse_x + offset_x
 
-                elif ((mouse_y + offset_y) < 30):
+                elif ((mouse_y + offset_y) < 30):                                                           # XY Dot out of box: top
                     joyCircle.y = 30
                     joyCircle.x = mouse_x + offset_x
 
                 else:
-                    joyCircle.x = mouse_x + offset_x
+                    joyCircle.x = mouse_x + offset_x                                                        # XY Dot inside box
                     joyCircle.y = mouse_y + offset_y
 
                 axisX = int(scale((joyCircle.x), (30,mouseBorder), (-255,255)))
@@ -1541,14 +1384,14 @@ def process_events():
                 mouse_x, mouse_y = event.pos
                 sliderCircle.x = mouse_x
                 sliderCircle.y = 420
-                if ((mouse_x + sliderOffset_x) > mouseBorder):
+                if ((mouse_x + sliderOffset_x) > mouseBorder):                                              # Z Dot out of box: right
                     sliderCircle.x = mouseBorder
 
-                elif ((mouse_x + sliderOffset_x) < 30):
+                elif ((mouse_x + sliderOffset_x) < 30):                                                     # Z Dot out of box: left
                     sliderCircle.x = 30
 
                 else:
-                    sliderCircle.x = mouse_x + sliderOffset_x
+                    sliderCircle.x = mouse_x + sliderOffset_x                                               # Z Dot inside box
 
                 axisZ = int(scale((sliderCircle.x), (30,mouseBorder), (-255,255)))
 
@@ -1556,11 +1399,9 @@ def process_events():
         axisYDOT = scale(axisY, (-255,255), (-1.0,1.0))
         axisZDOT = scale(axisZ, (-255,255), (-1.0,1.0))
 
-        joyCircle.x = (axisXDOT*165)+210-radius
+        joyCircle.x = (axisXDOT*165)+210-radius                                                             # Draw Dots
         joyCircle.y = (axisYDOT*165)+210-radius
         sliderCircle.x = (axisZDOT*165)+210-radius
-
-ui_manager.set_focus_set(textBoxSerial)
 
 while running:
     #pygame.event.pump()

@@ -6,6 +6,8 @@ const int XdeadRangeLow  = 512 - 60;
 const int XdeadRangeHigh = 512 + 60;
 const int YdeadRangeLow  = 512 - 60;
 const int YdeadRangeHigh = 512 + 60;
+const int ZdeadRangeLow  = 512 - 5;
+const int ZdeadRangeHigh = 512 + 5;
 
 const int ledPin1r = 27;
 const int ledPin1g = 25;
@@ -161,6 +163,7 @@ short oldShortVal2 = 0;
 
 int X_max = 1023;
 int Y_max = 1023;
+int Z_max = 1023;
 
 int out_min = -254;
 int out_max = 254;
@@ -169,6 +172,8 @@ int joyXread;
 int joyX;
 int joyYread;
 int joyY;
+int joyZread;
+int joyZ;
 
 void setup() {
   //Serial.begin(115200);
@@ -211,8 +216,8 @@ void setup() {
   pinMode(swPinSlow, INPUT_PULLUP);
   pinMode(swPinFast, INPUT_PULLUP);
 
-  pinMode(swPinLeft, INPUT_PULLUP);
-  pinMode(swPinRight, INPUT_PULLUP);
+  //pinMode(swPinLeft, INPUT_PULLUP);
+  //pinMode(swPinRight, INPUT_PULLUP);
 
   pinMode(swPinZoomIn, INPUT_PULLUP);
   pinMode(swPinZoomOut, INPUT_PULLUP);
@@ -288,6 +293,17 @@ void loop() {
     YShort = 0; // deadzone around center value
   }
 
+  joyZread = analogRead(A2);
+  if (joyZread < ZdeadRangeLow) {
+    ZShort = map(joyZread, 0, ZdeadRangeLow, out_min, 0);
+  }
+  else if (joyZread > ZdeadRangeHigh) {
+    ZShort = map(joyZread, ZdeadRangeHigh, Z_max, 0, out_max);
+  }
+  else {
+    ZShort = 0; // deadzone around center value
+  }
+  
   /* ------------------------------------------------- Buttons ------------------------------------------------- */
 
   reading1 = digitalRead(swPin1s);
@@ -630,7 +646,7 @@ void loop() {
   lastButtonState14 = reading14;
 
   /* --------------------------------------------- Send Move Slider Left / Right -------------------------------------------- */
-
+/*
   reading15 = digitalRead(swPinLeft);
   reading16 = digitalRead(swPinRight);
   if (!reading15 && reading16 && !sliderPressed) {
@@ -648,7 +664,7 @@ void loop() {
     notMoving = true;
     ZShort = 0;                                             // Stop L&R
   }
-
+*/
   /* --------------------------------------------- Send Zoom In / Out -------------------------------------------- */
 
   reading17 = digitalRead(swPinZoomIn);

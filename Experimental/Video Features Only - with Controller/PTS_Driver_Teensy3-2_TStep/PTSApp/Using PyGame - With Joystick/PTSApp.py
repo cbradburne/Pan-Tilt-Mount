@@ -240,9 +240,25 @@ def sendREPORTpos():
 def serialPort_changed():
     global ser
     global baudRate
+    global current_serialPort
+    global serialText
+    global drop_down_serial
+    
     serialPortSelect = drop_down_serial.selected_option
-    ser = Serial(serialPortSelect , baudRate, timeout=0, writeTimeout=0)
-    readSerial()
+    try:
+        ser = Serial(serialPortSelect , baudRate, timeout=0, writeTimeout=0)
+        readSerial()
+    except:
+        ser = ''
+        serialNotSel = 'Serial port not available!<br>'
+        textBoxSerial.kill()
+        serialText = serialNotSel + serialText
+        serialPortTextBox()
+        drop_down_serial = UIDropDownMenu(available_ports,                      # Recreate serial port drop down list
+                                        current_serialPort[0],                  # Currently selected port
+                                        pygame.Rect((620,95),
+                                        (250, 30)),
+                                        ui_manager)
 
 def tohex(val, nbits):
     return hex((val + (1 << nbits)) % (1 << nbits))
@@ -410,13 +426,19 @@ def doRefresh():
 
     if current_serialPort == ' - ':
         if (wchusb_port in '\t'.join(available_ports)):
-            current_serialPort = [string for string in available_ports if wchusb_port in string]
-            ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
-            readSerial()
+            try:
+                current_serialPort = [string for string in available_ports if wchusb_port in string]
+                ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+                readSerial()
+            except:
+                current_serialPort = [' - ']
         elif (usb_port in '\t'.join(available_ports)):
-            current_serialPort = [string for string in available_ports if usb_port in string]
-            ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
-            readSerial()
+            try:
+                current_serialPort = [string for string in available_ports if usb_port in string]
+                ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+                readSerial()
+            except:
+                current_serialPort = [' - ']
         else:
             current_serialPort = [' - ']
 
@@ -544,13 +566,19 @@ for p in ports:
 
 if current_serialPort == ' - ':
     if (wchusb_port in '\t'.join(available_ports)):
-        current_serialPort = [string for string in available_ports if wchusb_port in string]
-        ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
-        readSerial()
+        try:
+            current_serialPort = [string for string in available_ports if wchusb_port in string]
+            ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+            readSerial()
+        except:
+                current_serialPort = [' - ']
     elif (usb_port in '\t'.join(available_ports)):
-        current_serialPort = [string for string in available_ports if usb_port in string]
-        ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
-        readSerial()
+        try:
+            current_serialPort = [string for string in available_ports if usb_port in string]
+            ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+            readSerial()
+        except:
+                current_serialPort = [' - ']
     else:
         current_serialPort = [' - ']
 

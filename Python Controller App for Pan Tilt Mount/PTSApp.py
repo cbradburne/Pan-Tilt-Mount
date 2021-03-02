@@ -176,9 +176,26 @@ def sendSLOW():
 def serialPort_changed():
     global ser
     global baudRate
+    global current_serialPort
+    global serialText
+    global drop_down_serial
+    
     serialPortSelect = drop_down_serial.selected_option
-    ser = Serial(serialPortSelect , baudRate, timeout=0, writeTimeout=0)
-    readSerial()
+    try:
+        ser = Serial(serialPortSelect , baudRate, timeout=0, writeTimeout=0)
+        readSerial()
+    except:
+        ser = ''
+        serialNotSel = 'Serial port not available!<br>'
+        current_serialPort = [' - ']
+        textBoxSerial.kill()
+        serialText = serialNotSel + serialText
+        serialPortTextBox()
+        drop_down_serial = UIDropDownMenu(available_ports,                      # Recreate serial port drop down list
+                                        current_serialPort[0],                  # Currently selected port
+                                        pygame.Rect((620,95),
+                                        (250, 30)),
+                                        ui_manager)
 
 def tohex(val, nbits):
     return hex((val + (1 << nbits)) % (1 << nbits))
@@ -322,11 +339,11 @@ def initialiseJoysticks():
 
     if ( len( available_joysticks ) == 0 ):
         joystickName =  "No joystick found."
-        print( "No joystick found." )
+        #print( "No joystick found." )
     else:
         for i,joystk in enumerate( available_joysticks ):
-            print("Joystick %d is named [%s]" % ( i, joystk.get_name() ) )
             joystickName = joystk.get_name()
+            #print("Joystick %d is named [%s]" % ( i, joystk.get_name() ) )
 
     return available_joysticks
 
@@ -336,15 +353,20 @@ def int_to_bytes(number: int) -> bytes:
 def doRefresh():
     global drop_down_serial
     global ser
-    ser = ''
-    current_serialPort = ' - '
-    drop_down_serial.kill()
-    ports = serial.tools.list_ports.comports()
+    global current_serialPort
+    global baudRate
+    #ser = ''
+    #current_serialPort = ' - '
+    drop_down_serial.kill()                                             # Clear serial port drop down box
+    ports = serial.tools.list_ports.comports()                          # Search for attached serial ports
     available_ports = []
     for p in ports:
-        available_ports.append(p.device)                        # Append each found serial port to array available_ports
-    drop_down_serial = UIDropDownMenu(available_ports,
-                                current_serialPort,
+        available_ports.append(p.device)                                # Append each found serial port to array available_ports
+
+    current_serialPort = [' - ']
+
+    drop_down_serial = UIDropDownMenu(available_ports,                  # Recreate serial port drop down list
+                                current_serialPort[0],                  # Currently selected port
                                 pygame.Rect((620,95),
                                 (250, 30)),
                                 ui_manager)

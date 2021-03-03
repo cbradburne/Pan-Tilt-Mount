@@ -699,16 +699,16 @@ def process_events():
             if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56:
                 isZooming = True
                 sendZOOMin()
-                print("IN pressed")
+                #print("IN pressed")
             if 482 <= mouse[0] <= 482+56 and 322 <= mouse[1] <= 322+56:
                 isZooming = True
                 sendZOOMout()
-                print("OUT pressed")
+                #print("OUT pressed")
 
         if event.type == pygame.MOUSEBUTTONUP and isZooming:
             isZooming = False
             sendZOOMstop()
-            print("Zoom Stopped")
+            #print("Zoom Stopped")
 
         ui_manager.process_events(event)
         deadRangeLow = -0.2
@@ -739,27 +739,27 @@ def process_events():
             if event.key == ord('a'):
                 axisX = int(0)
                 panKeyPresseed = False
-                print('Left stop')
+                #print('Left stop')
             if event.key == ord('d'):
                 axisX = int(0)
                 panKeyPresseed = False
-                print('Right stop')
+                #print('Right stop')
             if event.key == ord('w'):
                 axisY = int(0)
                 tiltKeyPresseed = False
-                print('Up stop')
+                #print('Up stop')
             if event.key == ord('s'):
                 axisY = int(0)
                 tiltKeyPresseed = False
-                print('Down stop')
+                #print('Down stop')
             if event.key == ord(','):
                 axisZ = int(0)
                 sliderKeyPresseed = False
-                print('Slider Left stop')
+                #print('Slider Left stop')
             if event.key == ord('.'):
                 axisZ = int(0)
                 sliderKeyPresseed = False
-                print('Slider Right stop')
+                #print('Slider Right stop')
 
         # left 1
         # right 2

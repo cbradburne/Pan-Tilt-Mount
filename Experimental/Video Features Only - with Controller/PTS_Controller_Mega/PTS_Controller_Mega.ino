@@ -6,8 +6,8 @@ const int XdeadRangeLow  = 512 - 60;
 const int XdeadRangeHigh = 512 + 60;
 const int YdeadRangeLow  = 512 - 60;
 const int YdeadRangeHigh = 512 + 60;
-const int ZdeadRangeLow  = 512 - 5;
-const int ZdeadRangeHigh = 512 + 5;
+const int ZdeadRangeLow  = 508 - 60; // 466
+const int ZdeadRangeHigh = 508 + 60; // 547  
 
 const int ledPin1r = 27;
 const int ledPin1g = 25;
@@ -163,7 +163,8 @@ short oldShortVal2 = 0;
 
 int X_max = 1023;
 int Y_max = 1023;
-int Z_max = 1023;
+int Z_min = 258; // 130 914
+int Z_max = 793; // 258 794
 
 int out_min = -254;
 int out_max = 254;
@@ -295,7 +296,7 @@ void loop() {
 
   joyZread = analogRead(A2);
   if (joyZread < ZdeadRangeLow) {
-    ZShort = map(joyZread, 0, ZdeadRangeLow, out_min, 0);
+    ZShort = map(joyZread, Z_min, ZdeadRangeLow, out_min, 0);
   }
   else if (joyZread > ZdeadRangeHigh) {
     ZShort = map(joyZread, ZdeadRangeHigh, Z_max, 0, out_max);
@@ -303,6 +304,10 @@ void loop() {
   else {
     ZShort = 0; // deadzone around center value
   }
+
+  //Serial.print(joyZread);
+  //Serial.print(" - ");
+  //Serial.println(ZShort);
   
   /* ------------------------------------------------- Buttons ------------------------------------------------- */
 
@@ -681,7 +686,8 @@ void loop() {
   }
   if (reading17 && reading18 && !notZooming && zoomPressed) {
     zoomPressed = false;
-    notZooming = true;                                      //
+    notZooming = true;
+    sendCharArray((char *)"N");                             // Stop Zooming
   }
 
   /* --------------------------------------------- Send Joystick & Left / Right -------------------------------------------- */

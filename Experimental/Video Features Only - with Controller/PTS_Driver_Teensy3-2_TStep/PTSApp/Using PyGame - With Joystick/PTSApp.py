@@ -35,6 +35,7 @@ except:
 
 pygame.font.init()
 myfont = pygame.font.SysFont('Trebuchet MS', 30)
+myfontsmall = pygame.font.SysFont('Trebuchet MS', 20)
 clk = pygame.time.Clock()
 
 baudRate = 38400 #57600 or 38400
@@ -99,6 +100,13 @@ joyZreadDOT = 0.0
 panKeyPresseed = False
 tiltKeyPresseed = False
 sliderKeyPresseed = False
+isZooming = False
+colour_light = (99,104,107) 
+colour_dark = (76,80,82)
+colour = (255,255,255)
+zoomINtext = myfontsmall.render('IN' , True , colour)
+zoomOUTtext = myfontsmall.render('OUT' , True , colour)
+#smallfont = pygame.font.SysFont('Corbel',35) 
 
 textsurfaceW = myfont.render('w', False, (89, 89, 89))
 textsurfaceA = myfont.render('a', False, (89, 89, 89))
@@ -171,6 +179,10 @@ def sendZOOMin():
 
 def sendZOOMout():
     temp='z'
+    sendSerial(temp)
+
+def sendZOOMstop():
+    temp='N'
     sendSerial(temp)
 
 def sendSET1():
@@ -544,8 +556,9 @@ rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports'
 rel_button_SLOW = UIButton(pygame.Rect((480, 100), (60, 60)), 'SLOW', ui_manager)
 rel_button_FAST = UIButton(pygame.Rect((480, 160), (60, 60)), 'FAST', ui_manager)
 
-rel_button_ZOOMin = UIButton(pygame.Rect((480, 260), (60, 60)), 'IN', ui_manager)
-rel_button_ZOOMout = UIButton(pygame.Rect((480, 320), (60, 60)), 'OUT', ui_manager)
+#rel_button_ZOOMin = UIButton(pygame.Rect((480, 260), (60, 60)), 'IN', ui_manager)
+#rel_button_ZOOMout = UIButton(pygame.Rect((480, 320), (60, 60)), 'OUT', ui_manager)
+
 
 rel_button_REPORT = UIButton(pygame.Rect((510, 500), (100, 60)), 'Report All', ui_manager)
 rel_button_REPORTPOS = UIButton(pygame.Rect((510, 560), (100, 60)), 'Report Pos', ui_manager)
@@ -664,6 +677,7 @@ def process_events():
     global tiltKeyPresseed
     global sliderKeyPresseed
     global drop_down_serial
+    global isZooming
 
     joyPS4 = "Sony"
     joyPS4BT = "DUALSHOCK"
@@ -678,6 +692,23 @@ def process_events():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.MOUSEBUTTONDOWN: 
+            #if the mouse is clicked on the 
+            # button the game is terminated 
+            if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56:
+                isZooming = True
+                sendZOOMin()
+                print("IN pressed")
+            if 482 <= mouse[0] <= 482+56 and 322 <= mouse[1] <= 322+56:
+                isZooming = True
+                sendZOOMout()
+                print("OUT pressed")
+
+        if event.type == pygame.MOUSEBUTTONUP and isZooming:
+            isZooming = False
+            sendZOOMstop()
+            print("Zoom Stopped")
 
         ui_manager.process_events(event)
         deadRangeLow = -0.2
@@ -785,10 +816,12 @@ def process_events():
                     elif (joystick.get_button(6) and not button6Pressed):               # PS4 L2
                         button6Pressed = True
                         sendZOOMout()
+                        isZooming = True
                         #print("6 - L2")
                     elif (joystick.get_button(7) and not button7Pressed):               # PS4 R2
                         button7Pressed = True
                         sendZOOMin()
+                        isZooming = True
                         #print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # PS4 Share
                         button8Pressed = True
@@ -806,6 +839,14 @@ def process_events():
                         button11Pressed = True
                         sendREPORTpos()
                         #print("11 - R3")
+                if event.type == pygame.JOYBUTTONUP:
+                    if not (joystick.get_button(6) and button6Pressed):
+                        sendZOOMstop()
+                        isZooming = False
+                    elif not (joystick.get_button(7) and button7Pressed):
+                        sendZOOMstop()
+                        isZooming = False
+
                 if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
@@ -920,17 +961,23 @@ def process_events():
                         axisY = 0
 
                     if (joyL2read > 0) and not button15Pressed:
-                        button15Pressed = True
+                        isZooming = True
                         sendZOOMout()
+                        button15Pressed = True
 
                     if (joyR2read > 0) and not button16Pressed:
-                        button16Pressed = True
+                        isZooming = True
                         sendZOOMin()
+                        button16Pressed = True
                     
                     if (button15Pressed and (joyL2read < 0)):
+                        isZooming = False
+                        sendZOOMstop()
                         button15Pressed = False
 
                     if (button16Pressed and (joyR2read < 0)):
+                        isZooming = False
+                        sendZOOMstop()
                         button16Pressed = False
 
                 if not sliderKeyPresseed:
@@ -949,55 +996,65 @@ def process_events():
                     if (joystick.get_button(0) and not button0Pressed):                 # Nimbus - A
                         button0Pressed = True
                         sendGO3()
-                        print("0 - A") 
+                        #print("0 - A") 
                     elif (joystick.get_button(1) and not button1Pressed):               # Nimbus - B
                         button1Pressed = True
                         sendGO2()
-                        print("1 - B")                    
+                        #print("1 - B")                    
                     elif (joystick.get_button(2) and not button2Pressed):               # Nimbus - X
                         button2Pressed = True
                         sendGO1()
-                        print("2 - X")
+                        #print("2 - X")
                     elif (joystick.get_button(3) and not button3Pressed):               # Nimbus - Y
                         button3Pressed = True
                         sendGO4()
-                        print("3 - Y")
+                        #print("3 - Y")
                     elif (joystick.get_button(4) and not button4Pressed):               # Nimbus - L1
                         button4Pressed = True
                         sendSPEEDslow()
-                        print("4 - L1")
+                        #print("4 - L1")
                     elif (joystick.get_button(5) and not button5Pressed):               # Nimbus - R1
                         button5Pressed = True
                         sendSPEEDfast()
-                        print("5 - R1")
+                        #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # Nimbus - L2
                         button6Pressed = True
+                        isZooming = True
                         sendZOOMout()
-                        print("6 - L2")
+                        #print("6 - L2")
                     elif (joystick.get_button(7) and not button7Pressed):               # Nimbus - R2
                         button7Pressed = True
+                        isZooming = True
                         sendZOOMin()
-                        print("7 - R2")
+                        #print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # Nimbus - Up
                         button8Pressed = True
                         sendSET4()
-                        print("8 - Up")
+                        #print("8 - Up")
                     elif (joystick.get_button(9) and not button9Pressed):               # Nimbus - Down
                         button9Pressed = True
                         sendSET3()
-                        print("9 - Down")
+                        #print("9 - Down")
                     elif (joystick.get_button(10) and not button10Pressed):             # Nimbus - Right
                         button10Pressed = True
                         sendSET2()
-                        print("10 - Right")
+                        #print("10 - Right")
                     elif (joystick.get_button(11) and not button11Pressed):             # Nimbus - Left
                         button11Pressed = True
                         sendSET1()
-                        print("11 - Left")
+                        #print("11 - Left")
                     elif (joystick.get_button(12) and not button12Pressed):             # Nimbus - Menu
                         button12Pressed = True
                         sendREPORTall()
-                        print("12 - Menu")
+                        #print("12 - Menu")
+
+                if event.type == pygame.JOYBUTTONUP:
+                    if not (joystick.get_button(6) and button6Pressed):
+                        sendZOOMstop()
+                        isZooming = False
+                    elif not (joystick.get_button(7) and button7Pressed):
+                        sendZOOMstop()
+                        isZooming = False
 
                 if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
@@ -1081,10 +1138,12 @@ def process_events():
                         #print("7 - R1")
                     elif (joystick.get_button(8) and not button8Pressed):               # SN30 - L2
                         button8Pressed = True
+                        isZooming = True
                         sendZOOMout()
                         #print("8 - L2")
                     elif (joystick.get_button(9) and not button9Pressed):               # SN30 - R2
                         button9Pressed = True
+                        isZooming = True
                         sendZOOMin()
                         #print("9 - R2")
                     elif (joystick.get_button(10) and not button10Pressed):             # SN30 - Select
@@ -1107,6 +1166,14 @@ def process_events():
                         button14Pressed = True
                         sendREPORTall()
                         #print("14 - R3")
+
+                if event.type == pygame.JOYBUTTONUP:
+                    if not (joystick.get_button(8) and button8Pressed):
+                        sendZOOMstop()
+                        isZooming = False
+                    elif not (joystick.get_button(9) and button9Pressed):
+                        sendZOOMstop()
+                        isZooming = False
 
                 if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
@@ -1165,10 +1232,12 @@ def process_events():
                         #print("5 - R1")
                     elif (joystick.get_button(6) and not button6Pressed):               # L2
                         button6Pressed = True
+                        isZooming = True
                         sendZOOMout()
                         #print("6 - L2")
                     elif (joystick.get_button(7) and not button7Pressed):               # R2
                         button7Pressed = True
+                        isZooming = True
                         sendZOOMin()
                         #print("7 - R2")
                     elif (joystick.get_button(8) and not button8Pressed):               # Up
@@ -1191,6 +1260,14 @@ def process_events():
                         button12Pressed = True
                         sendREPORTall()
                         #print("12 - Menu")
+
+                if event.type == pygame.JOYBUTTONUP:
+                    if not (joystick.get_button(6) and button6Pressed):
+                        sendZOOMstop()
+                        isZooming = False
+                    elif not (joystick.get_button(7) and button7Pressed):
+                        sendZOOMstop()
+                        isZooming = False
 
                 if not panKeyPresseed and not tiltKeyPresseed:
                     joyXread = joystick.get_axis(0)
@@ -1284,10 +1361,6 @@ def process_events():
                     sendSL1()
                 elif event.ui_element == rel_button_SL100:
                     sendSL10()
-                elif event.ui_element == rel_button_U10:
-                    sendZOOMin()
-                elif event.ui_element == rel_button_D1:
-                    sendZOOMout()
                 elif event.ui_element == rel_button_SET1:
                     sendSET1()
                 elif event.ui_element == rel_button_SET2:
@@ -1318,10 +1391,6 @@ def process_events():
                     sendSPEEDslow()
                 elif event.ui_element == rel_button_FAST:
                     sendSPEEDfast()
-                elif event.ui_element == rel_button_ZOOMin:
-                    sendZOOMin()
-                elif event.ui_element == rel_button_ZOOMout:
-                    sendZOOMout()
                 elif event.ui_element == rel_button_REPORT:
                     sendREPORTall()
                 elif event.ui_element == rel_button_REPORTPOS:
@@ -1361,6 +1430,9 @@ def process_events():
                     axisZ = int(0)
 
                 mouseMoving = False
+            if isZooming:
+                sendZOOMstop()
+                isZooming = False
 
         if event.type == pygame.MOUSEMOTION:
             if joyCircle_draging:
@@ -1471,6 +1543,21 @@ while running:
 
     pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
     pygame.draw.rect(window_surface, [125,0,0], [30,400,360,60],width=3)
+
+    mouse = pygame.mouse.get_pos()
+
+    if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56: 
+        pygame.draw.rect(window_surface,colour_light,[482,262,56,56]) 
+    else: 
+        pygame.draw.rect(window_surface,colour_dark,[482,262,56,56])
+
+    if 482 <= mouse[0] <= 482+56 and 322 <= mouse[1] <= 322+56: 
+        pygame.draw.rect(window_surface,colour_light,[482,322,56,56]) 
+    else: 
+        pygame.draw.rect(window_surface,colour_dark,[482,322,56,56])
+
+    window_surface.blit(zoomINtext, (500, 278))
+    window_surface.blit(zoomOUTtext, (491, 338))
 
     pygame.display.update()
 

@@ -66,7 +66,7 @@ FloatCoordinate intercept;
 bool motorRunning = false;
 
 unsigned long previousMillis = 0;
-const long interval = 20;
+const long interval = 50;
 bool zoomIN = false;
 bool zoomOUT = false;
 int zoomCounter = 0;
@@ -1191,12 +1191,12 @@ void mainLoop(void) {
     unsigned long currentMillis = millis();
     if (zoomIN && !zoomOUT && (currentMillis - previousMillis >= interval)) {
       previousMillis = currentMillis;
-      irsend.sendSony(0x2C9B, 12);
+      irsend.sendSony(0x2C9B, 15);      // was 12bit
     }
 
     if (zoomOUT && !zoomIN && (currentMillis - previousMillis >= interval)) {
       previousMillis = currentMillis;
-      irsend.sendSony(0x6C9B, 12);   // test with hi-fi 0x481  // camera zoom out 0x6C9B
+      irsend.sendSony(0x6C9B, 15);   // test with hi-fi 0x481  // camera zoom out 0x6C9B
     }
   }
 }

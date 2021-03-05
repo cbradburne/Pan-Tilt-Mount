@@ -719,21 +719,27 @@ def process_events():
             if event.key == ord('a'):
                 axisX = int(-255)
                 panKeyPresseed = True
+                #print('Left')
             if event.key == ord('d'):
                 axisX = int(255)
                 panKeyPresseed = True
+                #print('Right')
             if event.key == ord('w'):
                 axisY = int(-255)
                 tiltKeyPresseed = True
+                #print('Up')
             if event.key == ord('s'):
                 axisY = int(255)
                 tiltKeyPresseed = True
+                #print('Down')
             if event.key == ord(','):
                 axisZ = int(-255)
                 sliderKeyPresseed = True
+                #print('Slider Left')
             if event.key == ord('.'):
                 axisZ = int(255)
                 sliderKeyPresseed = True
+                #print('Slider Right')
 
         if (event.type == pygame.KEYUP) and not (UITextEntry in whereIsFocus):
             if event.key == ord('a'):
@@ -847,7 +853,7 @@ def process_events():
                         sendZOOMstop()
                         isZooming = False
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -865,7 +871,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):
@@ -939,7 +945,7 @@ def process_events():
                         sendSET2()
                         #print("14 - Right")
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -980,7 +986,7 @@ def process_events():
                         sendZOOMstop()
                         button16Pressed = False
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(3)
 
                     if (joyZread < deadRangeLow):
@@ -1056,7 +1062,7 @@ def process_events():
                         sendZOOMstop()
                         isZooming = False
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = -(joystick.get_axis(1))
 
@@ -1074,7 +1080,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):
@@ -1175,7 +1181,7 @@ def process_events():
                         sendZOOMstop()
                         isZooming = False
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1193,7 +1199,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):
@@ -1269,7 +1275,7 @@ def process_events():
                         sendZOOMstop()
                         isZooming = False
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1287,7 +1293,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):

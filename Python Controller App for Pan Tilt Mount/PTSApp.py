@@ -758,7 +758,7 @@ def process_events():
                         sendREPORTall()
                         #print("11 - R3")
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -776,7 +776,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):
@@ -849,7 +849,7 @@ def process_events():
                         sendGOFwd()
                         #print("14 - Right")
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -867,7 +867,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(3)
 
                     if (joyZread < deadRangeLow):
@@ -940,7 +940,7 @@ def process_events():
                         sendGOFwd()
                         #print("14 - Right")
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = -(joystick.get_axis(1))
 
@@ -958,7 +958,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):
@@ -1049,7 +1049,7 @@ def process_events():
                         sendREPORTall()
                         #print("14 - R3")
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1067,7 +1067,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):
@@ -1132,7 +1132,7 @@ def process_events():
                         sendREPORTall()
                         #print("12 - Menu")
 
-                if not panKeyPresseed and not tiltKeyPresseed:
+                if not panKeyPresseed and not tiltKeyPresseed and not joyCircle_draging:
                     joyXread = joystick.get_axis(0)
                     joyYread = joystick.get_axis(1)
 
@@ -1150,7 +1150,7 @@ def process_events():
                     else:
                         axisY = 0
 
-                if not sliderKeyPresseed:
+                if not sliderKeyPresseed and not sliderCircle_draging:
                     joyZread = joystick.get_axis(2)
 
                     if (joyZread < deadRangeLow):

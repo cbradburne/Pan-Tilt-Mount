@@ -27,7 +27,7 @@ try:                                                                            
     image_path = (base_path / "./PTSApp-Icon.png").resolve()
     gameIcon = pygame.image.load(image_path)
     pygame.display.set_icon(gameIcon)
-except:
+except:                                                                                             # Needed for Windows "cx_freeze"
     imageFile = "PTSApp-Icon.png"
     imageFilePath = find_data_file(imageFile)
     gameIcon = pygame.image.load(imageFilePath)
@@ -104,9 +104,9 @@ isZooming = False
 colour_light = (99,104,107) 
 colour_dark = (76,80,82)
 colour = (255,255,255)
+
 zoomINtext = myfontsmall.render('IN' , True , colour)
 zoomOUTtext = myfontsmall.render('OUT' , True , colour)
-#smallfont = pygame.font.SysFont('Corbel',35) 
 
 textsurfaceW = myfont.render('w', False, (89, 89, 89))
 textsurfaceA = myfont.render('a', False, (89, 89, 89))
@@ -249,6 +249,12 @@ def sendREPORTpos():
     temp='r'
     sendSerial(temp)
 
+def sendCLEARtext():
+    global serialText
+    serialText = ''
+    textBoxSerial.kill()
+    serialPortTextBox()
+
 def serialPort_changed():
     global ser
     global baudRate
@@ -266,6 +272,7 @@ def serialPort_changed():
         textBoxSerial.kill()
         serialText = serialNotSel + serialText
         serialPortTextBox()
+        drop_down_serial.kill()
         drop_down_serial = UIDropDownMenu(available_ports,                      # Recreate serial port drop down list
                                         current_serialPort[0],                  # Currently selected port
                                         pygame.Rect((620,95),
@@ -393,7 +400,7 @@ def sendSerial(sendValue):
         ser.write(sendValue.encode())                               # Send button value to coneected com port
         
 def scale(val, src, dst):
-    #Scale the given value from the scale of src to the scale of dst.
+    # Scale the given value from the scale of src to the scale of dst.
     return ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
     
 def initialiseJoysticks():
@@ -426,7 +433,6 @@ def doRefresh():
     global ser
     global current_serialPort
     global baudRate
-    #ser = ''
     usb_port = 'usbserial'
     wchusb_port = 'wchusbserial'
     current_serialPort = ' - '
@@ -482,34 +488,6 @@ except:
     themeFilePath = find_data_file(themeFile)
     ui_manager = UIManager(resolution, themeFilePath)
 
-rel_button_L1 = None
-rel_button_L10 = None
-rel_button_R1 = None
-rel_button_R10 = None
-rel_button_U1 = None
-rel_button_U10 = None
-rel_button_D1 = None
-rel_button_D10 = None
-rel_button_SET1 = None
-rel_button_SET2 = None
-rel_button_SET3 = None
-rel_button_SET4 = None
-rel_button_SET5 = None
-rel_button_SET6 = None
-rel_button_GO1 = None
-rel_button_GO2 = None
-rel_button_GO3 = None
-rel_button_GO4 = None
-rel_button_GO5 = None
-rel_button_GO6 = None
-rel_button_SLOW = None
-rel_button_FAST = None
-rel_button_REPORT = None
-rel_button_REPORTPOS = None
-serial_text_entry = None
-drop_down_serial = None
-
-message_window = None
 running = True
 
 clock = pygame.time.Clock()
@@ -556,26 +534,22 @@ rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports'
 rel_button_SLOW = UIButton(pygame.Rect((480, 100), (60, 60)), 'SLOW', ui_manager)
 rel_button_FAST = UIButton(pygame.Rect((480, 160), (60, 60)), 'FAST', ui_manager)
 
-#rel_button_ZOOMin = UIButton(pygame.Rect((480, 260), (60, 60)), 'IN', ui_manager)
-#rel_button_ZOOMout = UIButton(pygame.Rect((480, 320), (60, 60)), 'OUT', ui_manager)
-
-
-rel_button_REPORT = UIButton(pygame.Rect((510, 500), (100, 60)), 'Report All', ui_manager)
-rel_button_REPORTPOS = UIButton(pygame.Rect((510, 560), (100, 60)), 'Report Pos', ui_manager)
+rel_button_REPORT = UIButton(pygame.Rect((510, 470), (100, 60)), 'Report All', ui_manager)
+rel_button_REPORTPOS = UIButton(pygame.Rect((510, 530), (100, 60)), 'Report Pos', ui_manager)
+rel_button_CLEARtext = UIButton(pygame.Rect((510, 600), (100, 40)), 'Clear Text', ui_manager)
 
 joystick_label = UILabel(pygame.Rect(540, 10, 230, 24), "Joystick", ui_manager, object_id='#main_text_entry')
 serial_text_entry = UITextEntryLine(pygame.Rect((930, 95), (250, 35)), ui_manager, object_id='#main_text_entry')
 serial_port_label = UILabel(pygame.Rect(550, 70, 230, 24), "Serial Port", ui_manager)
 serial_command_label = UILabel(pygame.Rect(870, 70, 230, 24), "Serial Command", ui_manager)
 
-
 usb_port = 'usbserial'
 wchusb_port = 'wchusbserial'
 current_serialPort = ' - '
-ports = serial.tools.list_ports.comports()                          # Search for attached serial ports
+ports = serial.tools.list_ports.comports()                                                       # Search for attached serial ports
 available_ports = []
 for p in ports:
-    available_ports.append(p.device)                                # Append each found serial port to array available_ports
+    available_ports.append(p.device)                                                             # Append each found serial port to array available_ports
 
 if current_serialPort == ' - ':
     if (wchusb_port in '\t'.join(available_ports)):
@@ -595,8 +569,8 @@ if current_serialPort == ' - ':
     else:
         current_serialPort = [' - ']
 
-drop_down_serial = UIDropDownMenu(available_ports,                  # Recreate serial port drop down list
-                            current_serialPort[0],                  # Currently selected port
+drop_down_serial = UIDropDownMenu(available_ports,                                              # Recreate serial port drop down list
+                            current_serialPort[0],                                              # Currently selected port
                             pygame.Rect((620,95),
                             (250, 30)),
                             ui_manager)
@@ -693,9 +667,7 @@ def process_events():
         if event.type == pygame.QUIT:
             running = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN: 
-            #if the mouse is clicked on the 
-            # button the game is terminated 
+        if event.type == pygame.MOUSEBUTTONDOWN:
             if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56:
                 isZooming = True
                 sendZOOMin()
@@ -1336,7 +1308,7 @@ def process_events():
                 button14Pressed = False
 
         if event.type == pygame.USEREVENT:
-            if (event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED):# and event.ui_object_id == '#main_text_entry'):
+            if (event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED):
                 sendSerial(event.text)
                 serial_text_entry.set_text('')
 
@@ -1401,6 +1373,8 @@ def process_events():
                     sendREPORTall()
                 elif event.ui_element == rel_button_REPORTPOS:
                     sendREPORTpos()
+                elif event.ui_element == rel_button_CLEARtext:
+                    sendCLEARtext()
 
             if (event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED
                 and event.ui_element == drop_down_serial):
@@ -1510,11 +1484,10 @@ def process_events():
         sliderCircle.x = (axisZDOT*165)+210-radius
 
 while running:
-    #pygame.event.pump()
     time_delta = clock.tick() / 1000.0
     time_delta_stack.append(time_delta)
     
-    process_events()                                               # check for input
+    process_events()                                                                                        # check for input
 
     if (((axisX != oldAxisX) or (axisY != oldAxisY) or (axisZ != oldAxisZ)) and ((time.time() - previousTime) > 0.1)):
         previousTime = time.time()
@@ -1529,20 +1502,39 @@ while running:
         sendJoystick(arr)
         #print(4,' - ', axisZh, ' - ', axisXh, ' - ', axisYh)
 
-    readSerial()
+    try:
+        readSerial()
+    except:
+        ser=''
+        current_serialPort = [' - ']
+        serialNotSel = 'Serial port disconnected.<br>'
+        textBoxSerial.kill()
+        serialText = serialNotSel + serialText
+        serialPortTextBox()   
+        ports = serial.tools.list_ports.comports()                              # Search for attached serial ports
+        available_ports = []
+        for p in ports:
+            available_ports.append(p.device)                                    # Append each found serial port to array available_ports
 
-    ui_manager.update(time_delta)                               # respond to input
+        drop_down_serial.kill()
+        drop_down_serial = UIDropDownMenu(available_ports,                      # Recreate serial port drop down list
+                                        current_serialPort[0],                  # Currently selected port
+                                        pygame.Rect((620,95),
+                                        (250, 30)),
+                                        ui_manager)
 
-    window_surface.blit(background_surface, (0, 0))             # draw graphics
+    ui_manager.update(time_delta)                                               # respond to input
 
-    ui_manager.draw_ui(window_surface)                          # draw UI
+    window_surface.blit(background_surface, (0, 0))                             # draw graphics
 
-    window_surface.blit(textsurfaceW,(198,28))                  # W
-    window_surface.blit(textsurfaceA,(35,190))                  # A
-    window_surface.blit(textsurfaceS,(205,355))                 # S
-    window_surface.blit(textsurfaceD,(365,190))                 # D
-    window_surface.blit(textsurfaceLeft,(35,415))               # ,
-    window_surface.blit(textsurfaceRight,(375,415))             # .
+    ui_manager.draw_ui(window_surface)                                          # draw UI
+
+    window_surface.blit(textsurfaceW,(198,28))                                  # W
+    window_surface.blit(textsurfaceA,(35,190))                                  # A
+    window_surface.blit(textsurfaceS,(205,355))                                 # S
+    window_surface.blit(textsurfaceD,(365,190))                                 # D
+    window_surface.blit(textsurfaceLeft,(35,415))                               # ,
+    window_surface.blit(textsurfaceRight,(375,415))                             # .
     
     pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
     pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)

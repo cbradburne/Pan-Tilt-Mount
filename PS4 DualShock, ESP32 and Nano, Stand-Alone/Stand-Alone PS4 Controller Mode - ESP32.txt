@@ -1,0 +1,28 @@
+To use a PS4 DualShock controller with the Pan-Tilt-Mount in stand-alone mode, this is what you’ll need.
+
+ESP32 Dev Kit board - like this one https://www.amazon.co.uk/gp/product/B071JR9WS9
+DualShock 4 controller
+
+You'll need to get your DualShock4's Bluetooth MAC Address. 
+To get the MAC address use the program "SixaxisPairTool", https://dancingpixelstudios.com/sixaxis-controller/sixaxispairtool/. 
+I've included the file as thier website seems to be down at the moment.
+
+I was able to use it on a Mac via a virtual machine running Windows 10 on Parallels Deskptop.
+Make sure you connect your DualShock4 to your computer via USB and not by BlueTooth.
+
+Wiring:
+
+NANO  --  12vPSU  --  ESP32
+
+GND---------GND---------GND
+
+Vin---------12v---------Vin
+
+TX----------------------RX0
+
+RX----------------------TX0
+
+Note: When programming either board, you must disconnect the link between TX and RX. 
+Also, when programming the ESP32 via Arduino IDE, and when the IDE says "Connecting", sometimes you might need to press and hold the "BOOT" button on the ESP32 until the upload starts.
+
+When connecting your DualShock4 to your ESP32, make sure your PS4 is turned off (unplug the mains) and press the PS button on the controller. Keep trying if it doesn't connect first time.

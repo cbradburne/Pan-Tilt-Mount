@@ -1526,29 +1526,41 @@ def process_events():
                 elif event.ui_element == rel_button_SL100:
                     sendSL10()
                 elif event.ui_element == rel_button_SET1:
-                    sendSET1()
+                    if not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendSET1()
                 elif event.ui_element == rel_button_SET2:
-                    sendSET2()
+                    if not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendSET2()
                 elif event.ui_element == rel_button_SET3:
-                    sendSET3()
+                    if not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendSET3()
                 elif event.ui_element == rel_button_SET4:
-                    sendSET4()
+                    if not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendSET4()
                 elif event.ui_element == rel_button_SET5:
-                    sendSET5()
+                    if not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendSET5()
                 elif event.ui_element == rel_button_SET6:
-                    sendSET6()
+                    if not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendSET6()
                 elif event.ui_element == rel_button_GO1:
-                    sendGO1()
+                    if pos1set and not atPos1 and not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendGO1()
                 elif event.ui_element == rel_button_GO2:
-                    sendGO2()
+                    if pos2set and not atPos2 and not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendGO2()
                 elif event.ui_element == rel_button_GO3:
-                    sendGO3()
+                    if pos3set and not atPos3 and not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendGO3()
                 elif event.ui_element == rel_button_GO4:
-                    sendGO4()
+                    if pos4set and not atPos4 and not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendGO4()
                 elif event.ui_element == rel_button_GO5:
-                    sendGO5()
+                    if pos5set and not atPos5 and not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendGO5()
                 elif event.ui_element == rel_button_GO6:
-                    sendGO6()
+                    if pos6set and not atPos6 and not (pos1run or pos2run or pos3run or pos4run or pos5run or pos6run):
+                        sendGO6()
                 elif event.ui_element == rel_button_CLEARALL:
                     clearPosConfirm()
                 elif event.ui_element == rel_button_Refresh:

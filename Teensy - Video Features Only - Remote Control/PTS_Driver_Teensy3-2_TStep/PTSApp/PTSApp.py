@@ -467,7 +467,7 @@ def readSerial():
                     atPos4 = False
                     atPos5 = False
                     atPos6 = False
-                    pos1run = True
+                    pos2run = True
                 elif c == b'L':
                     atPos1 = False
                     atPos2 = False
@@ -475,7 +475,7 @@ def readSerial():
                     atPos4 = False
                     atPos5 = False
                     atPos6 = False
-                    pos1run = True
+                    pos3run = True
                 elif c == b'M':
                     atPos1 = False
                     atPos2 = False
@@ -483,7 +483,7 @@ def readSerial():
                     atPos4 = False
                     atPos5 = False
                     atPos6 = False
-                    pos1run = True
+                    pos4run = True
                 elif c == b'N':
                     atPos1 = False
                     atPos2 = False
@@ -491,7 +491,7 @@ def readSerial():
                     atPos4 = False
                     atPos5 = False
                     atPos6 = False
-                    pos1run = True
+                    pos5run = True
                 elif c == b'O':
                     atPos1 = False
                     atPos2 = False
@@ -499,25 +499,25 @@ def readSerial():
                     atPos4 = False
                     atPos5 = False
                     atPos6 = False
-                    pos1run = True
+                    pos6run = True
                 elif c == b'a':
                     pos1run = False
                     atPos1 = True
                 elif c == b'b':
-                    pos1run = False
-                    atPos1 = True
+                    pos2run = False
+                    atPos2 = True
                 elif c == b'c':
-                    pos1run = False
-                    atPos1 = True
+                    pos3run = False
+                    atPos3 = True
                 elif c == b'd':
-                    pos1run = False
-                    atPos1 = True
+                    pos4run = False
+                    atPos4 = True
                 elif c == b'e':
-                    pos1run = False
-                    atPos1 = True
+                    pos5run = False
+                    atPos5 = True
                 elif c == b'f':
-                    pos1run = False
-                    atPos1 = True
+                    pos6run = False
+                    atPos6 = True
                 elif c == b'Y':
                     pos1run = False
                     pos1set = False

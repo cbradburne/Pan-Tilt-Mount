@@ -7,11 +7,14 @@ import os, sys
 
 from collections import deque
 from pygame_gui import UIManager
+from pygame_gui.elements import UIWindow
 from pygame_gui.elements import UIButton
 from pygame_gui.elements import UITextEntryLine
 from pygame_gui.elements import UIDropDownMenu
 from pygame_gui.elements import UILabel
 from pygame_gui.elements.ui_text_box import UITextBox
+from pygame_gui.windows import UIMessageWindow
+from pygame_gui.windows import UIConfirmationDialog
 from serial import *
 from pathlib import Path
 
@@ -37,6 +40,8 @@ pygame.font.init()
 myfont = pygame.font.SysFont('Trebuchet MS', 30)
 myfontsmall = pygame.font.SysFont('Trebuchet MS', 20)
 clk = pygame.time.Clock()
+
+interval = 200
 
 baudRate = 38400 #57600 or 38400
 
@@ -70,6 +75,30 @@ button13Pressed = False
 button14Pressed = False
 button15Pressed = False
 button16Pressed = False
+
+pos1set = False
+pos2set = False
+pos3set = False
+pos4set = False
+pos5set = False
+pos6set = False
+
+pos1run = False
+pos2run = False
+pos3run = False
+pos4run = False
+pos5run = False
+pos6run = False
+
+atPos1 = False
+atPos2 = False
+atPos3 = False
+atPos4 = False
+atPos5 = False
+atPos6 = False
+
+blinkSet = False
+
 textBoxJoystickNames = None
 joyCircle_draging = False
 sliderCircle_draging = False
@@ -90,7 +119,11 @@ hat = ()
 oldHatX = 0
 oldHatY = 0
 previousTime = time.time()
+
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+OFF = (33, 40, 45)
+
 mouseBorder = 360
 radius = 15
 mouseMoving = False
@@ -120,6 +153,8 @@ fullscreen = False
 
 pygame.init()
 pygame.display.set_caption("PTSApp")
+
+previousTicks = pygame.time.get_ticks() + interval
 
 def sendUP1():
     temp='T1'
@@ -249,6 +284,15 @@ def sendREPORTpos():
     temp='r'
     sendSerial(temp)
 
+def clearPosConfirm():
+    message_window = UIConfirmationDialog(pygame.Rect((650, 200), (300, 150)), 
+                                        ui_manager,
+                                        action_long_desc='Clear All Position Data?')
+
+def sendCLEARALLpos():
+    temp='Y'
+    sendSerial(temp)
+
 def sendCLEARtext():
     global serialText
     serialText = ''
@@ -346,6 +390,24 @@ def readSerial():
     global ser
     global serBuffer
     global serialText
+    global atPos1
+    global atPos2
+    global atPos3
+    global atPos4
+    global atPos5
+    global atPos6
+    global pos1set
+    global pos2set
+    global pos3set
+    global pos4set
+    global pos5set
+    global pos6set
+    global pos1run
+    global pos2run
+    global pos3run
+    global pos4run
+    global pos5run
+    global pos6run
 
     if (ser == ''):
         return
@@ -370,9 +432,120 @@ def readSerial():
                 c = '²'
             elif (c == b'\xba') or (c == b'\xc2') or (c == b'\xc9'):
                 c = ''
-            elif (c == b'\x23'):                                        # c = # Remove zoom in / out commands
+            elif (c == b'\x23'):                                        # c = # Remove HASHTAG commands
                 c = ser.read()
-                c = '\n'
+                if c == b'A':
+                    atPos1 = True
+                    pos1set = True
+                elif c == b'B':
+                    atPos2 = True
+                    pos2set = True
+                elif c == b'C':
+                    atPos3 = True
+                    pos3set = True
+                elif c == b'D':
+                    atPos4 = True
+                    pos4set = True
+                elif c == b'E':
+                    atPos5 = True
+                    pos5set = True
+                elif c == b'F':
+                    atPos6 = True
+                    pos6set = True
+                elif c == b'J':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                    pos1run = True
+                elif c == b'K':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                    pos1run = True
+                elif c == b'L':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                    pos1run = True
+                elif c == b'M':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                    pos1run = True
+                elif c == b'N':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                    pos1run = True
+                elif c == b'O':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                    pos1run = True
+                elif c == b'a':
+                    pos1run = False
+                    atPos1 = True
+                elif c == b'b':
+                    pos1run = False
+                    atPos1 = True
+                elif c == b'c':
+                    pos1run = False
+                    atPos1 = True
+                elif c == b'd':
+                    pos1run = False
+                    atPos1 = True
+                elif c == b'e':
+                    pos1run = False
+                    atPos1 = True
+                elif c == b'f':
+                    pos1run = False
+                    atPos1 = True
+                elif c == b'Y':
+                    pos1run = False
+                    pos1set = False
+                    atPos1 = False
+                    pos2run = False
+                    pos2set = False
+                    atPos2 = False
+                    pos3run = False
+                    pos3set = False
+                    atPos3 = False
+                    pos4run = False
+                    pos4set = False
+                    atPos4 = False
+                    pos5run = False
+                    pos5set = False
+                    atPos5 = False
+                    pos6run = False
+                    pos6set = False
+                    atPos6 = False
+                elif c == b'y':
+                    atPos1 = False
+                    atPos2 = False
+                    atPos3 = False
+                    atPos4 = False
+                    atPos5 = False
+                    atPos6 = False
+                #c = '\n'
+                c = ''
             else:
                 c = c.decode('ascii') 
 
@@ -536,6 +709,8 @@ rel_button_GO3 = UIButton(pygame.Rect((150, 500), (60, 60)), 'GO 3', ui_manager)
 rel_button_GO4 = UIButton(pygame.Rect((210, 500), (60, 60)), 'GO 4', ui_manager)
 rel_button_GO5 = UIButton(pygame.Rect((270, 500), (60, 60)), 'GO 5', ui_manager)
 rel_button_GO6 = UIButton(pygame.Rect((330, 500), (60, 60)), 'GO 6', ui_manager)
+
+rel_button_CLEARALL = UIButton(pygame.Rect((390, 545), (100, 30)), 'Clear ALL', ui_manager)
 
 rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports', ui_manager)
 
@@ -1320,6 +1495,9 @@ def process_events():
                 sendSerial(event.text)
                 serial_text_entry.set_text('')
 
+            if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                sendCLEARALLpos()
+
             if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == rel_button_L1:
                     sendLEFT1()
@@ -1371,6 +1549,8 @@ def process_events():
                     sendGO5()
                 elif event.ui_element == rel_button_GO6:
                     sendGO6()
+                elif event.ui_element == rel_button_CLEARALL:
+                    clearPosConfirm()
                 elif event.ui_element == rel_button_Refresh:
                     doRefresh()
                 elif event.ui_element == rel_button_SLOW:
@@ -1534,6 +1714,82 @@ while running:
     ui_manager.update(time_delta)                                               # respond to input
 
     window_surface.blit(background_surface, (0, 0))                             # draw graphics
+    if pos1set and not pos1run and not atPos1:
+        pygame.draw.circle(window_surface, RED, (60, 480), radius/2)
+    elif pos1set and not pos1run and atPos1:
+        pygame.draw.circle(window_surface, GREEN, (60, 480), radius/2)
+    elif pos1set and pos1run and not atPos1:
+        if blinkSet:
+            pygame.draw.circle(window_surface, GREEN, (60, 480), radius/2)
+        else:
+            pygame.draw.circle(window_surface, OFF, (60, 480), radius/2)
+    elif not pos1set:
+        pygame.draw.circle(window_surface, OFF, (60, 480), radius/2)
+    
+    if pos2set and not pos2run and not atPos2:
+        pygame.draw.circle(window_surface, RED, (120, 480), radius/2)
+    elif pos2set and not pos2run and atPos2:
+        pygame.draw.circle(window_surface, GREEN, (120, 480), radius/2)
+    elif pos2set and pos2run and not atPos2:
+        if blinkSet:
+            pygame.draw.circle(window_surface, GREEN, (120, 480), radius/2)
+        else:
+            pygame.draw.circle(window_surface, OFF, (120, 480), radius/2)
+    elif not pos2set:
+        pygame.draw.circle(window_surface, OFF, (120, 480), radius/2)
+
+    if pos3set and not pos3run and not atPos3:
+        pygame.draw.circle(window_surface, RED, (180, 480), radius/2)
+    elif pos3set and not pos3run and atPos3:
+        pygame.draw.circle(window_surface, GREEN, (180, 480), radius/2)
+    elif pos3set and pos3run and not atPos3:
+        if blinkSet:
+            pygame.draw.circle(window_surface, GREEN, (180, 480), radius/2)
+        else:
+            pygame.draw.circle(window_surface, OFF, (180, 480), radius/2)
+    elif not pos3set:
+        pygame.draw.circle(window_surface, OFF, (180, 480), radius/2)
+
+    if pos4set and not pos4run and not atPos4:
+        pygame.draw.circle(window_surface, RED, (240, 480), radius/2)
+    elif pos4set and not pos4run and atPos4:
+        pygame.draw.circle(window_surface, GREEN, (240, 480), radius/2)
+    elif pos4set and pos4run and not atPos4:
+        if blinkSet:
+            pygame.draw.circle(window_surface, GREEN, (240, 480), radius/2)
+        else:
+            pygame.draw.circle(window_surface, OFF, (240, 480), radius/2)
+    elif not pos4set:
+        pygame.draw.circle(window_surface, OFF, (240, 480), radius/2)
+
+    if pos5set and not pos5run and not atPos5:
+        pygame.draw.circle(window_surface, RED, (300, 480), radius/2)
+    elif pos5set and not pos5run and atPos5:
+        pygame.draw.circle(window_surface, GREEN, (300, 480), radius/2)
+    elif pos5set and pos5run and not atPos5:
+        if blinkSet:
+            pygame.draw.circle(window_surface, GREEN, (300, 480), radius/2)
+        else:
+            pygame.draw.circle(window_surface, OFF, (300, 480), radius/2)
+    elif not pos5set:
+        pygame.draw.circle(window_surface, OFF, (300, 480), radius/2)
+
+    if pos6set and not pos6run and not atPos6:
+        pygame.draw.circle(window_surface, RED, (360, 480), radius/2)
+    elif pos6set and not pos6run and atPos6:
+        pygame.draw.circle(window_surface, GREEN, (360, 480), radius/2)
+    elif pos6set and pos6run and not atPos6:
+        if blinkSet:
+            pygame.draw.circle(window_surface, GREEN, (360, 480), radius/2)
+        else:
+            pygame.draw.circle(window_surface, OFF, (360, 480), radius/2)
+    elif not pos6set:
+        pygame.draw.circle(window_surface, OFF, (360, 480), radius/2)
+
+
+    if previousTicks <= pygame.time.get_ticks():
+        blinkSet = not blinkSet       
+        previousTicks = pygame.time.get_ticks() + interval
 
     ui_manager.draw_ui(window_surface)                                          # draw UI
 
@@ -1546,6 +1802,8 @@ while running:
     
     pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
     pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)
+                                                                                                    # Position LEDs
+    
 
     pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
     pygame.draw.rect(window_surface, [125,0,0], [30,400,360,60],width=3)

@@ -62,6 +62,7 @@ float tilt_accel_increment_us = 6000;
 float slider_accel_increment_us = 6000;
 byte acceleration_enable_state = 1;
 FloatCoordinate intercept;
+String atIndex = "test";
 
 bool motorRunning = false;
 
@@ -498,6 +499,27 @@ void moveToIndex(int index) {
   Serial1.println(String("Slider: ") + sliderStepsToMillimetres(keyframe_array[index].sliderStepCount) + String("mm"));
 
   multi_stepper.move(stepper_pan, stepper_tilt, stepper_slider);
+
+  if (index == 0) {
+    atIndex = "#a";
+  }
+  else if (index == 1) {
+    atIndex = "#b";
+  }
+  else if (index == 2) {
+    atIndex = "#c";
+  }
+  else if (index == 3) {
+    atIndex = "#d";
+  }
+  else if (index == 4) {
+    atIndex = "#e";
+  }
+  else if (index == 5) {
+    atIndex = "#f";
+  }
+  
+  Serial1.println(atIndex);
 }
 
 
@@ -852,6 +874,8 @@ void Serial1Data(void) {
     short panStepSpeed = (Serial1.read() << 8) + Serial1.read();
     short tiltStepSpeed = (Serial1.read() << 8) + Serial1.read();
 
+    Serial1.print(String("#y"));
+
     if ( DEBUG1 ) {
       Serial1.print(String("sliderStepSpeed - ") + sliderStepSpeed);
       Serial1.print(String(" , "));
@@ -916,63 +940,79 @@ void Serial1Data(void) {
 
   switch (instruction) {
     case INSTRUCTION_SETPOS1: {
+        Serial1.print(String("#A"));
         editKeyframe(0);
       }
       break;
     case INSTRUCTION_GOPOS1: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          Serial1.print(String("#J"));
           moveToIndex(0);
         }
       }
       break;
     case INSTRUCTION_SETPOS2: {
+      Serial1.print(String("#B"));
         editKeyframe(1);
       }
       break;
     case INSTRUCTION_GOPOS2: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          Serial1.print(String("#K"));
           moveToIndex(1);
         }
       }
       break;
     case INSTRUCTION_SETPOS3: {
+      Serial1.print(String("#C"));
         editKeyframe(2);
       }
       break;
     case INSTRUCTION_GOPOS3: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          Serial1.print(String("#L"));
           moveToIndex(2);
         }
       }
       break;
     case INSTRUCTION_SETPOS4: {
+      Serial1.print(String("#D"));
         editKeyframe(3);
       }
       break;
     case INSTRUCTION_GOPOS4: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          Serial1.print(String("#M"));
           moveToIndex(3);
         }
       }
       break;
     case INSTRUCTION_SETPOS5: {
+      Serial1.print(String("#E"));
         editKeyframe(4);
       }
       break;
     case INSTRUCTION_GOPOS5: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          Serial1.print(String("#N"));
           moveToIndex(4);
         }
       }
       break;
     case INSTRUCTION_SETPOS6: {
+      Serial1.print(String("#F"));
         editKeyframe(5);
       }
       break;
     case INSTRUCTION_GOPOS6: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          Serial1.print(String("#O"));
           moveToIndex(5);
         }
+      }
+      break;
+    case INSTRUCTION_CLEAR_ARRAY: {
+        clearKeyframes();
       }
       break;
     case INSTRUCTION_SET_FAST_SPEED: {
@@ -980,7 +1020,7 @@ void Serial1Data(void) {
           stepper_pan.setMaxSpeed(panDegreesToSteps(pan_fast_speed));
           stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_fast_speed));
           stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_fast_speed));
-          Serial1.println(String("#V"));
+          Serial1.print(String("#V"));
           Serial1.println(String("Speeds set (fast):"));
           Serial1.println(String("Pan   : ") + pan_fast_speed + String(" °/s."));
           Serial1.println(String("Tilt  : ") + tilt_fast_speed + String(" °/s."));
@@ -993,7 +1033,7 @@ void Serial1Data(void) {
           stepper_pan.setMaxSpeed(panDegreesToSteps(pan_slow_speed));
           stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_slow_speed));
           stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_slow_speed));
-          Serial1.println(String("#v"));
+          Serial1.print(String("#v"));
           Serial1.println(String("Speeds set (slow):"));
           Serial1.println(String("Pan   : ") + pan_slow_speed + String(" °/s."));
           Serial1.println(String("Tilt  : ") + tilt_slow_speed + String(" °/s."));
@@ -1021,12 +1061,6 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_ACCEL_ENABLE: {
         toggleAcceleration();
-      }
-      break;
-    case INSTRUCTION_SLIDER_MILLIMETRES: {
-        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-        sliderMoveTo(Serial1CommandValueFloat);
-        //}
       }
       break;
     case INSTRUCTION_INVERT_SLIDER: {
@@ -1059,30 +1093,42 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_PAN_DEGREES: {
+        Serial1.print(String("#y"));
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           panDegrees(Serial1CommandValueFloat);
         }
       }
       break;
     case INSTRUCTION_TILT_DEGREES: {
+        Serial1.print(String("#y"));
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           tiltDegrees(Serial1CommandValueFloat);
         }
       }
       break;
+    case INSTRUCTION_SLIDER_MILLIMETRES: {
+        Serial1.print(String("#y"));
+        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+        sliderMoveTo(Serial1CommandValueFloat);
+        }
+      }
+      break;
     case INSTRUCTION_PAN_DEGREES_REL: {
+        Serial1.print(String("#y"));
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           panDegreesRel(Serial1CommandValueFloat);
         }
       }
       break;
     case INSTRUCTION_TILT_DEGREES_REL: {
+        Serial1.print(String("#y"));
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           tiltDegreesRel(Serial1CommandValueFloat);
         }
       }
       break;
     case INSTRUCTION_SLIDER_MILLIMETRES_REL: {
+        Serial1.print(String("#y"));
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           sliderMMRel(Serial1CommandValueFloat);
         }
@@ -1179,6 +1225,14 @@ void Serial1Data(void) {
   }
   
   
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+void clearKeyframes(void) {
+  Serial1.print(String("#Y"));
 }
 
 

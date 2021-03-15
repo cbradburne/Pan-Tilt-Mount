@@ -2,6 +2,10 @@
 
 bool DEBUG = false;
 
+unsigned long previousMillis = 0;
+unsigned long currentMillis = 0;
+const long interval = 200;              // run to pos LED flashing interval
+
 const int XdeadRangeLow  = 512 - 60;
 const int XdeadRangeHigh = 512 + 60;
 const int YdeadRangeLow  = 512 - 60;
@@ -85,6 +89,13 @@ bool pos4run = false;
 bool pos5run = false;
 bool pos6run = false;
 
+bool atPos1 = false;
+bool atPos2 = false;
+bool atPos3 = false;
+bool atPos4 = false;
+bool atPos5 = false;
+bool atPos6 = false;
+
 bool speedFast = true;
 bool speedFastSet = true;
 
@@ -93,6 +104,12 @@ bool sliderPressed = false;
 
 bool zoomPressed = false;
 bool notZooming = true;
+
+bool ledState = LOW;
+
+bool set1held = false;
+bool set6held = false;
+bool clearHeld = false;
 
 int buttonState1;
 int buttonState2;
@@ -152,6 +169,9 @@ unsigned long lastDebounceTime17 = 0;
 unsigned long lastDebounceTime18 = 0;
 
 unsigned long debounceDelay = 10;
+
+unsigned long heldDelay = 2000;
+unsigned long clearStartTime = 0;
 
 short shortVals[3] = {0, 0, 0};
 short XShort = 0;
@@ -254,12 +274,165 @@ void loop() {
       switch (instruction) {
         case 'v': {                       // speed set slow
             speedFastSet = false;
-            doLEDs();
+            digitalWrite(ledPinSlow, HIGH);
+            digitalWrite(ledPinFast, LOW);
           }
           break;
         case 'V': {                       // speed set fast
             speedFastSet = true;
-            doLEDs();
+            digitalWrite(ledPinSlow, LOW);
+            digitalWrite(ledPinFast, HIGH);
+            
+          }
+          break;
+        case 'A': {                       // At pos 1 (edit)
+            atPos1 = true;
+            pos1set = true;
+          }
+          break;
+        case 'B': {                       // At pos 2 (edit)
+            atPos2 = true;
+            pos2set = true;
+          }
+          break;
+        case 'C': {                       // At pos 3 (edit)
+            atPos3 = true;
+            pos3set = true;
+          }
+          break;
+        case 'D': {                       // At pos 4 (edit)
+            atPos4 = true;
+            pos4set = true;
+          }
+          break;
+        case 'E': {                       // At pos 5 (edit)
+            atPos5 = true;
+            pos5set = true;
+          }
+          break;
+        case 'F': {                       // At pos 6 (edit)
+            atPos6 = true;
+            pos6set = true;
+          }
+          break;
+        case 'J': {                       // Moveing to pos 1
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
+            pos1run = true;
+          }
+          break;
+        case 'K': {                       // Moveing to pos 2
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
+            pos2run = true;
+          }
+          break;
+        case 'L': {                       // Moveing to pos 3
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
+            pos3run = true;
+          }
+          break;
+        case 'M': {                       // Moveing to pos 4
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
+            pos4run = true;
+          }
+          break;
+        case 'N': {                       // Moveing to pos 5
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
+            pos5run = true;
+          }
+          break;
+        case 'O': {                       // Moveing to pos 6
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
+            pos6run = true;
+          }
+          break;
+        case 'a': {                       // At pos 1
+            pos1run = false;
+            atPos1 = true;
+          }
+          break;
+        case 'b': {                       // At pos 2
+            pos2run = false;
+            atPos2 = true;
+          }
+          break;
+        case 'c': {                       // At pos 3
+            pos3run = false;
+            atPos3 = true;
+          }
+          break;
+        case 'd': {                       // At pos 4
+            pos4run = false;
+            atPos4 = true;
+          }
+          break;
+        case 'e': {                       // At pos 5
+            pos5run = false;
+            atPos5 = true;
+          }
+          break;
+        case 'f': {                       // At pos 6
+            pos6run = false;
+            atPos6 = true;
+          }
+          break;
+        case 'Y': {                       // CLEAR ALL POSITIONS
+            pos1run = false;
+            pos1set = false;
+            atPos1 = false;
+            pos2run = false;
+            pos2set = false;
+            atPos2 = false;
+            pos3run = false;
+            pos3set = false;
+            atPos3 = false;
+            pos4run = false;
+            pos4set = false;
+            atPos4 = false;
+            pos5run = false;
+            pos5set = false;
+            atPos5 = false;
+            pos6run = false;
+            pos6set = false;
+            atPos6 = false;
+          }
+          break;
+        case 'y': {                       // Not at any stored position
+            atPos1 = false;
+            atPos2 = false;
+            atPos3 = false;
+            atPos4 = false;
+            atPos5 = false;
+            atPos6 = false;
           }
           break;
       }
@@ -321,14 +494,10 @@ void loop() {
       buttonState1 = reading1;
       if (buttonState1 == LOW) {
         sendCharArray((char *)"a");
-        pos1set = true;
-        pos1run = true;
-        pos2run = false;
-        pos3run = false;
-        pos4run = false;
-        pos5run = false;
-        pos6run = false;
-        doLEDs();
+        set1held = true;
+      }
+      if (buttonState1 == HIGH) {
+        set1held = false;
       }
     }
   }
@@ -343,15 +512,8 @@ void loop() {
     if (reading2 != buttonState2) {
       buttonState2 = reading2;
       if (buttonState2 == LOW) {
-        if (pos1set && !pos1run) {
+        if (pos1set && !atPos1) {
           sendCharArray((char *)"A");
-          pos1run = true;
-          pos2run = false;
-          pos3run = false;
-          pos4run = false;
-          pos5run = false;
-          pos6run = false;
-          doLEDs();
         }
       }
     }
@@ -368,14 +530,6 @@ void loop() {
       buttonState3 = reading3;
       if (buttonState3 == LOW) {
         sendCharArray((char *)"b");
-        pos2set = true;
-        pos1run = false;
-        pos2run = true;
-        pos3run = false;
-        pos4run = false;
-        pos5run = false;
-        pos6run = false;
-        doLEDs();
       }
     }
   }
@@ -390,15 +544,8 @@ void loop() {
     if (reading4 != buttonState4) {
       buttonState4 = reading4;
       if (buttonState4 == LOW) {
-        if (pos2set && !pos2run) {
+        if (pos2set && !atPos2) {
           sendCharArray((char *)"B");
-          pos1run = false;
-          pos2run = true;
-          pos3run = false;
-          pos4run = false;
-          pos5run = false;
-          pos6run = false;
-          doLEDs();
         }
       }
     }
@@ -415,14 +562,6 @@ void loop() {
       buttonState5 = reading5;
       if (buttonState5 == LOW) {
         sendCharArray((char *)"c");
-        pos3set = true;
-        pos1run = false;
-        pos2run = false;
-        pos3run = true;
-        pos4run = false;
-        pos5run = false;
-        pos6run = false;
-        doLEDs();
       }
     }
   }
@@ -437,15 +576,8 @@ void loop() {
     if (reading6 != buttonState6) {
       buttonState6 = reading6;
       if (buttonState6 == LOW) {
-        if (pos3set && !pos3run) {
+        if (pos3set && !atPos3) {
           sendCharArray((char *)"C");
-          pos1run = false;
-          pos2run = false;
-          pos3run = true;
-          pos4run = false;
-          pos5run = false;
-          pos6run = false;
-          doLEDs();
         }
       }
     }
@@ -462,14 +594,6 @@ void loop() {
       buttonState7 = reading7;
       if (buttonState7 == LOW) {
         sendCharArray((char *)"d");
-        pos4set = true;
-        pos1run = false;
-        pos2run = false;
-        pos3run = false;
-        pos4run = true;
-        pos5run = false;
-        pos6run = false;
-        doLEDs();
       }
     }
   }
@@ -484,15 +608,8 @@ void loop() {
     if (reading8 != buttonState8) {
       buttonState8 = reading8;
       if (buttonState8 == LOW) {
-        if (pos4set && !pos4run) {
+        if (pos4set && !atPos4) {
           sendCharArray((char *)"D");
-          pos1run = false;
-          pos2run = false;
-          pos3run = false;
-          pos4run = true;
-          pos5run = false;
-          pos6run = false;
-          doLEDs();
         }
       }
     }
@@ -509,14 +626,6 @@ void loop() {
       buttonState9 = reading9;
       if (buttonState9 == LOW) {
         sendCharArray((char *)"e");
-        pos5set = true;
-        pos1run = false;
-        pos2run = false;
-        pos3run = false;
-        pos4run = false;
-        pos5run = true;
-        pos6run = false;
-        doLEDs();
       }
     }
   }
@@ -531,15 +640,8 @@ void loop() {
     if (reading10 != buttonState10) {
       buttonState10 = reading10;
       if (buttonState10 == LOW) {
-        if (pos5set && !pos5run) {
+        if (pos5set && !atPos5) {
           sendCharArray((char *)"E");
-          pos1run = false;
-          pos2run = false;
-          pos3run = false;
-          pos4run = false;
-          pos5run = true;
-          pos6run = false;
-          doLEDs();
         }
       }
     }
@@ -556,14 +658,10 @@ void loop() {
       buttonState11 = reading11;
       if (buttonState11 == LOW) {
         sendCharArray((char *)"f");
-        pos6set = true;
-        pos1run = false;
-        pos2run = false;
-        pos3run = false;
-        pos4run = false;
-        pos5run = false;
-        pos6run = true;
-        doLEDs();
+        set6held = true;
+      }
+      if (buttonState11 == HIGH) {
+        set6held = false;
       }
     }
   }
@@ -578,21 +676,27 @@ void loop() {
     if (reading12 != buttonState12) {
       buttonState12 = reading12;
       if (buttonState12 == LOW) {
-        if (pos6set && !pos6run) {
+        if (pos6set && !atPos6) {
           sendCharArray((char *)"F");
-          pos1run = false;
-          pos2run = false;
-          pos3run = false;
-          pos4run = false;
-          pos5run = false;
-          pos6run = true;
-          doLEDs();
         }
       }
     }
   }
   lastButtonState12 = reading12;
 
+  if (set1held && set6held && !clearHeld){
+    clearHeld = true;
+    clearStartTime = millis();
+  }
+
+  if (set1held && set6held && clearHeld && ((millis() - clearStartTime) > heldDelay)){
+    clearHeld = false;
+    sendCharArray((char *)"Y");
+  }
+
+  if (!set1held && !set6held && clearHeld){
+    clearHeld = false;
+  }
 
   /* ------------------------------------------------- Speed, L&R ------------------------------------------------- */
 
@@ -698,7 +802,7 @@ void loop() {
 
   if (shortVals[0] != oldShortVal0 || shortVals[1] != oldShortVal1 || shortVals[2] != oldShortVal2) {   // IF input has changed
     sendSliderPanTiltStepSpeed(INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED, shortVals);                     // Send the combned values
-
+    
     oldShortVal0 = shortVals[0];      // Store as old values
     oldShortVal1 = shortVals[1];      // Store as old values
     oldShortVal2 = shortVals[2];      // Store as old values
@@ -712,6 +816,147 @@ void loop() {
       Serial.println(ZShort);
     }
   }
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    if (pos1set && !pos1run && !atPos1) {
+      digitalWrite(ledPin1r, HIGH);
+      digitalWrite(ledPin1g, LOW);
+    }
+    else if (pos1set && !pos1run && atPos1) {
+      digitalWrite(ledPin1r, LOW);
+      digitalWrite(ledPin1g, HIGH);
+    }
+    else if (pos1set && pos1run && !atPos1) {
+      if (ledState == LOW) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+      digitalWrite(ledPin1r, LOW);
+      digitalWrite(ledPin1g, ledState);
+    }
+    else if (!pos1set) {
+      digitalWrite(ledPin1r, LOW);
+      digitalWrite(ledPin1g, LOW);
+    }
+    
+    if (pos2set && !pos2run && !atPos2) {
+      digitalWrite(ledPin2r, HIGH);
+      digitalWrite(ledPin2g, LOW);
+    }
+    else if (pos2set && !pos2run && atPos2) {
+      digitalWrite(ledPin2r, LOW);
+      digitalWrite(ledPin2g, HIGH);
+    }
+    else if (pos2set && pos2run && !atPos2) {
+      if (ledState == LOW) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+      digitalWrite(ledPin2r, LOW);
+      digitalWrite(ledPin2g, ledState);
+    }
+    else if (!pos2set) {
+      digitalWrite(ledPin2r, LOW);
+      digitalWrite(ledPin2g, LOW);
+    }
+    
+    if (pos3set && !pos3run && !atPos3) {
+      digitalWrite(ledPin3r, HIGH);
+      digitalWrite(ledPin3g, LOW);
+    }
+    else if (pos3set && !pos3run && atPos3) {
+      digitalWrite(ledPin3r, LOW);
+      digitalWrite(ledPin3g, HIGH);
+    }
+    else if (pos3set && pos3run && !atPos3) {
+      if (ledState == LOW) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+      digitalWrite(ledPin3r, LOW);
+      digitalWrite(ledPin3g, ledState);
+    }
+    else if (!pos3set) {
+      digitalWrite(ledPin3r, LOW);
+      digitalWrite(ledPin3g, LOW);
+    }
+
+    if (pos4set && !pos4run && !atPos4) {
+      digitalWrite(ledPin4r, HIGH);
+      digitalWrite(ledPin4g, LOW);
+    }
+    else if (pos4set && !pos4run && atPos4) {
+      digitalWrite(ledPin4r, LOW);
+      digitalWrite(ledPin4g, HIGH);
+    }
+    else if (pos4set && pos4run && !atPos4) {
+      if (ledState == LOW) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+      digitalWrite(ledPin4r, LOW);
+      digitalWrite(ledPin4g, ledState);
+    }
+    else if (!pos4set) {
+      digitalWrite(ledPin4r, LOW);
+      digitalWrite(ledPin4g, LOW);
+    }
+
+    if (pos5set && !pos5run && !atPos5) {
+      digitalWrite(ledPin5r, HIGH);
+      digitalWrite(ledPin5g, LOW);
+    }
+    else if (pos5set && !pos5run && atPos5) {
+      digitalWrite(ledPin5r, LOW);
+      digitalWrite(ledPin5g, HIGH);
+    }
+    else if (pos5set && pos5run && !atPos5) {
+      if (ledState == LOW) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+      digitalWrite(ledPin5r, LOW);
+      digitalWrite(ledPin5g, ledState);
+    }
+    else if (!pos5set) {
+      digitalWrite(ledPin5r, LOW);
+      digitalWrite(ledPin5g, LOW);
+    }
+
+    if (pos6set && !pos6run && !atPos6) {
+      digitalWrite(ledPin6r, HIGH);
+      digitalWrite(ledPin6g, LOW);
+    }
+    else if (pos6set && !pos6run && atPos6) {
+      digitalWrite(ledPin6r, LOW);
+      digitalWrite(ledPin6g, HIGH);
+    }
+    else if (pos6set && pos6run && !atPos6) {
+      if (ledState == LOW) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+      digitalWrite(ledPin6r, LOW);
+      digitalWrite(ledPin6g, ledState);
+    }
+    else if (!pos6set) {
+      digitalWrite(ledPin6r, LOW);
+      digitalWrite(ledPin6g, LOW);
+    }
+
+    
+  }
+
+
+  
 }
 
 /* ------------------------------------------------- Set LEDs ------------------------------------------------- */
@@ -839,6 +1084,8 @@ void sendSliderPanTiltStepSpeed(int command, short * arr) {
   data[4] = (arr[1] & 0xFF);
   data[5] = (arr[2] >> 8);
   data[6] = (arr[2] & 0xFF);                  // Gets the least significant byte
+
+  delay(20);
 
   if ( DEBUG ) {
     Serial.print(data[0], HEX);

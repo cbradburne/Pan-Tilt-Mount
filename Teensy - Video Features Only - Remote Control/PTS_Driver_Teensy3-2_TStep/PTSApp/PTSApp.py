@@ -285,7 +285,7 @@ def sendREPORTpos():
     sendSerial(temp)
 
 def clearPosConfirm():
-    message_window = UIConfirmationDialog(pygame.Rect((650, 200), (300, 150)), 
+    message_window = UIConfirmationDialog(pygame.Rect((650, 200), (300, 200)), 
                                         ui_manager,
                                         action_long_desc='Clear All Position Data?')
 
@@ -863,7 +863,6 @@ def process_events():
         if event.type == pygame.MOUSEBUTTONUP and isZooming:
             isZooming = False
             sendZOOMstop()
-            #print("Zoom Stopped")
 
         ui_manager.process_events(event)
         deadRangeLow = -0.2
@@ -1001,10 +1000,12 @@ def process_events():
                         sendREPORTpos()
                         #print("11 - R3")
                 if event.type == pygame.JOYBUTTONUP:
-                    if not (joystick.get_button(6) and button6Pressed):
+                    if button6Pressed and not joystick.get_button(6):
+                        button6Pressed = False
                         sendZOOMstop()
                         isZooming = False
-                    elif not (joystick.get_button(7) and button7Pressed):
+                    elif button7Pressed and not joystick.get_button(7):
+                        button7Pressed = False
                         sendZOOMstop()
                         isZooming = False
 
@@ -1210,10 +1211,12 @@ def process_events():
                         #print("12 - Menu")
 
                 if event.type == pygame.JOYBUTTONUP:
-                    if not (joystick.get_button(6) and button6Pressed):
+                    if button6Pressed and not joystick.get_button(6):
+                        button6Pressed = False
                         sendZOOMstop()
                         isZooming = False
-                    elif not (joystick.get_button(7) and button7Pressed):
+                    elif button7Pressed and not joystick.get_button(7):
+                        button7Pressed = False
                         sendZOOMstop()
                         isZooming = False
 
@@ -1329,10 +1332,12 @@ def process_events():
                         #print("14 - R3")
 
                 if event.type == pygame.JOYBUTTONUP:
-                    if not (joystick.get_button(8) and button8Pressed):
+                    if button8Pressed and not joystick.get_button(8):
+                        button8Pressed = False
                         sendZOOMstop()
                         isZooming = False
-                    elif not (joystick.get_button(9) and button9Pressed):
+                    elif button9Pressed and not joystick.get_button(9):
+                        button9Pressed = False
                         sendZOOMstop()
                         isZooming = False
 
@@ -1423,10 +1428,12 @@ def process_events():
                         #print("12 - Menu")
 
                 if event.type == pygame.JOYBUTTONUP:
-                    if not (joystick.get_button(6) and button6Pressed):
+                    if button6Pressed and not joystick.get_button(6):
+                        button6Pressed = False
                         sendZOOMstop()
                         isZooming = False
-                    elif not (joystick.get_button(7) and button7Pressed):
+                    elif button7Pressed and not joystick.get_button(7):
+                        button7Pressed = False
                         sendZOOMstop()
                         isZooming = False
 

@@ -492,7 +492,7 @@ void moveToIndex(int index) {
   stepper_tilt.setTargetAbs(keyframe_array[index].tiltStepCount);
   stepper_slider.setTargetAbs(keyframe_array[index].sliderStepCount);
 
-  Serial1.println(String("\nMove to Index: ") + index);
+  Serial1.println(String("\nMove to Index: ") + (index + 1));
   //delay(200);
   Serial1.println(String("Pan   : ") + panStepsToDegrees(keyframe_array[index].panStepCount) + String("°"));
   Serial1.println(String("Tilt  : ") + tiltStepsToDegrees(keyframe_array[index].tiltStepCount) + String("°"));
@@ -545,7 +545,7 @@ void editKeyframe(int keyframeEdit) {
   keyframe_array[keyframeEdit].tiltSpeed = tiltDegreesToSteps(tilt_max_speed);
   keyframe_array[keyframeEdit].sliderSpeed = sliderMillimetresToSteps(slider_max_speed);
 
-  Serial1.println(String("Edited index: ") + keyframeEdit);
+  Serial1.println(String("Edited index: ") + (keyframeEdit + 1));
 }
 
 
@@ -622,29 +622,23 @@ void saveEEPROM(void) {
 
 void printEEPROM(void) {
   float ftemp;
-  //delay(200);
   EEPROM.get(EEPROM_ADDRESS_MODE, ftemp);
   Serial1.println(String("EEPROM:\nStep mode         : ") + ftemp + String("\n"));
   EEPROM.get(EEPROM_ADDRESS_PAN_MAX_SPEED, ftemp);
   Serial1.println(String("Pan max           : ") + ftemp + String("°/s"));
-  //delay(200);
   EEPROM.get(EEPROM_ADDRESS_TILT_MAX_SPEED, ftemp);
   Serial1.println(String("Tilt max          : ") + ftemp + String("°/s"));
   EEPROM.get(EEPROM_ADDRESS_SLIDER_MAX_SPEED, ftemp);
   Serial1.println(String("Slider max        : ") + ftemp + String("mm/s\n"));
-  //delay(200);
   Serial1.println(String("Pan invert        : ") + EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
   Serial1.println(String("Tilt invert       : ") + EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
-  //delay(200);
   Serial1.println(String("Slider invert     : ") + EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER) + String("\n"));
   EEPROM.get(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, ftemp);
-  Serial1.println(String("Pan accel delay   : ") + ftemp + String(" steps/s²"));
-  //delay(200);
+  Serial1.println(String("Pan accel         : ") + ftemp + String(" steps/s²"));
   EEPROM.get(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, ftemp);
-  Serial1.println(String("Tilt accel delay  : ") + ftemp + String(" steps/s²"));
+  Serial1.println(String("Tilt accel        : ") + ftemp + String(" steps/s²"));
   EEPROM.get(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY, ftemp);
-  Serial1.println(String("Slider accel delay: ") + ftemp + String(" steps/s²\n"));
-  //delay(500);
+  Serial1.println(String("Slider accel      : ") + ftemp + String(" steps/s²\n"));
 }
 
 

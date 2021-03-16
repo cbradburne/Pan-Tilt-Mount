@@ -7,13 +7,11 @@ import os, sys
 
 from collections import deque
 from pygame_gui import UIManager
-from pygame_gui.elements import UIWindow
 from pygame_gui.elements import UIButton
 from pygame_gui.elements import UITextEntryLine
 from pygame_gui.elements import UIDropDownMenu
 from pygame_gui.elements import UILabel
 from pygame_gui.elements.ui_text_box import UITextBox
-from pygame_gui.windows import UIMessageWindow
 from pygame_gui.windows import UIConfirmationDialog
 from serial import *
 from pathlib import Path

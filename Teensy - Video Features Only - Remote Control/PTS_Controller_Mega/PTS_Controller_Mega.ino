@@ -196,6 +196,8 @@ int joyY;
 int joyZread;
 int joyZ;
 
+char hash = '#';
+
 void setup() {
   //Serial.begin(115200);
   //Serial3.begin(115200);
@@ -266,19 +268,21 @@ void loop() {
         delayMicroseconds(200);
         count++;
         if (count > 100) {
-          SerialFlush();                                     //  Clear the Serial1 buffer
+          SerialFlush();                                      //  Clear the Serial1 buffer
           break;
         }
       }
       instruction = Serial3.read();
+      Serial.write(hash);                                     // So app through remote commands get passed.
+      Serial.write(instruction);
       switch (instruction) {
-        case 'v': {                       // speed set slow
+        case 'v': {                                           // speed set slow
             speedFastSet = false;
             digitalWrite(ledPinSlow, HIGH);
             digitalWrite(ledPinFast, LOW);
           }
           break;
-        case 'V': {                       // speed set fast
+        case 'V': {                                           // speed set fast
             speedFastSet = true;
             digitalWrite(ledPinSlow, LOW);
             digitalWrite(ledPinFast, HIGH);

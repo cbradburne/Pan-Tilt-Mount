@@ -36,15 +36,13 @@ float tilt_steps_per_degree = (200.0 * SIXTEENTH_STEP * TILT_GEAR_RATIO) / 360.0
 float slider_steps_per_millimetre = (200.0 * SIXTEENTH_STEP) / (SLIDER_PULLEY_TEETH * 2); //Stepper motor has 200 steps per 360 degrees, the timing pully has 36 teeth and the belt has a pitch of 2mm
 float step_mode = SIXTEENTH_STEP;
 bool enable_state = true; //Stepper motor driver enable state
-float hall_pan_offset_degrees = 0;  //Offset to make the pan axis home position centred. This is required because the Hall sensor triggers before being centred on the magnet.
-float hall_tilt_offset_degrees = 0; //Offset to make the tilt axis home position centred. This is required because the Hall sensor triggers before being centred on the magnet.
 byte invert_pan = 0;                //Variables to invert the direction of the axis. Note: These value gets set from the saved EEPROM value on startup.
 byte invert_tilt = 0;
 byte invert_slider = 0;
 byte homing_mode = 0;               //Note: Gets set from the saved EEPROM value on startup
-float pan_max_speed = 10;           //degrees/second. Note: Gets set from the saved EEPROM value on startup.
-float tilt_max_speed = 10;          //degrees/second.
-float slider_max_speed = 30;        //mm/second.
+float pan_set_speed = 20;           //degrees/second.
+float tilt_set_speed = 20;          //degrees/second.
+float slider_set_speed = 60;        //mm/second.
 float pan_fast_speed = 20;          //degrees/second.
 float tilt_fast_speed = 20;         //degrees/second.
 float slider_fast_speed = 60;       //mm/second.
@@ -54,9 +52,6 @@ float slider_slow_speed = 20;       //mm/second.
 long target_position[3];            //Array to store stepper motor step counts
 long start_position[3];
 float final_position[3];
-float degrees_per_picture = 0.5;                  //Note: Gets set from the saved EEPROM value on startup.
-//unsigned long delay_ms_between_pictures = 1000; //Note: Gets set from the saved EEPROM value on startup.
-float delay_ms_between_pictures = 1000;           //Note: Gets set from the saved EEPROM value on startup.
 float pan_accel_increment_us = 6000;
 float tilt_accel_increment_us = 6000;
 float slider_accel_increment_us = 6000;
@@ -96,9 +91,12 @@ void initPanTilt(void) {
   pinMode(PIN_SLIDER_HALL, INPUT_PULLUP);
   setEEPROMVariables();
   setStepMode(step_mode); //steping mode
-  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
+  pan_set_speed = pan_fast_speed;
+  tilt_set_speed = tilt_fast_speed;
+  slider_set_speed = slider_fast_speed;
+  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
+  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_set_speed));
+  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_set_speed));
   stepper_pan.setAcceleration(pan_accel_increment_us);
   stepper_tilt.setAcceleration(tilt_accel_increment_us);
   stepper_slider.setAcceleration(slider_accel_increment_us);
@@ -106,9 +104,9 @@ void initPanTilt(void) {
   invertTiltDirection(invert_tilt);
   invertSliderDirection(invert_slider);
   delay(200);
-  Serial1.println(String("Pan max           : ") + panDegreesToSteps(pan_max_speed) + String(" steps/s"));
-  Serial1.println(String("Tilt max          : ") + tiltDegreesToSteps(tilt_max_speed) + String(" steps/s"));
-  Serial1.println(String("Slider max        : ") + sliderMillimetresToSteps(slider_max_speed) + String(" steps/s"));
+  Serial1.println(String("Pan speed         : ") + panDegreesToSteps(pan_set_speed) + String(" steps/s"));
+  Serial1.println(String("Tilt speed        : ") + tiltDegreesToSteps(tilt_set_speed) + String(" steps/s"));
+  Serial1.println(String("Slider speed      : ") + sliderMillimetresToSteps(slider_set_speed) + String(" steps/s"));
   Serial1.println("-");
   digitalWrite(PIN_ENABLE, LOW);              //Enable the stepper drivers
 }
@@ -178,9 +176,9 @@ void setStepMode(int newMode) {                         //Step modes for the TMC
   tilt_steps_per_degree = (200.0 * (float)newMode * TILT_GEAR_RATIO) / 360.0;           //Stepper motor has 200 steps per 360 degrees
   slider_steps_per_millimetre = (200.0 * (float)newMode) / (SLIDER_PULLEY_TEETH * 2.0); //Stepper motor has 200 steps per 360 degrees, the timing pully has 36 teeth and the belt has a pitch of 2mm
 
-  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
+  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
+  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_set_speed));
+  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_set_speed));
   step_mode = (float)newMode;
   Serial1.println(String("Set to ") + step_mode + (" step mode."));
 }
@@ -365,7 +363,7 @@ void sliderMoveTo(float mm) {
 void printKeyframeElements(void) {
   int row = 0;
   do {
-    Serial1.println(String("Keyframe index: ") + row + String("\t"));
+    Serial1.println(String("Keyframe index: ") + (row + 1) + String("\t"));
     //delay(500);
     Serial1.print(String("Pan   : ") + panStepsToDegrees(keyframe_array[row].panStepCount) + String("°\t"));
     Serial1.print(String("Tilt  : ") + tiltStepsToDegrees(keyframe_array[row].tiltStepCount) + String("°\t"));
@@ -387,27 +385,19 @@ void printKeyframeElements(void) {
 
 void debugReport(void) {
   Serial1.println(String("Step mode         : ") + step_mode);
-  //delay(200);
   Serial1.println(String(""));
   Serial1.println(String("Pan angle         : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("°"));
-  //delay(200);
   Serial1.println(String("Tilt angle        : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("°"));
   Serial1.println(String("Slider position   : ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm\n"));
-  //delay(200);
-  Serial1.println(String("Pan max           : ") + panDegreesToSteps(pan_max_speed) + String(" steps/s"));
-  Serial1.println(String("Tilt max          : ") + tiltDegreesToSteps(tilt_max_speed) + String(" steps/s"));
-  //delay(200);
-  Serial1.println(String("Slider max        : ") + sliderMillimetresToSteps(slider_max_speed) + String(" steps/s\n"));
-  Serial1.println(String("Pan max speed     : ") + pan_max_speed + String("°/s"));
-  //delay(200);
-  Serial1.println(String("Tilt max speed    : ") + tilt_max_speed + String("°/s"));
-  Serial1.println(String("Slider max speed  : ") + slider_max_speed + String("mm/s\n"));
-  //delay(200);
+  Serial1.println(String("Pan steps         : ") + panDegreesToSteps(pan_set_speed) + String(" steps/s"));
+  Serial1.println(String("Tilt steps        : ") + tiltDegreesToSteps(tilt_set_speed) + String(" steps/s"));
+  Serial1.println(String("Slider steps      : ") + sliderMillimetresToSteps(slider_set_speed) + String(" steps/s\n"));
+  Serial1.println(String("Pan set speed     : ") + pan_set_speed + String("°/s"));
+  Serial1.println(String("Tilt set speed    : ") + tilt_set_speed + String("°/s"));
+  Serial1.println(String("Slider set speed  : ") + slider_set_speed + String("mm/s\n"));
   Serial1.println(String("Pan Accel         : ") + pan_accel_increment_us + String(" steps/s²"));
   Serial1.println(String("Tilt Accel        : ") + tilt_accel_increment_us + String(" steps/s²"));
-  //delay(200);
   Serial1.println(String("Slider Accel      : ") + slider_accel_increment_us + String(" steps/s²\n"));
-  //delay(100);
 
   printEEPROM();
   printKeyframeElements();
@@ -467,9 +457,9 @@ int addPosition(void) {
     keyframe_array[keyframe_elements].panStepCount = stepper_pan.getPosition();
     keyframe_array[keyframe_elements].tiltStepCount = stepper_tilt.getPosition();
     keyframe_array[keyframe_elements].sliderStepCount = stepper_slider.getPosition();
-    keyframe_array[keyframe_elements].panSpeed = panDegreesToSteps(pan_max_speed);
-    keyframe_array[keyframe_elements].tiltSpeed = tiltDegreesToSteps(tilt_max_speed);
-    keyframe_array[keyframe_elements].sliderSpeed = sliderMillimetresToSteps(slider_max_speed);
+    keyframe_array[keyframe_elements].panSpeed = panDegreesToSteps(pan_set_speed);
+    keyframe_array[keyframe_elements].tiltSpeed = tiltDegreesToSteps(tilt_set_speed);
+    keyframe_array[keyframe_elements].sliderSpeed = sliderMillimetresToSteps(slider_set_speed);
     keyframe_array[keyframe_elements].msDelay = 0;
     current_keyframe_index = keyframe_elements;
     keyframe_elements++;                            //increment the index
@@ -541,9 +531,9 @@ void editKeyframe(int keyframeEdit) {
   keyframe_array[keyframeEdit].panStepCount = stepper_pan.getPosition();
   keyframe_array[keyframeEdit].tiltStepCount = stepper_tilt.getPosition();
   keyframe_array[keyframeEdit].sliderStepCount = stepper_slider.getPosition();
-  keyframe_array[keyframeEdit].panSpeed = panDegreesToSteps(pan_max_speed);
-  keyframe_array[keyframeEdit].tiltSpeed = tiltDegreesToSteps(tilt_max_speed);
-  keyframe_array[keyframeEdit].sliderSpeed = sliderMillimetresToSteps(slider_max_speed);
+  keyframe_array[keyframeEdit].panSpeed = panDegreesToSteps(pan_set_speed);
+  keyframe_array[keyframeEdit].tiltSpeed = tiltDegreesToSteps(tilt_set_speed);
+  keyframe_array[keyframeEdit].sliderSpeed = sliderMillimetresToSteps(slider_set_speed);
 
   Serial1.println(String("Edited index: ") + (keyframeEdit + 1));
 }
@@ -600,16 +590,15 @@ void invertSliderDirection(bool invert) {
 void saveEEPROM(void) {
   EEPROM.put(EEPROM_ADDRESS_HOMING_MODE, homing_mode);
   EEPROM.put(EEPROM_ADDRESS_MODE, step_mode);
-  EEPROM.put(EEPROM_ADDRESS_PAN_MAX_SPEED, pan_max_speed);
-  EEPROM.put(EEPROM_ADDRESS_TILT_MAX_SPEED, tilt_max_speed);
-  EEPROM.put(EEPROM_ADDRESS_SLIDER_MAX_SPEED, slider_max_speed);
-  EEPROM.put(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
-  EEPROM.put(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
+  EEPROM.put(EEPROM_ADDRESS_PAN_FAST_SPEED, pan_fast_speed);
+  EEPROM.put(EEPROM_ADDRESS_TILT_FAST_SPEED, tilt_fast_speed);
+  EEPROM.put(EEPROM_ADDRESS_SLIDER_FAST_SPEED, slider_fast_speed);
+  EEPROM.put(EEPROM_ADDRESS_PAN_SLOW_SPEED, pan_slow_speed);
+  EEPROM.put(EEPROM_ADDRESS_TILT_SLOW_SPEED, tilt_slow_speed);
+  EEPROM.put(EEPROM_ADDRESS_SLIDER_SLOW_SPEED, slider_slow_speed);
   EEPROM.put(EEPROM_ADDRESS_INVERT_PAN, invert_pan);
   EEPROM.put(EEPROM_ADDRESS_INVERT_TILT, invert_tilt);
   EEPROM.put(EEPROM_ADDRESS_INVERT_SLIDER, invert_slider);
-  //EEPROM.put(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-  //EEPROM.put(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
   EEPROM.put(EEPROM_ADDRESS_ACCELERATION_ENABLE, acceleration_enable_state);
   EEPROM.put(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, pan_accel_increment_us);
   EEPROM.put(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, tilt_accel_increment_us);
@@ -624,12 +613,18 @@ void printEEPROM(void) {
   float ftemp;
   EEPROM.get(EEPROM_ADDRESS_MODE, ftemp);
   Serial1.println(String("EEPROM:\nStep mode         : ") + ftemp + String("\n"));
-  EEPROM.get(EEPROM_ADDRESS_PAN_MAX_SPEED, ftemp);
-  Serial1.println(String("Pan max           : ") + ftemp + String("°/s"));
-  EEPROM.get(EEPROM_ADDRESS_TILT_MAX_SPEED, ftemp);
-  Serial1.println(String("Tilt max          : ") + ftemp + String("°/s"));
-  EEPROM.get(EEPROM_ADDRESS_SLIDER_MAX_SPEED, ftemp);
-  Serial1.println(String("Slider max        : ") + ftemp + String("mm/s\n"));
+  EEPROM.get(EEPROM_ADDRESS_PAN_FAST_SPEED, ftemp);
+  Serial1.println(String("Pan (fast)        : ") + ftemp + String("°/s"));
+  EEPROM.get(EEPROM_ADDRESS_TILT_FAST_SPEED, ftemp);
+  Serial1.println(String("Tilt (fast)       : ") + ftemp + String("°/s"));
+  EEPROM.get(EEPROM_ADDRESS_SLIDER_FAST_SPEED, ftemp);
+  Serial1.println(String("Slider (fast)     : ") + ftemp + String("mm/s\n"));
+  EEPROM.get(EEPROM_ADDRESS_PAN_SLOW_SPEED, ftemp);
+  Serial1.println(String("Pan (slow)        : ") + ftemp + String("°/s"));
+  EEPROM.get(EEPROM_ADDRESS_TILT_SLOW_SPEED, ftemp);
+  Serial1.println(String("Tilt (slow)       : ") + ftemp + String("°/s"));
+  EEPROM.get(EEPROM_ADDRESS_SLIDER_SLOW_SPEED, ftemp);
+  Serial1.println(String("Slider (slow)     : ") + ftemp + String("mm/s\n"));
   Serial1.println(String("Pan invert        : ") + EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
   Serial1.println(String("Tilt invert       : ") + EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
   Serial1.println(String("Slider invert     : ") + EEPROM.read(EEPROM_ADDRESS_INVERT_SLIDER) + String("\n"));
@@ -647,13 +642,12 @@ void printEEPROM(void) {
 
 void setEEPROMVariables(void) {
   EEPROM.get(EEPROM_ADDRESS_MODE, step_mode);
-  EEPROM.get(EEPROM_ADDRESS_PAN_MAX_SPEED, pan_max_speed);
-  EEPROM.get(EEPROM_ADDRESS_TILT_MAX_SPEED, tilt_max_speed);
-  EEPROM.get(EEPROM_ADDRESS_SLIDER_MAX_SPEED, slider_max_speed);
-  EEPROM.get(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
-  EEPROM.get(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
-  //EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-  //EEPROM.get(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
+  EEPROM.get(EEPROM_ADDRESS_PAN_FAST_SPEED, pan_fast_speed);
+  EEPROM.get(EEPROM_ADDRESS_TILT_FAST_SPEED, tilt_fast_speed);
+  EEPROM.get(EEPROM_ADDRESS_SLIDER_FAST_SPEED, slider_fast_speed);
+  EEPROM.get(EEPROM_ADDRESS_PAN_SLOW_SPEED, pan_slow_speed);
+  EEPROM.get(EEPROM_ADDRESS_TILT_SLOW_SPEED, tilt_slow_speed);
+  EEPROM.get(EEPROM_ADDRESS_SLIDER_SLOW_SPEED, slider_slow_speed);
   EEPROM.get(EEPROM_ADDRESS_PAN_ACCEL_INCREMENT_DELAY, pan_accel_increment_us);
   EEPROM.get(EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY, tilt_accel_increment_us);
   EEPROM.get(EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY, slider_accel_increment_us);
@@ -878,9 +872,9 @@ void Serial1Data(void) {
       Serial1.println(String("tiltStepSpeed - ") + tiltStepSpeed);
     }
 
-    float sliderStepSpeed2 = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_max_speed)), sliderMillimetresToSteps(slider_max_speed));
-    float panStepSpeed2 = map(panStepSpeed, -255, 255, -(panDegreesToSteps(pan_max_speed)), panDegreesToSteps(pan_max_speed));
-    float tiltStepSpeed2 = map(tiltStepSpeed, -255, 255, -(tiltDegreesToSteps(tilt_max_speed)), tiltDegreesToSteps(tilt_max_speed));
+    float sliderStepSpeed2 = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_set_speed)), sliderMillimetresToSteps(slider_set_speed));
+    float panStepSpeed2 = map(panStepSpeed, -255, 255, -(panDegreesToSteps(pan_set_speed)), panDegreesToSteps(pan_set_speed));
+    float tiltStepSpeed2 = map(tiltStepSpeed, -255, 255, -(tiltDegreesToSteps(tilt_set_speed)), tiltDegreesToSteps(tilt_set_speed));
 
     float speedFactorP = panStepSpeed2 / 2000.0f;
     float speedFactorT = tiltStepSpeed2 / 2000.0f;
@@ -1011,27 +1005,33 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_SET_FAST_SPEED: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_fast_speed));
-          stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_fast_speed));
-          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_fast_speed));
+          pan_set_speed = pan_fast_speed;
+          tilt_set_speed = tilt_fast_speed;
+          slider_set_speed = slider_fast_speed;
+          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
+          stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_set_speed));
+          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_set_speed));
           Serial1.print(String("#V"));
           Serial1.println(String("Speeds set (fast):"));
-          Serial1.println(String("Pan   : ") + pan_fast_speed + String(" °/s."));
-          Serial1.println(String("Tilt  : ") + tilt_fast_speed + String(" °/s."));
-          Serial1.println(String("Slider: ") + slider_fast_speed + String(" mm/s."));
+          Serial1.println(String("Pan   : ") + pan_set_speed + String(" °/s."));
+          Serial1.println(String("Tilt  : ") + tilt_set_speed + String(" °/s."));
+          Serial1.println(String("Slider: ") + slider_set_speed + String(" mm/s."));
         }
       }
       break;
     case INSTRUCTION_SET_SLOW_SPEED: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_slow_speed));
-          stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_slow_speed));
-          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_slow_speed));
-          Serial1.print(String("#v"));
-          Serial1.println(String("Speeds set (slow):"));
-          Serial1.println(String("Pan   : ") + pan_slow_speed + String(" °/s."));
-          Serial1.println(String("Tilt  : ") + tilt_slow_speed + String(" °/s."));
-          Serial1.println(String("Slider: ") + slider_slow_speed + String(" mm/s."));
+          pan_set_speed = pan_slow_speed;
+          tilt_set_speed = tilt_slow_speed;
+          slider_set_speed = slider_slow_speed;
+          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
+          stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_set_speed));
+          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_set_speed));
+          Serial1.print(String("#V"));
+          Serial1.println(String("Speeds set (fast):"));
+          Serial1.println(String("Pan   : ") + pan_set_speed + String(" °/s."));
+          Serial1.println(String("Tilt  : ") + tilt_set_speed + String(" °/s."));
+          Serial1.println(String("Slider: ") + slider_set_speed + String(" mm/s."));
         }
       }
       break;
@@ -1137,30 +1137,48 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SET_PAN_SPEED: {
-        Serial1.println(String("Max pan speed: ") + Serial1CommandValueFloat + String("°/s."));
-        pan_max_speed = Serial1CommandValueFloat;
-        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-          stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
-        }
-        Serial1.println(String("Max pan speed set as: ") + panDegreesToSteps(pan_max_speed) + String("\n\n"));
+        Serial1.println(String("Fast pan speed: ") + Serial1CommandValueFloat + String("°/s."));
+        pan_fast_speed = Serial1CommandValueFloat;
+        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+        //  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
+        //}
+        Serial1.println(String("Fast pan speed set as: ") + panDegreesToSteps(pan_fast_speed) + String("\n"));
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED: {
-        Serial1.println(String("Max tilt speed: ") + Serial1CommandValueFloat + String("°/s."));
-        tilt_max_speed = Serial1CommandValueFloat;
-        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-          stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
-        }
-        Serial1.println(String("Max tilt speed set as: ") + tiltDegreesToSteps(tilt_max_speed) + String("\n\n"));
+        Serial1.println(String("Fast tilt speed: ") + Serial1CommandValueFloat + String("°/s."));
+        tilt_fast_speed = Serial1CommandValueFloat;
+        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+        //  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_fast_speed));
+        //}
+        Serial1.println(String("Fast tilt speed set as: ") + tiltDegreesToSteps(tilt_fast_speed) + String("\n"));
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
-        Serial1.println(String("Max slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
-        slider_max_speed = Serial1CommandValueFloat;
-        if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
-          stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
-        }
-        Serial1.println(String("Max slider speed set as: ") + sliderMillimetresToSteps(slider_max_speed) + String("\n\n"));
+        Serial1.println(String("Fast slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
+        slider_fast_speed = Serial1CommandValueFloat;
+        //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+        //  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_fast_speed));
+        //}
+        Serial1.println(String("Fast slider speed set as: ") + sliderMillimetresToSteps(slider_fast_speed) + String("\n"));
+      }
+      break;
+    case INSTRUCTION_SET_PAN_SPEED_SLOW: {
+        Serial1.println(String("Slow pan speed: ") + Serial1CommandValueFloat + String("°/s."));
+        pan_slow_speed = Serial1CommandValueFloat;
+        Serial1.println(String("Slow pan speed set as: ") + panDegreesToSteps(pan_slow_speed) + String("\n"));
+      }
+      break;
+    case INSTRUCTION_SET_TILT_SPEED_SLOW: {
+        Serial1.println(String("Slow tilt speed: ") + Serial1CommandValueFloat + String("°/s."));
+        tilt_slow_speed = Serial1CommandValueFloat;
+        Serial1.println(String("Slow tilt speed set as: ") + tiltDegreesToSteps(tilt_slow_speed) + String("\n"));
+      }
+      break;
+    case INSTRUCTION_SET_SLIDER_SPEED_SLOW: {
+        Serial1.println(String("Slow slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
+        slider_slow_speed = Serial1CommandValueFloat;
+        Serial1.println(String("Slow slider speed set as: ") + sliderMillimetresToSteps(slider_slow_speed) + String("\n"));
       }
       break;
     case INSTRUCTION_CALCULATE_TARGET_POINT: {

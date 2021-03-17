@@ -40,6 +40,7 @@ myfontsmall = pygame.font.SysFont('Trebuchet MS', 20)
 clk = pygame.time.Clock()
 
 interval = 200
+intervalReport = 100
 
 baudRate = 38400 #57600 or 38400
 
@@ -95,7 +96,11 @@ atPos4 = False
 atPos5 = False
 atPos6 = False
 
+speedIsFast = True
+speedRec = False
+
 blinkSet = False
+canSendReport = False
 
 textBoxJoystickNames = None
 joyCircle_draging = False
@@ -153,134 +158,140 @@ pygame.init()
 pygame.display.set_caption("PTSApp")
 
 previousTicks = pygame.time.get_ticks() + interval
+previousTicksReport = pygame.time.get_ticks() + intervalReport
 
 def sendUP1():
-    temp='T1'
+    temp='^T1'
     sendSerial(temp)
 
 def sendDOWN1():
-    temp='T-1'
+    temp='^T-1'
     sendSerial(temp)
 
 def sendLEFT1():
-    temp='P-0.5'
+    temp='^P-0.5'
     sendSerial(temp)
 
 def sendRIGHT1():
-    temp='P0.5'
+    temp='^P0.5'
     sendSerial(temp)
 
 def sendUP10():
-    temp='T10'
+    temp='^T10'
     sendSerial(temp)
 
 def sendDOWN10():
-    temp='T-10'
+    temp='^T-10'
     sendSerial(temp)
 
 def sendLEFT10():
-    temp='P-10'
+    temp='^P-10'
     sendSerial(temp)
 
 def sendRIGHT10():
-    temp='P10'
+    temp='^P10'
     sendSerial(temp)
 
 def sendRESETpos():
-    temp='h'
+    temp='^h'
     sendSerial(temp)
 
 def sendSR1():
-    temp='L10'
+    temp='^L10'
     sendSerial(temp)
 
 def sendSR10():
-    temp='L100'
+    temp='^L100'
     sendSerial(temp)
 
 def sendSL1():
-    temp='L-10'
+    temp='^L-10'
     sendSerial(temp)
 
 def sendSL10():
-    temp='L-100'
+    temp='^L-100'
     sendSerial(temp)
 
 def sendZOOMin():
-    temp='Z'
+    temp='^Z'
     sendSerial(temp)
 
 def sendZOOMout():
-    temp='z'
+    temp='^z'
     sendSerial(temp)
 
 def sendZOOMstop():
-    temp='N'
+    temp='^N'
     sendSerial(temp)
 
 def sendSET1():
-    temp='a'
+    temp='^a'
     sendSerial(temp)
 
 def sendSET2():
-    temp='b'
+    temp='^b'
     sendSerial(temp)
 
 def sendSET3():
-    temp='c'
+    temp='^c'
     sendSerial(temp)
 
 def sendSET4():
-    temp='d'
+    temp='^d'
     sendSerial(temp)
 
 def sendSET5():
-    temp='e'
+    temp='^e'
     sendSerial(temp)
 
 def sendSET6():
-    temp='f'
+    temp='^f'
     sendSerial(temp)
 
 def sendGO1():
-    temp='A'
+    temp='^A'
     sendSerial(temp)
 
 def sendGO2():
-    temp='B'
+    temp='^B'
     sendSerial(temp)
 
 def sendGO3():
-    temp='C'
+    temp='^C'
     sendSerial(temp)
 
 def sendGO4():
-    temp='D'
+    temp='^D'
     sendSerial(temp)
 
 def sendGO5():
-    temp='E'
+    temp='^E'
     sendSerial(temp)
 
 def sendGO6():
-    temp='F'
+    temp='^F'
     sendSerial(temp)
 
 def sendSPEEDfast():
-    temp='V'
+    temp='^V'
     sendSerial(temp)
 
 def sendSPEEDslow():
-    temp='v'
+    temp='^v'
     sendSerial(temp)
 
 def sendREPORTall():
-    temp='R'
+    temp='^R'
     sendSerial(temp)
 
 def sendREPORTpos():
-    temp='r'
+    global canSendReport
+    global previousTicksReport
+
+    temp='^W'
     sendSerial(temp)
+    canSendReport = True
+    previousTicksReport = pygame.time.get_ticks() + intervalReport
 
 def clearPosConfirm():
     message_window = UIConfirmationDialog(pygame.Rect((650, 200), (300, 200)), 
@@ -288,7 +299,7 @@ def clearPosConfirm():
                                         action_long_desc='Clear All Position Data?')
 
 def sendCLEARALLpos():
-    temp='Y'
+    temp='^Y'
     sendSerial(temp)
 
 def sendCLEARtext():
@@ -307,6 +318,8 @@ def serialPort_changed():
     serialPortSelect = drop_down_serial.selected_option
     try:
         ser = Serial(serialPortSelect , baudRate, timeout=0, writeTimeout=0)
+        temp='^W'
+        sendSerial(temp)
         readSerial()
     except:
         ser = ''
@@ -406,13 +419,15 @@ def readSerial():
     global pos4run
     global pos5run
     global pos6run
+    global speedIsFast
+    global speedRec
 
     if (ser == ''):
         return
     else:
         while True:
             c = ser.read()
-
+            
             if len(c) == 0:
                 break
             
@@ -424,6 +439,9 @@ def readSerial():
                 c = ser.read()
                 c = ser.read()
                 c = ''
+            elif (c == b'^'):
+                c = ser.read()
+                c = ''
             elif (c == b'\xb0'):                                        # Change / remove characters that cause error
                 c = '°'
             elif (c == b'\xb2'):
@@ -433,22 +451,22 @@ def readSerial():
             elif (c == b'\x23'):                                        # c = # Remove HASHTAG commands
                 c = ser.read()
                 if c == b'A':
-                    atPos1 = True
+                    #atPos1 = True
                     pos1set = True
                 elif c == b'B':
-                    atPos2 = True
+                    #atPos2 = True
                     pos2set = True
                 elif c == b'C':
-                    atPos3 = True
+                    #atPos3 = True
                     pos3set = True
                 elif c == b'D':
-                    atPos4 = True
+                    #atPos4 = True
                     pos4set = True
                 elif c == b'E':
-                    atPos5 = True
                     pos5set = True
+                    #atPos5 = True
                 elif c == b'F':
-                    atPos6 = True
+                    #atPos6 = True
                     pos6set = True
                 elif c == b'J':
                     atPos1 = False
@@ -542,6 +560,12 @@ def readSerial():
                     atPos4 = False
                     atPos5 = False
                     atPos6 = False
+                elif c == b'V':
+                    speedIsFast = True
+                    speedRec = True
+                elif c == b'v':
+                    speedIsFast = False
+                    speedRec = True
                 #c = '\n'
                 c = ''
             else:
@@ -626,6 +650,8 @@ def doRefresh():
             try:
                 current_serialPort = [string for string in available_ports if wchusb_port in string]
                 ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+                temp='^W'
+                sendSerial(temp)
                 readSerial()
             except:
                 current_serialPort = [' - ']
@@ -633,6 +659,8 @@ def doRefresh():
             try:
                 current_serialPort = [string for string in available_ports if usb_port in string]
                 ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+                temp='^W'
+                sendSerial(temp)
                 readSerial()
             except:
                 current_serialPort = [' - ']
@@ -712,8 +740,8 @@ rel_button_CLEARALL = UIButton(pygame.Rect((390, 545), (100, 30)), 'Clear ALL', 
 
 rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports', ui_manager)
 
-rel_button_SLOW = UIButton(pygame.Rect((480, 100), (60, 60)), 'SLOW', ui_manager)
-rel_button_FAST = UIButton(pygame.Rect((480, 160), (60, 60)), 'FAST', ui_manager)
+rel_button_FAST = UIButton(pygame.Rect((480, 100), (60, 60)), 'FAST', ui_manager)
+rel_button_SLOW = UIButton(pygame.Rect((480, 160), (60, 60)), 'SLOW', ui_manager)
 
 rel_button_REPORT = UIButton(pygame.Rect((510, 470), (100, 60)), 'Report All', ui_manager)
 rel_button_REPORTPOS = UIButton(pygame.Rect((510, 530), (100, 60)), 'Report Pos', ui_manager)
@@ -737,6 +765,8 @@ if current_serialPort == ' - ':
         try:
             current_serialPort = [string for string in available_ports if wchusb_port in string]
             ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+            temp='^W'
+            sendSerial(temp)
             readSerial()
         except:
                 current_serialPort = [' - ']
@@ -744,6 +774,8 @@ if current_serialPort == ' - ':
         try:
             current_serialPort = [string for string in available_ports if usb_port in string]
             ser = Serial(current_serialPort[0], baudRate, timeout=0, writeTimeout=0)
+            temp='^W'
+            sendSerial(temp)
             readSerial()
         except:
                 current_serialPort = [' - ']
@@ -1715,7 +1747,28 @@ while running:
         serialNotSel = 'Serial port disconnected.<br>'
         textBoxSerial.kill()
         serialText = serialNotSel + serialText
-        serialPortTextBox()   
+        serialPortTextBox()
+        
+        speedRec = False
+        pos1set = False
+        pos2set = False
+        pos3set = False
+        pos4set = False
+        pos5set = False
+        pos6set = False
+        atPos1 = False
+        atPos2 = False
+        atPos3 = False
+        atPos4 = False
+        atPos5 = False
+        atPos6 = False
+        pos1run = False
+        pos2run = False
+        pos3run = False
+        pos4run = False
+        pos5run = False
+        pos6run = False
+
         ports = serial.tools.list_ports.comports()                              # Search for attached serial ports
         available_ports = []
         for p in ports:
@@ -1731,7 +1784,8 @@ while running:
     ui_manager.update(time_delta)                                               # respond to input
 
     window_surface.blit(background_surface, (0, 0))                             # draw graphics
-    if pos1set and not pos1run and not atPos1:
+
+    if pos1set and not pos1run and not atPos1:                                  # Position LEDs
         pygame.draw.circle(window_surface, RED, (60, 480), radius/2)
     elif pos1set and not pos1run and atPos1:
         pygame.draw.circle(window_surface, GREEN, (60, 480), radius/2)
@@ -1808,6 +1862,16 @@ while running:
         blinkSet = not blinkSet       
         previousTicks = pygame.time.get_ticks() + interval
 
+    if canSendReport and (previousTicksReport <= pygame.time.get_ticks()):
+        canSendReport = False
+        temp='^r'
+        sendSerial(temp)
+
+    if speedRec and speedIsFast:
+        pygame.draw.circle(window_surface, GREEN, (460, 130), radius/2)
+    elif speedRec and not speedIsFast:
+        pygame.draw.circle(window_surface, GREEN, (460, 190), radius/2)
+
     ui_manager.draw_ui(window_surface)                                          # draw UI
 
     window_surface.blit(textsurfaceW,(198,28))                                  # W
@@ -1819,9 +1883,8 @@ while running:
     
     pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
     pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)
-                                                                                                    # Position LEDs
     
-
+    
     pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
     pygame.draw.rect(window_surface, [125,0,0], [30,400,360,60],width=3)
 

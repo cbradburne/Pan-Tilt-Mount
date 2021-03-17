@@ -59,6 +59,10 @@ byte acceleration_enable_state = 1;
 FloatCoordinate intercept;
 String atIndex = "test";
 
+float speedFactorS = 0.0;
+float speedFactorP = 0.0;
+float speedFactorT = 0.0;
+
 bool motorRunning = false;
 
 unsigned long previousMillis = 0;
@@ -66,6 +70,22 @@ const long interval = 50;
 bool zoomIN = false;
 bool zoomOUT = false;
 int zoomCounter = 0;
+
+bool speedIsFast = true;
+
+bool pos1set = false;
+bool pos2set = false;
+bool pos3set = false;
+bool pos4set = false;
+bool pos5set = false;
+bool pos6set = false;
+
+bool atPos1 = false;
+bool atPos2 = false;
+bool atPos3 = false;
+bool atPos4 = false;
+bool atPos5 = false;
+bool atPos6 = false;
 
 constexpr unsigned PID_Interval = 10; // ms
 constexpr float P = 0.01;             // (P)roportional constant of the regulator needs to be adjusted (depends on speed and acceleration setting)
@@ -104,11 +124,13 @@ void initPanTilt(void) {
   invertTiltDirection(invert_tilt);
   invertSliderDirection(invert_slider);
   delay(200);
-  Serial1.println(String("Pan speed         : ") + panDegreesToSteps(pan_set_speed) + String(" steps/s"));
-  Serial1.println(String("Tilt speed        : ") + tiltDegreesToSteps(tilt_set_speed) + String(" steps/s"));
-  Serial1.println(String("Slider speed      : ") + sliderMillimetresToSteps(slider_set_speed) + String(" steps/s"));
+  Serial1.println(String("Pan speed         : ") + pan_set_speed + String("°/s"));
+  Serial1.println(String("Tilt speed        : ") + tilt_set_speed + String("°/s"));
+  Serial1.println(String("Slider speed      : ") + slider_set_speed + String("mm/s"));
   Serial1.println("-");
   digitalWrite(PIN_ENABLE, LOW);              //Enable the stepper drivers
+  Serial1.print(String("#Y"));
+  Serial1.print(String("#V"));
 }
 
 
@@ -384,11 +406,11 @@ void printKeyframeElements(void) {
 
 
 void debugReport(void) {
-  Serial1.println(String("Step mode         : ") + step_mode);
+  Serial1.println(String("\nStep mode         : ") + step_mode);
   Serial1.println(String(""));
   Serial1.println(String("Pan angle         : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("°"));
   Serial1.println(String("Tilt angle        : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("°"));
-  Serial1.println(String("Slider position   : ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm\n"));
+  Serial1.println(String("Slider position   : ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String("mm\n"));
   Serial1.println(String("Pan steps         : ") + panDegreesToSteps(pan_set_speed) + String(" steps/s"));
   Serial1.println(String("Tilt steps        : ") + tiltDegreesToSteps(tilt_set_speed) + String(" steps/s"));
   Serial1.println(String("Slider steps      : ") + sliderMillimetresToSteps(slider_set_speed) + String(" steps/s\n"));
@@ -397,7 +419,7 @@ void debugReport(void) {
   Serial1.println(String("Slider set speed  : ") + slider_set_speed + String("mm/s\n"));
   Serial1.println(String("Pan Accel         : ") + pan_accel_increment_us + String(" steps/s²"));
   Serial1.println(String("Tilt Accel        : ") + tilt_accel_increment_us + String(" steps/s²"));
-  Serial1.println(String("Slider Accel      : ") + slider_accel_increment_us + String(" steps/s²\n"));
+  Serial1.println(String("Slider Accel      : ") + slider_accel_increment_us + String(" steps/s²"));
 
   printEEPROM();
   printKeyframeElements();
@@ -408,12 +430,10 @@ void debugReport(void) {
 
 
 void positionReport(void) {
-  Serial1.println(String("Position Report   : "));
+  Serial1.println(String("\nPosition Report   : "));
   Serial1.println(String("Pan angle         : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("°"));
-  //delay(200);
   Serial1.println(String("Tilt angle        : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("°"));
-  Serial1.println(String("Slider position   : ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String(" mm \n"));
-  //delay(200);
+  Serial1.println(String("Slider position   : ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String("mm"));
 }
 
 
@@ -492,24 +512,61 @@ void moveToIndex(int index) {
 
   if (index == 0) {
     atIndex = "#a";
+    atPos1 = true;
+    atPos2 = false;
+    atPos3 = false;
+    atPos4 = false;
+    atPos5 = false;
+    atPos6 = false;
   }
   else if (index == 1) {
     atIndex = "#b";
+    atPos2 = true;
+    atPos1 = false;
+    atPos3 = false;
+    atPos4 = false;
+    atPos5 = false;
+    atPos6 = false;
   }
   else if (index == 2) {
     atIndex = "#c";
+    atPos3 = true;
+    atPos1 = false;
+    atPos2 = false;
+    atPos4 = false;
+    atPos5 = false;
+    atPos6 = false;
   }
   else if (index == 3) {
     atIndex = "#d";
+    atPos4 = true;
+    atPos1 = false;
+    atPos2 = false;
+    atPos3 = false;
+    atPos5 = false;
+    atPos6 = false;
   }
   else if (index == 4) {
     atIndex = "#e";
+    atPos5 = true;
+    atPos1 = false;
+    atPos2 = false;
+    atPos3 = false;
+    atPos4 = false;
+    atPos6 = false;
   }
   else if (index == 5) {
     atIndex = "#f";
+    atPos6 = true;
+    atPos1 = false;
+    atPos2 = false;
+    atPos3 = false;
+    atPos4 = false;
+    atPos5 = false;
   }
   
-  Serial1.println(atIndex);
+  Serial1.print(atIndex);
+  //Serial.print(atIndex);
 }
 
 
@@ -848,7 +905,10 @@ void toggleAcceleration(void) {
 
 void Serial1Data(void) {
   char instruction = Serial1.read();
-  if (instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED) {
+  if (instruction == '^') {
+    instruction = Serial1.read();
+  }
+  else if (instruction == INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED) {
     int count = 0;
     while (Serial1.available() < 6) {                       //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
       delayMicroseconds(200);
@@ -862,7 +922,13 @@ void Serial1Data(void) {
     short panStepSpeed = (Serial1.read() << 8) + Serial1.read();
     short tiltStepSpeed = (Serial1.read() << 8) + Serial1.read();
 
-    Serial1.print(String("#y"));
+    Serial1.print(String("#y"));          // not at any set pos
+    atPos1 = false;
+    atPos2 = false;
+    atPos3 = false;
+    atPos4 = false;
+    atPos5 = false;
+    atPos6 = false;
 
     if ( DEBUG1 ) {
       Serial1.print(String("sliderStepSpeed - ") + sliderStepSpeed);
@@ -872,13 +938,28 @@ void Serial1Data(void) {
       Serial1.println(String("tiltStepSpeed - ") + tiltStepSpeed);
     }
 
-    float sliderStepSpeed2 = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_set_speed)), sliderMillimetresToSteps(slider_set_speed));
-    float panStepSpeed2 = map(panStepSpeed, -255, 255, -(panDegreesToSteps(pan_set_speed)), panDegreesToSteps(pan_set_speed));
-    float tiltStepSpeed2 = map(tiltStepSpeed, -255, 255, -(tiltDegreesToSteps(tilt_set_speed)), tiltDegreesToSteps(tilt_set_speed));
+    //float sliderStepSpeed2 = map(sliderStepSpeed, -255, 255, -(sliderMillimetresToSteps(slider_set_speed)), sliderMillimetresToSteps(slider_set_speed));
+    //float panStepSpeed2 = map(panStepSpeed, -255, 255, -(panDegreesToSteps(pan_set_speed)), panDegreesToSteps(pan_set_speed));
+    //float tiltStepSpeed2 = map(tiltStepSpeed, -255, 255, -(tiltDegreesToSteps(tilt_set_speed)), tiltDegreesToSteps(tilt_set_speed));
+    
+    //speedFactorS = sliderStepSpeed2 / 2000.0f;
+    //speedFactorP = panStepSpeed2 / 2000.0f;
+    //speedFactorT = tiltStepSpeed2 / 2000.0f;
 
-    float speedFactorP = panStepSpeed2 / 2000.0f;
-    float speedFactorT = tiltStepSpeed2 / 2000.0f;
-    float speedFactorS = sliderStepSpeed2 / 2000.0f;
+    float sliderStepSpeed2 = map(sliderStepSpeed, -255, 255, -slider_set_speed, slider_set_speed);
+    float panStepSpeed2 = map(panStepSpeed, -255, 255, -pan_set_speed, pan_set_speed);
+    float tiltStepSpeed2 = map(tiltStepSpeed, -255, 255, -tilt_set_speed, tilt_set_speed);
+
+    if (speedIsFast){
+      speedFactorS = sliderStepSpeed2 / 40.0f;
+      speedFactorP = panStepSpeed2 / 40.0f;
+      speedFactorT = tiltStepSpeed2 / 40.0f;
+    }
+    else{
+      speedFactorS = sliderStepSpeed2 / 5.0f;
+      speedFactorP = panStepSpeed2 / 5.0f;
+      speedFactorT = tiltStepSpeed2 / 5.0f;
+    }
 
     if (speedFactorS == 0) {
       rotate_stepperS.stopAsync();
@@ -929,6 +1010,9 @@ void Serial1Data(void) {
   switch (instruction) {
     case INSTRUCTION_SETPOS1: {
         Serial1.print(String("#A"));
+        Serial1.print(String("#a"));
+        pos1set = true;
+        atPos1 = true;
         editKeyframe(0);
       }
       break;
@@ -940,7 +1024,10 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SETPOS2: {
-      Serial1.print(String("#B"));
+        Serial1.print(String("#B"));
+        Serial1.print(String("#b"));
+        pos2set = true;
+        atPos2 = true;
         editKeyframe(1);
       }
       break;
@@ -952,7 +1039,10 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SETPOS3: {
-      Serial1.print(String("#C"));
+        Serial1.print(String("#C"));
+        Serial1.print(String("#c"));
+        pos3set = true;
+        atPos3 = true;
         editKeyframe(2);
       }
       break;
@@ -964,7 +1054,10 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SETPOS4: {
-      Serial1.print(String("#D"));
+        Serial1.print(String("#D"));
+        Serial1.print(String("#d"));
+        pos4set = true;
+        atPos4 = true;
         editKeyframe(3);
       }
       break;
@@ -976,7 +1069,10 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SETPOS5: {
-      Serial1.print(String("#E"));
+        Serial1.print(String("#E"));
+        Serial1.print(String("#e"));
+        pos5set = true;
+        atPos5 = true;
         editKeyframe(4);
       }
       break;
@@ -988,7 +1084,10 @@ void Serial1Data(void) {
       }
       break;
     case INSTRUCTION_SETPOS6: {
-      Serial1.print(String("#F"));
+        Serial1.print(String("#F"));
+        Serial1.print(String("#f"));
+        pos6set = true;
+        atPos6 = true;
         editKeyframe(5);
       }
       break;
@@ -1005,13 +1104,14 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_SET_FAST_SPEED: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          speedIsFast = true;
           pan_set_speed = pan_fast_speed;
           tilt_set_speed = tilt_fast_speed;
           slider_set_speed = slider_fast_speed;
           stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
           stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_set_speed));
           stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_set_speed));
-          Serial1.print(String("#V"));
+          Serial1.print(String("#V\n"));
           Serial1.println(String("Speeds set (fast):"));
           Serial1.println(String("Pan   : ") + pan_set_speed + String(" °/s."));
           Serial1.println(String("Tilt  : ") + tilt_set_speed + String(" °/s."));
@@ -1021,14 +1121,15 @@ void Serial1Data(void) {
       break;
     case INSTRUCTION_SET_SLOW_SPEED: {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
+          speedIsFast = false;
           pan_set_speed = pan_slow_speed;
           tilt_set_speed = tilt_slow_speed;
           slider_set_speed = slider_slow_speed;
           stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
           stepper_tilt.setMaxSpeed(panDegreesToSteps(tilt_set_speed));
           stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_set_speed));
-          Serial1.print(String("#V"));
-          Serial1.println(String("Speeds set (fast):"));
+          Serial1.print(String("#v\n"));
+          Serial1.println(String("Speeds set (slow):"));
           Serial1.println(String("Pan   : ") + pan_set_speed + String(" °/s."));
           Serial1.println(String("Tilt  : ") + tilt_set_speed + String(" °/s."));
           Serial1.println(String("Slider: ") + slider_set_speed + String(" mm/s."));
@@ -1084,6 +1185,65 @@ void Serial1Data(void) {
         if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
           positionReport();
         }
+      }
+      break;
+    case INSTRUCTION_RESET_LEDS: {
+        Serial1.print(String("#W"));        // clear LEDS
+        if (pos1set) {
+          Serial1.print(String("#A"));
+          //Serial.println("pos1set");
+        }
+        if (atPos1) {
+          Serial1.print(String("#a"));
+          //Serial.println("atpos1");
+        }
+        if (pos2set) {
+          Serial1.print(String("#B"));
+          //Serial.println("pos2set");
+        }
+        if (atPos2) {
+          Serial1.print(String("#b"));
+          //Serial.println("atpos2");
+        }
+        if (pos3set) {
+          Serial1.print(String("#C"));
+          //Serial.println("pos3set");
+        }
+        if (atPos3) {
+          Serial1.print(String("#c"));
+          //Serial.println("atpos3");
+        }
+        if (pos4set) {
+          Serial1.print(String("#D"));
+          //Serial.println("pos4set");
+        }
+        if (atPos4) {
+          Serial1.print(String("#d"));
+          //Serial.println("atpos4");
+        }
+        if (pos5set) {
+          Serial1.print(String("#E"));
+          //Serial.println("pos5set");
+        }
+        if (atPos5) {
+          Serial1.print(String("#e"));
+          //Serial.println("atpos5");
+        }
+        if (pos6set) {
+          Serial1.print(String("#F"));
+          //Serial.println("pos6set");
+        }
+        if (atPos6) {
+          Serial1.print(String("#f"));
+          //Serial.println("atpos6");
+        }
+        if (speedIsFast) {
+          Serial1.print(String("#V"));
+        }
+        if (!speedIsFast) {
+          Serial1.print(String("#v"));
+        }
+        
       }
       break;
     case INSTRUCTION_PAN_DEGREES: {
@@ -1142,7 +1302,7 @@ void Serial1Data(void) {
         //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
         //  stepper_pan.setMaxSpeed(panDegreesToSteps(pan_set_speed));
         //}
-        Serial1.println(String("Fast pan speed set as: ") + panDegreesToSteps(pan_fast_speed) + String("\n"));
+        Serial1.println(String("Fast pan speed set as: ") + panDegreesToSteps(pan_fast_speed));
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED: {
@@ -1151,7 +1311,7 @@ void Serial1Data(void) {
         //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
         //  stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_fast_speed));
         //}
-        Serial1.println(String("Fast tilt speed set as: ") + tiltDegreesToSteps(tilt_fast_speed) + String("\n"));
+        Serial1.println(String("Fast tilt speed set as: ") + tiltDegreesToSteps(tilt_fast_speed));
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED: {
@@ -1160,32 +1320,32 @@ void Serial1Data(void) {
         //if (!multi_stepper.isRunning() && !step_stepperP.isRunning() && !rotate_stepperP.isRunning() && !step_stepperT.isRunning() && !rotate_stepperT.isRunning() && !step_stepperS.isRunning() && !rotate_stepperS.isRunning()) {
         //  stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_fast_speed));
         //}
-        Serial1.println(String("Fast slider speed set as: ") + sliderMillimetresToSteps(slider_fast_speed) + String("\n"));
+        Serial1.println(String("Fast slider speed set as: ") + sliderMillimetresToSteps(slider_fast_speed));
       }
       break;
     case INSTRUCTION_SET_PAN_SPEED_SLOW: {
         Serial1.println(String("Slow pan speed: ") + Serial1CommandValueFloat + String("°/s."));
         pan_slow_speed = Serial1CommandValueFloat;
-        Serial1.println(String("Slow pan speed set as: ") + panDegreesToSteps(pan_slow_speed) + String("\n"));
+        Serial1.println(String("Slow pan speed set as: ") + panDegreesToSteps(pan_slow_speed));
       }
       break;
     case INSTRUCTION_SET_TILT_SPEED_SLOW: {
         Serial1.println(String("Slow tilt speed: ") + Serial1CommandValueFloat + String("°/s."));
         tilt_slow_speed = Serial1CommandValueFloat;
-        Serial1.println(String("Slow tilt speed set as: ") + tiltDegreesToSteps(tilt_slow_speed) + String("\n"));
+        Serial1.println(String("Slow tilt speed set as: ") + tiltDegreesToSteps(tilt_slow_speed));
       }
       break;
     case INSTRUCTION_SET_SLIDER_SPEED_SLOW: {
         Serial1.println(String("Slow slider speed: ") + Serial1CommandValueFloat + String("mm/s."));
         slider_slow_speed = Serial1CommandValueFloat;
-        Serial1.println(String("Slow slider speed set as: ") + sliderMillimetresToSteps(slider_slow_speed) + String("\n"));
+        Serial1.println(String("Slow slider speed set as: ") + sliderMillimetresToSteps(slider_slow_speed));
       }
       break;
     case INSTRUCTION_CALCULATE_TARGET_POINT: {
         if (calculateTargetCoordinate()) {
           Serial1.println(String("Target:\tx: ") + intercept.x + String("\t"));
           Serial1.println(String("y: ") + intercept.y + String("\t"));
-          Serial1.println(String("z: ") + intercept.z + String("mm\n"));
+          Serial1.println(String("z: ") + intercept.z + String("mm"));
         }
       }
       break;
@@ -1235,8 +1395,6 @@ void Serial1Data(void) {
       // if unrecognised charater, do nothing
       break;
   }
-  
-  
 }
 
 
@@ -1245,6 +1403,20 @@ void Serial1Data(void) {
 
 void clearKeyframes(void) {
   Serial1.print(String("#Y"));
+  pos1set = false;
+  pos2set = false;
+  pos3set = false;
+  pos4set = false;
+  pos5set = false;
+  pos6set = false;
+
+  atPos1 = false;
+  atPos2 = false;
+  atPos3 = false;
+  atPos4 = false;
+  atPos5 = false;
+  atPos6 = false;
+  Serial1.println(String("\nPositions Cleared."));
 }
 
 

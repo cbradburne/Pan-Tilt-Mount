@@ -4,14 +4,14 @@ bool DEBUG = false;
 
 unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
-const long interval = 200;              // run to pos LED flashing interval
+const long interval = 200;                    // run to pos LED flashing interval
 
 const int XdeadRangeLow  = 512 - 60;
 const int XdeadRangeHigh = 512 + 60;
 const int YdeadRangeLow  = 512 - 60;
 const int YdeadRangeHigh = 512 + 60;
-const int ZdeadRangeLow  = 508 - 60; // 466
-const int ZdeadRangeHigh = 508 + 60; // 547  
+const int ZdeadRangeLow  = 508 - 60;          // 466
+const int ZdeadRangeHigh = 508 + 60;          // 547  
 
 const int ledPin1r = 27;
 const int ledPin1g = 25;
@@ -111,6 +111,12 @@ bool set1held = false;
 bool set6held = false;
 bool clearHeld = false;
 
+bool fastHeld = false;
+bool slowHeld = false;
+bool clearHeld2 = false;
+
+bool firstConnect = true;
+
 int buttonState1;
 int buttonState2;
 int buttonState3;
@@ -199,8 +205,6 @@ int joyZ;
 char hash = '#';
 
 void setup() {
-  //Serial.begin(115200);
-  //Serial3.begin(115200);
   Serial.begin(38400);
   Serial3.begin(38400);
 
@@ -245,11 +249,25 @@ void setup() {
   pinMode(swPinZoomIn, INPUT_PULLUP);
   pinMode(swPinZoomOut, INPUT_PULLUP);
 
-  digitalWrite(ledPinSlow, LOW);
-  digitalWrite(ledPinFast, HIGH);
+  //digitalWrite(ledPinSlow, LOW);
+  //digitalWrite(ledPinFast, HIGH);
 }
 
 void loop() {
+
+  if (Serial) {
+    if (firstConnect) {
+      delay(200);
+      sendCharArray((char *)"^W");
+      firstConnect = false;
+    }
+  }
+
+  if (!Serial) {
+    if (!firstConnect) {
+      firstConnect = true;
+    }
+  }
 
   if (Serial.available()) {
     int inByte = Serial.read();
@@ -260,7 +278,12 @@ void loop() {
   //  Serial.write(Serial3.read());   // read it and send it out Serial (USB)
   //}
 
+  //if ((!Serial3.available()) && (!firstConnect)) {
+  //  firstConnect = true;
+  //}
+
   if (Serial3.available()) {
+    
     char instruction = Serial3.read();
     if (instruction == '#') {
       int count = 0;
@@ -286,40 +309,39 @@ void loop() {
             speedFastSet = true;
             digitalWrite(ledPinSlow, LOW);
             digitalWrite(ledPinFast, HIGH);
-            
           }
           break;
-        case 'A': {                       // At pos 1 (edit)
-            atPos1 = true;
+        case 'A': {                                           // At pos 1 (edit)
+            //atPos1 = true;
             pos1set = true;
           }
           break;
-        case 'B': {                       // At pos 2 (edit)
-            atPos2 = true;
+        case 'B': {                                           // At pos 2 (edit)
+            //atPos2 = true;
             pos2set = true;
           }
           break;
-        case 'C': {                       // At pos 3 (edit)
-            atPos3 = true;
+        case 'C': {                                           // At pos 3 (edit)
+            //atPos3 = true;
             pos3set = true;
           }
           break;
-        case 'D': {                       // At pos 4 (edit)
-            atPos4 = true;
+        case 'D': {                                           // At pos 4 (edit)
+            //atPos4 = true;
             pos4set = true;
           }
           break;
-        case 'E': {                       // At pos 5 (edit)
-            atPos5 = true;
+        case 'E': {                                           // At pos 5 (edit)
+            //atPos5 = true;
             pos5set = true;
           }
           break;
-        case 'F': {                       // At pos 6 (edit)
-            atPos6 = true;
+        case 'F': {                                           // At pos 6 (edit)
+            //atPos6 = true;
             pos6set = true;
           }
           break;
-        case 'J': {                       // Moveing to pos 1
+        case 'J': {                                           // Moveing to pos 1
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -329,7 +351,7 @@ void loop() {
             pos1run = true;
           }
           break;
-        case 'K': {                       // Moveing to pos 2
+        case 'K': {                                           // Moveing to pos 2
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -339,7 +361,7 @@ void loop() {
             pos2run = true;
           }
           break;
-        case 'L': {                       // Moveing to pos 3
+        case 'L': {                                           // Moveing to pos 3
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -349,7 +371,7 @@ void loop() {
             pos3run = true;
           }
           break;
-        case 'M': {                       // Moveing to pos 4
+        case 'M': {                                           // Moveing to pos 4
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -359,7 +381,7 @@ void loop() {
             pos4run = true;
           }
           break;
-        case 'N': {                       // Moveing to pos 5
+        case 'N': {                                           // Moveing to pos 5
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -369,7 +391,7 @@ void loop() {
             pos5run = true;
           }
           break;
-        case 'O': {                       // Moveing to pos 6
+        case 'O': {                                           // Moveing to pos 6
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -379,37 +401,37 @@ void loop() {
             pos6run = true;
           }
           break;
-        case 'a': {                       // At pos 1
+        case 'a': {                                           // At pos 1
             pos1run = false;
             atPos1 = true;
           }
           break;
-        case 'b': {                       // At pos 2
+        case 'b': {                                           // At pos 2
             pos2run = false;
             atPos2 = true;
           }
           break;
-        case 'c': {                       // At pos 3
+        case 'c': {                                           // At pos 3
             pos3run = false;
             atPos3 = true;
           }
           break;
-        case 'd': {                       // At pos 4
+        case 'd': {                                           // At pos 4
             pos4run = false;
             atPos4 = true;
           }
           break;
-        case 'e': {                       // At pos 5
+        case 'e': {                                           // At pos 5
             pos5run = false;
             atPos5 = true;
           }
           break;
-        case 'f': {                       // At pos 6
+        case 'f': {                                           // At pos 6
             pos6run = false;
             atPos6 = true;
           }
           break;
-        case 'Y': {                       // CLEAR ALL POSITIONS
+        case 'Y': {                                           // CLEAR ALL POSITIONS
             pos1run = false;
             pos1set = false;
             atPos1 = false;
@@ -430,7 +452,7 @@ void loop() {
             atPos6 = false;
           }
           break;
-        case 'y': {                       // Not at any stored position
+        case 'y': {                                           // Not at any stored position
             atPos1 = false;
             atPos2 = false;
             atPos3 = false;
@@ -457,7 +479,7 @@ void loop() {
     XShort = map(joyXread, XdeadRangeHigh, X_max, 0, out_max);
   }
   else {
-    XShort = 0; // deadzone around center value
+    XShort = 0;                                               // deadzone around center value
   }
 
   joyYread = analogRead(A1);
@@ -468,7 +490,7 @@ void loop() {
     YShort = map(joyYread, YdeadRangeHigh, Y_max, 0, out_max);
   }
   else {
-    YShort = 0; // deadzone around center value
+    YShort = 0;                                               // deadzone around center value
   }
 
   joyZread = analogRead(A2);
@@ -479,7 +501,7 @@ void loop() {
     ZShort = map(joyZread, ZdeadRangeHigh, Z_max, 0, out_max);
   }
   else {
-    ZShort = 0; // deadzone around center value
+    ZShort = 0;                                               // deadzone around center value
   }
 
   //Serial.print(joyZread);
@@ -497,7 +519,7 @@ void loop() {
     if (reading1 != buttonState1) {
       buttonState1 = reading1;
       if (buttonState1 == LOW) {
-        sendCharArray((char *)"a");
+        sendCharArray((char *)"^a");
         set1held = true;
       }
       if (buttonState1 == HIGH) {
@@ -517,7 +539,7 @@ void loop() {
       buttonState2 = reading2;
       if (buttonState2 == LOW) {
         if (pos1set && !atPos1) {
-          sendCharArray((char *)"A");
+          sendCharArray((char *)"^A");
         }
       }
     }
@@ -533,7 +555,7 @@ void loop() {
     if (reading3 != buttonState3) {
       buttonState3 = reading3;
       if (buttonState3 == LOW) {
-        sendCharArray((char *)"b");
+        sendCharArray((char *)"^b");
       }
     }
   }
@@ -549,7 +571,7 @@ void loop() {
       buttonState4 = reading4;
       if (buttonState4 == LOW) {
         if (pos2set && !atPos2) {
-          sendCharArray((char *)"B");
+          sendCharArray((char *)"^B");
         }
       }
     }
@@ -565,7 +587,7 @@ void loop() {
     if (reading5 != buttonState5) {
       buttonState5 = reading5;
       if (buttonState5 == LOW) {
-        sendCharArray((char *)"c");
+        sendCharArray((char *)"^c");
       }
     }
   }
@@ -581,7 +603,7 @@ void loop() {
       buttonState6 = reading6;
       if (buttonState6 == LOW) {
         if (pos3set && !atPos3) {
-          sendCharArray((char *)"C");
+          sendCharArray((char *)"^C");
         }
       }
     }
@@ -597,7 +619,7 @@ void loop() {
     if (reading7 != buttonState7) {
       buttonState7 = reading7;
       if (buttonState7 == LOW) {
-        sendCharArray((char *)"d");
+        sendCharArray((char *)"^d");
       }
     }
   }
@@ -613,7 +635,7 @@ void loop() {
       buttonState8 = reading8;
       if (buttonState8 == LOW) {
         if (pos4set && !atPos4) {
-          sendCharArray((char *)"D");
+          sendCharArray((char *)"^D");
         }
       }
     }
@@ -629,7 +651,7 @@ void loop() {
     if (reading9 != buttonState9) {
       buttonState9 = reading9;
       if (buttonState9 == LOW) {
-        sendCharArray((char *)"e");
+        sendCharArray((char *)"^e");
       }
     }
   }
@@ -645,7 +667,7 @@ void loop() {
       buttonState10 = reading10;
       if (buttonState10 == LOW) {
         if (pos5set && !atPos5) {
-          sendCharArray((char *)"E");
+          sendCharArray((char *)"^E");
         }
       }
     }
@@ -661,7 +683,7 @@ void loop() {
     if (reading11 != buttonState11) {
       buttonState11 = reading11;
       if (buttonState11 == LOW) {
-        sendCharArray((char *)"f");
+        sendCharArray((char *)"^f");
         set6held = true;
       }
       if (buttonState11 == HIGH) {
@@ -681,12 +703,14 @@ void loop() {
       buttonState12 = reading12;
       if (buttonState12 == LOW) {
         if (pos6set && !atPos6) {
-          sendCharArray((char *)"F");
+          sendCharArray((char *)"^F");
         }
       }
     }
   }
   lastButtonState12 = reading12;
+
+  /* ------------------------------------------------- Clear All Positions ------------------------------------------------- */
 
   if (set1held && set6held && !clearHeld){
     clearHeld = true;
@@ -695,11 +719,27 @@ void loop() {
 
   if (set1held && set6held && clearHeld && ((millis() - clearStartTime) > heldDelay)){
     clearHeld = false;
-    sendCharArray((char *)"Y");
+    sendCharArray((char *)"^Y");
   }
 
   if (!set1held && !set6held && clearHeld){
     clearHeld = false;
+  }
+
+  /* ------------------------------------------------- Reset LEDs ------------------------------------------------- */
+
+  if (fastHeld && slowHeld && !clearHeld2){
+    clearHeld2 = true;
+    clearStartTime = millis();
+  }
+
+  if (fastHeld && slowHeld && clearHeld2 && ((millis() - clearStartTime) > heldDelay)){
+    clearHeld2 = false;
+    sendCharArray((char *)"^W");
+  }
+
+  if (!fastHeld && !slowHeld && clearHeld2){
+    clearHeld2 = false;
   }
 
   /* ------------------------------------------------- Speed, L&R ------------------------------------------------- */
@@ -715,19 +755,21 @@ void loop() {
   if ((millis() - lastDebounceTime13) > debounceDelay) {
     if (reading13 != buttonState13) {
       buttonState13 = reading13;
-      if (buttonState13 == LOW) {
-        if (1==1) {                                    // If Fast is set, Send SLOW  (speedFast)
-          /*
-          sendCharArray((char *)"s10");
-          delay(50);
-          sendCharArray((char *)"S10");
-          delay(50);
-          sendCharArray((char *)"X30");
-          speedFast = false;
-          doLEDs();
-          */
-          sendCharArray((char *)"v");
-        }
+      if (buttonState13 == LOW) {                             // Send SLOW
+        /*
+        sendCharArray((char *)"s10");
+        delay(50);
+        sendCharArray((char *)"S10");
+        delay(50);
+        sendCharArray((char *)"X30");
+        speedFast = false;
+        doLEDs();
+        */
+        sendCharArray((char *)"^v");
+        slowHeld = true;
+      }
+      if (buttonState13 == HIGH) {
+        slowHeld = false;
       }
     }
   }
@@ -740,19 +782,21 @@ void loop() {
   if ((millis() - lastDebounceTime14) > debounceDelay) {
     if (reading14 != buttonState14) {
       buttonState14 = reading14;
-      if (buttonState14 == LOW) {
-        if (1==1) {                                   // If Slow is set, Send FAST  (!speedFast)
-          /*
-          sendCharArray((char *)"s30");
-          delay(50);
-          sendCharArray((char *)"S30");
-          delay(50);
-          sendCharArray((char *)"X60");
-          speedFast = true;
-          doLEDs();
-          */
-          sendCharArray((char *)"V");
-        }
+      if (buttonState14 == LOW) {                           // Send FAST
+        /*
+        sendCharArray((char *)"s30");
+        delay(50);
+        sendCharArray((char *)"S30");
+        delay(50);
+        sendCharArray((char *)"X60");
+        speedFast = true;
+        doLEDs();
+        */
+        sendCharArray((char *)"^V");
+        fastHeld = true;
+      }
+      if (buttonState14 == HIGH) {
+        fastHeld = false;
       }
     }
   }
@@ -785,17 +829,17 @@ void loop() {
   if (!reading17 && reading18 && !zoomPressed) {
     zoomPressed = true;
     notZooming = false;
-    sendCharArray((char *)"Z");                             // Zoom In
+    sendCharArray((char *)"^Z");                             // Zoom In
   }
   else if (reading17 && !reading18 && !zoomPressed) {
     zoomPressed = true;
     notZooming = false;
-    sendCharArray((char *)"z");                             // Zoom In
+    sendCharArray((char *)"^z");                             // Zoom In
   }
   if (reading17 && reading18 && !notZooming && zoomPressed) {
     zoomPressed = false;
     notZooming = true;
-    sendCharArray((char *)"N");                             // Stop Zooming
+    sendCharArray((char *)"^N");                             // Stop Zooming
   }
 
   /* --------------------------------------------- Send Joystick & Left / Right -------------------------------------------- */
@@ -954,13 +998,8 @@ void loop() {
     else if (!pos6set) {
       digitalWrite(ledPin6r, LOW);
       digitalWrite(ledPin6g, LOW);
-    }
-
-    
+    } 
   }
-
-
-  
 }
 
 /* ------------------------------------------------- Set LEDs ------------------------------------------------- */

@@ -46,81 +46,27 @@
             "regular_path": "./Montserrat-Regular.ttf"
         }
     },
-    "#test_prototype_colours":
-    {
-        "colours":
-        {
-            "dark_bg": "#333333,#222222,180",
-            "normal_border": "#ffB2A5",
-            "normal_bg": "#fb9e91"
+    "dummy_load_roboto": {
+        "font": {
+            "name": "roboto",
+            "size": "12",
+            "regular_path": "./Roboto-Regular.ttf"
         }
     },
-
-    
-    "horizontal_slider":
-    {
-        "prototype": "#test_prototype_colours",
-
-        "colours":
-        {
-            "dark_bg": "#fb86fb,#fd92A0,90"
-        },
-        "misc":
-        {
-            "shape": "rounded_rectangle",
-            "shape_corner_radius": "10",
-            "shadow_width": "2",
-            "border_width": "1",
-            "enable_arrow_buttons": "1"
+    "dummy_load_roboto14": {
+        "font": {
+            "name": "roboto",
+            "size": "18",
+            "regular_path": "./Roboto-Regular.ttf"
         }
     },
-    "horizontal_slider.@arrow_button":
-    {
-        "misc":
-        {
-            "shape": "rounded_rectangle",
-            "shape_corner_radius": "8",
-            "text_horiz_alignment_padding": "5"
+    "dummy_load_roboto32": {
+        "font": {
+            "name": "roboto",
+            "size": "32",
+            "regular_path": "./Roboto-Regular.ttf"
         }
     },
-    "horizontal_slider.#left_button":
-    {
-        "misc":
-        {
-            "text_horiz_alignment": "left"
-        }
-    },
-    "horizontal_slider.#right_button":
-    {
-        "misc":
-        {
-            "text_horiz_alignment": "right"
-        }
-    },
-
-    "vertical_scroll_bar":
-    {
-        "colours":
-        {
-            "selected_bg": "#fb9e91",
-            "dark_bg": "#333333"
-        }
-    },
-
-    "tool_tip.text_box":
-    {
-        "colours":
-        {
-            "dark_bg": "#fb9e91B0"
-        },
-        "misc":
-        {
-            "shape": "rounded_rectangle",
-            "shape_corner_radius": "10",
-            "padding": "8,8"
-        }
-    },
-
 
     "#everything_button":
     {
@@ -131,29 +77,44 @@
         },
         "misc":
         {
-            "shape": "square",
-            "shadow_width": "2",
+            "shape": "rounded_rectangle",
+            "text_horiz_alignment_padding": "0.5",
+            "shape_corner_radius": "2",
             "border_width": "1"
         }
     },
 
-    "#text_box_1":
+    "text_box":
     {
         "colours":
         {
-            "normal_border": "#585C5E",
-            "normal_text": "#FFFFFF,#BBBBBB,90"
+            "regular_text": "#EEEEEE"
         },
         "misc":
         {
-            "shape": "square",
-            "shadow_width": "2",
-            "border_width": "1"
-        },
-        "font":
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10",
+            "border_width": "1",
+            "padding": "1,1",
+            "link_normal_underline": "0",
+            "link_hover_underline": "0"
+
+        }
+    },
+    "text_box.vertical_scroll_bar":
+    {
+        "misc":
         {
-            "name": "montserrat",
-            "size": "14"
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "9"
+        }
+    },
+    "text_box.vertical_scroll_bar.button":
+    {
+        "misc":
+        {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "7"
         }
     },
     
@@ -166,9 +127,10 @@
         },
         "misc":
         {
-            "shape": "square",
-            "shadow_width": "2",
-            "border_width": "1"
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": 5,
+            "border_width": "1",
+            "padding": "4,1"
         }
     },
     
@@ -267,111 +229,6 @@
                 "normal_hovered": "0.2",
                 "hovered_normal": "0.5"
             }
-        }
-    },
-
-    "screen_space_health_bar":
-    {
-        "colours":
-        {
-            "normal_text": "#FFFFFF"
-        }
-    },
-
-    "#base_window":
-    {
-        "misc":
-        {
-            "border_width": "8"
-        }
-    },
-
-    "#scaling_window":
-    {
-        "prototype": "#base_window",
-        "misc":
-        {
-            "shadow_width": "1"
-        }
-    },
-
-    "#everything_window.horizontal_slider":
-    {
-        "colours":
-        {
-            "dark_bg": "#fb8691,#fd92A0,180",
-            "normal_border": "#ffB2A5",
-            "normal_bg": "#fb9e91"
-        },
-        "misc":
-        {
-            "shape": "rounded_rectangle",
-            "border_width": "2",
-            "shadow_width": "1",
-            "enable_arrow_buttons": "1"
-        }
-    },
-    "#everything_window.horizontal_slider.#sliding_button":
-    {
-        "misc":
-        {
-            "shape": "ellipse",
-            "border_width": "1",
-            "shadow_width": "1"
-        }
-    },
-    
-    "#everything_window.label":
-    {
-        "colours":
-        {
-            "normal_text": "#0091fbFF,#20fdA0FF,90",
-            "text_shadow": "#10101070"
-        },
-        "misc":
-        {
-            "text_shadow": "1",
-            "text_shadow_size": "1",
-            "text_shadow_offset": "0,0"
-        }
-    },
-    "#everything_window.screen_space_health_bar":
-    {
-        "colours":
-        {
-            "normal_text": "#FFFFFF",
-            "filled_bar": "#0091fbAA,#2060A0AA,90",
-            "unfilled_bar": "#FF505090"
-        },
-        "misc":
-        {
-            "shadow_width": "1"
-        }
-    },
-
-    
-    "#fps_counter":
-    {
-        "colours":
-        {
-            "normal_text": "#FFFFFF"
-        },
-        "font":
-        {
-            "name": "montserrat",
-            "size": "32"
-        }
-    },
-    "#frame_timer":
-    {
-        "colours":
-        {
-            "normal_text": "#FFFFFF"
-        },
-        "font":
-        {
-            "name": "montserrat",
-            "size": "14"
         }
     }
 }

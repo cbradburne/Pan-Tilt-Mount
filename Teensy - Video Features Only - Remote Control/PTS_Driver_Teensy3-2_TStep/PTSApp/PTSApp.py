@@ -385,10 +385,10 @@ def sendJoystick(arr):
 
 def serialPortTextBox():
     global textBoxSerial
-    textBoxSerial = UITextBox(serialText,
+    textBoxSerial = UITextBox('<font face=roboto size=5 color=#F0F0F0>' + serialText + '</font>',
                                         pygame.Rect((620, 130), (560, 510)),
-                                        ui_manager,
-                                        wrap_to_height=False)
+                                        ui_manager)
+                                        #wrap_to_height=False)
     
 def textBoxJoystickName():
     global joystickName
@@ -708,46 +708,46 @@ ui_manager.clear_and_reset()
 background_surface = pygame.Surface(resolution)
 background_surface.fill(ui_manager.get_theme().get_colour('dark_bg'))
 
-rel_button_L1 = UIButton(pygame.Rect((120, 180), (60, 60)), '.5', ui_manager)
-rel_button_L10 = UIButton(pygame.Rect((60, 180), (60, 60)), '10', ui_manager)
-rel_button_R1 = UIButton(pygame.Rect((240, 180), (60, 60)), '.5', ui_manager)
-rel_button_R10 = UIButton(pygame.Rect((300, 180), (60, 60)), '10', ui_manager)
-rel_button_U1 = UIButton(pygame.Rect((180, 120), (60, 60)), '.5', ui_manager)
-rel_button_U10 = UIButton(pygame.Rect((180, 60), (60, 60)), '10', ui_manager)
-rel_button_D1 = UIButton(pygame.Rect((180, 240), (60, 60)), '.5', ui_manager)
-rel_button_D10 = UIButton(pygame.Rect((180, 300), (60, 60)), '10', ui_manager)
+rel_button_L1 = UIButton(pygame.Rect((120, 180), (60, 60)), '.5', ui_manager, object_id='#everything_button')
+rel_button_L10 = UIButton(pygame.Rect((60, 180), (60, 60)), '10', ui_manager, object_id='#everything_button')
+rel_button_R1 = UIButton(pygame.Rect((240, 180), (60, 60)), '.5', ui_manager, object_id='#everything_button')
+rel_button_R10 = UIButton(pygame.Rect((300, 180), (60, 60)), '10', ui_manager, object_id='#everything_button')
+rel_button_U1 = UIButton(pygame.Rect((180, 120), (60, 60)), '.5', ui_manager, object_id='#everything_button')
+rel_button_U10 = UIButton(pygame.Rect((180, 60), (60, 60)), '10', ui_manager, object_id='#everything_button')
+rel_button_D1 = UIButton(pygame.Rect((180, 240), (60, 60)), '.5', ui_manager, object_id='#everything_button')
+rel_button_D10 = UIButton(pygame.Rect((180, 300), (60, 60)), '10', ui_manager, object_id='#everything_button')
 #rel_button_set0 = UIButton(pygame.Rect((190, 190), (40, 40)), '0', ui_manager)             # Resets position back to zero
-rel_button_SL10 = UIButton(pygame.Rect((120, 400), (60, 60)), '10', ui_manager)
-rel_button_SL100 = UIButton(pygame.Rect((60, 400), (60, 60)), '100', ui_manager)
-rel_button_SR10 = UIButton(pygame.Rect((240, 400), (60, 60)), '10', ui_manager)
-rel_button_SR100 = UIButton(pygame.Rect((300, 400), (60, 60)), '100', ui_manager)
+rel_button_SL10 = UIButton(pygame.Rect((120, 400), (60, 60)), '10', ui_manager, object_id='#everything_button')
+rel_button_SL100 = UIButton(pygame.Rect((60, 400), (60, 60)), '100', ui_manager, object_id='#everything_button')
+rel_button_SR10 = UIButton(pygame.Rect((240, 400), (60, 60)), '10', ui_manager, object_id='#everything_button')
+rel_button_SR100 = UIButton(pygame.Rect((300, 400), (60, 60)), '100', ui_manager, object_id='#everything_button')
 
-rel_button_SET1 = UIButton(pygame.Rect((30, 560), (60, 60)), 'SET 1', ui_manager)
-rel_button_SET2 = UIButton(pygame.Rect((90, 560), (60, 60)), 'SET 2', ui_manager)
-rel_button_SET3 = UIButton(pygame.Rect((150, 560), (60, 60)), 'SET 3', ui_manager)
-rel_button_SET4 = UIButton(pygame.Rect((210, 560), (60, 60)), 'SET 4', ui_manager)
-rel_button_SET5 = UIButton(pygame.Rect((270, 560), (60, 60)), 'SET 5', ui_manager)
-rel_button_SET6 = UIButton(pygame.Rect((330, 560), (60, 60)), 'SET 6', ui_manager)
+rel_button_SET1 = UIButton(pygame.Rect((30, 560), (60, 60)), 'SET 1', ui_manager, object_id='#everything_button')
+rel_button_SET2 = UIButton(pygame.Rect((90, 560), (60, 60)), 'SET 2', ui_manager, object_id='#everything_button')
+rel_button_SET3 = UIButton(pygame.Rect((150, 560), (60, 60)), 'SET 3', ui_manager, object_id='#everything_button')
+rel_button_SET4 = UIButton(pygame.Rect((210, 560), (60, 60)), 'SET 4', ui_manager, object_id='#everything_button')
+rel_button_SET5 = UIButton(pygame.Rect((270, 560), (60, 60)), 'SET 5', ui_manager, object_id='#everything_button')
+rel_button_SET6 = UIButton(pygame.Rect((330, 560), (60, 60)), 'SET 6', ui_manager, object_id='#everything_button')
 
-rel_button_GO1 = UIButton(pygame.Rect((30, 500), (60, 60)), 'GO 1', ui_manager)
-rel_button_GO2 = UIButton(pygame.Rect((90, 500), (60, 60)), 'GO 2', ui_manager)
-rel_button_GO3 = UIButton(pygame.Rect((150, 500), (60, 60)), 'GO 3', ui_manager)
-rel_button_GO4 = UIButton(pygame.Rect((210, 500), (60, 60)), 'GO 4', ui_manager)
-rel_button_GO5 = UIButton(pygame.Rect((270, 500), (60, 60)), 'GO 5', ui_manager)
-rel_button_GO6 = UIButton(pygame.Rect((330, 500), (60, 60)), 'GO 6', ui_manager)
+rel_button_GO1 = UIButton(pygame.Rect((30, 500), (60, 60)), 'GO 1', ui_manager, object_id='#everything_button')
+rel_button_GO2 = UIButton(pygame.Rect((90, 500), (60, 60)), 'GO 2', ui_manager, object_id='#everything_button')
+rel_button_GO3 = UIButton(pygame.Rect((150, 500), (60, 60)), 'GO 3', ui_manager, object_id='#everything_button')
+rel_button_GO4 = UIButton(pygame.Rect((210, 500), (60, 60)), 'GO 4', ui_manager, object_id='#everything_button')
+rel_button_GO5 = UIButton(pygame.Rect((270, 500), (60, 60)), 'GO 5', ui_manager, object_id='#everything_button')
+rel_button_GO6 = UIButton(pygame.Rect((330, 500), (60, 60)), 'GO 6', ui_manager, object_id='#everything_button')
 
-rel_button_CLEARALL = UIButton(pygame.Rect((390, 545), (100, 30)), 'Clear ALL', ui_manager)
+rel_button_CLEARALL = UIButton(pygame.Rect((390, 545), (100, 30)), 'Clear ALL', ui_manager, object_id='#everything_button')
 
-rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports', ui_manager)
+rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports', ui_manager, object_id='#everything_button')
 
-rel_button_FAST = UIButton(pygame.Rect((480, 100), (60, 60)), 'FAST', ui_manager)
-rel_button_SLOW = UIButton(pygame.Rect((480, 160), (60, 60)), 'SLOW', ui_manager)
+rel_button_FAST = UIButton(pygame.Rect((480, 100), (60, 60)), 'FAST', ui_manager, object_id='#everything_button')
+rel_button_SLOW = UIButton(pygame.Rect((480, 160), (60, 60)), 'SLOW', ui_manager, object_id='#everything_button')
 
-rel_button_REPORT = UIButton(pygame.Rect((510, 470), (100, 60)), 'Report All', ui_manager)
-rel_button_REPORTPOS = UIButton(pygame.Rect((510, 530), (100, 60)), 'Report Pos', ui_manager)
-rel_button_CLEARtext = UIButton(pygame.Rect((510, 600), (100, 40)), 'Clear Text', ui_manager)
+rel_button_REPORT = UIButton(pygame.Rect((510, 470), (100, 60)), 'Report All', ui_manager, object_id='#everything_button')
+rel_button_REPORTPOS = UIButton(pygame.Rect((510, 530), (100, 60)), 'Report Pos', ui_manager, object_id='#everything_button')
+rel_button_CLEARtext = UIButton(pygame.Rect((510, 600), (100, 40)), 'Clear Text', ui_manager, object_id='#everything_button')
 
-joystick_label = UILabel(pygame.Rect(540, 10, 230, 24), "Joystick", ui_manager, object_id='#main_text_entry')
+joystick_label = UILabel(pygame.Rect(540, 10, 230, 24), "Joystick", ui_manager)#, object_id='#main_text_entry')
 serial_text_entry = UITextEntryLine(pygame.Rect((930, 95), (250, 35)), ui_manager, object_id='#main_text_entry')
 serial_port_label = UILabel(pygame.Rect(550, 70, 230, 24), "Serial Port", ui_manager)
 serial_command_label = UILabel(pygame.Rect(870, 70, 230, 24), "Serial Command", ui_manager)

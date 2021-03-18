@@ -1,7 +1,7 @@
 import sys
 from cx_Freeze import setup, Executable
 
-includefiles = ['theme.json', 'Montserrat-Regular.ttf', 'PTSApp-Icon.png']
+includefiles = ['theme.json', 'Montserrat-Regular.ttf','Roboto-Regular.ttf' , 'PTSApp-Icon.png']
 
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {"packages": ["os"], "excludes": ["tkinter"], "include_files": includefiles}

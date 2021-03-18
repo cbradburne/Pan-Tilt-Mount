@@ -8,7 +8,7 @@ Usage:
 from setuptools import setup
 
 APP = ['PTSApp.py']
-DATA_FILES = ['theme.json', 'Montserrat-Regular.ttf', 'PTSApp-Icon.png']
+DATA_FILES = ['theme.json', 'Montserrat-Regular.ttf','Roboto-Regular.ttf' , 'PTSApp-Icon.png']
 OPTIONS = {'iconfile': 'PTSApp-Icon.icns'}
 
 setup(

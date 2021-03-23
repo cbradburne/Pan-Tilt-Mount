@@ -9,6 +9,9 @@
   install ESP32 boards into Arduino IDE, follow this guide:
   https://www.hackster.io/abdularbi17/how-to-install-esp32-board-in-arduino-ide-1cd571
 
+  NOTE: Thanks to YouTuber kingjust627, it's been noted that ESP32 DevKitC is incompatible with the code. 
+  ALSO, you need to install version 1.0.4 of the ESP32 library in the Arduino board manager.
+
   You'll need to get your DualShock4's Bluetooth MAC Address.
   To get the MAC address use the program "SixaxisPairTool", https://dancingpixelstudios.com/sixaxis-controller/sixaxispairtool/.
   I've included the file as thier website seems to be down at the moment.

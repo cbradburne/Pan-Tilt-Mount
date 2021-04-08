@@ -12,7 +12,7 @@ void setup() {
 
 void loop() {
   if (Serial.read() != -1) {
-    mySender.send(SONY,0x481, 12);
+    mySender.send(SONY,0xC81, 12);
     Serial.println(F("Sent signal."));
   }
 }

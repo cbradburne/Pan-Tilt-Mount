@@ -6,7 +6,7 @@
 //The lowest numbered protocol should be first but remainder 
 //can be any order.
 #include <IRLib_P01_NEC.h>    
-#include <IRLib_P02_Sony.h>   
+//#include <IRLib_P02_Sony.h>   
 #include <IRLibCombo.h>     // After all protocols, include this
 // All of the above automatically creates a universal sending
 // class called "IRsend" containing only the protocols you want.
@@ -27,9 +27,8 @@ void loop() {
     // push a button connected to an digital input pin.
     //Substitute values and protocols in the following statement
     // for device you have available.
-    mySender.send(SONY,0xa8bca, 20);//Sony DVD power A8BCA, 20 bits
-    //mySender.send(NEC,0x61a0f00f,0);//NEC TV power button=0x61a0f00f
+    //mySender.send(SONY,0xa8bca, 20);//Sony DVD power A8BCA, 20 bits
+    mySender.send(NEC,0x20df10ef,32);//NEC TV power button=0x61a0f00f
     Serial.println(F("Sent signal."));
   }
 }
-

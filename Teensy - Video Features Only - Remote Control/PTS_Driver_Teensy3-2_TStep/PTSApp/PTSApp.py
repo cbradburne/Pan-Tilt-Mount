@@ -325,7 +325,7 @@ def serialPort_changed():
         ser = ''
         serialNotSel = 'Serial port not available!<br>'
         textBoxSerial.kill()
-        serialText = serialNotSel + serialText
+        serialText = serialText + serialNotSel
         serialPortTextBox()
         drop_down_serial.kill()
         drop_down_serial = UIDropDownMenu(available_ports,                      # Recreate serial port drop down list
@@ -389,7 +389,19 @@ def serialPortTextBox():
                                         pygame.Rect((620, 130), (560, 510)),
                                         ui_manager)
                                         #wrap_to_height=False)
-    
+    if textBoxSerial.scroll_bar:
+        scroll_bar = textBoxSerial.scroll_bar
+        scroll_bar.scroll_position = (scroll_bar.bottom_limit - scroll_bar.sliding_button.rect.height)
+        x_pos = scroll_bar.rect.x + scroll_bar.shadow_width + scroll_bar.border_width
+        y_pos = scroll_bar.scroll_position + scroll_bar.rect.y + scroll_bar.shadow_width + \
+                scroll_bar.border_width + scroll_bar.button_height
+        scroll_bar.sliding_button.set_position(pygame.math.Vector2(x_pos, y_pos))
+
+        scroll_bar.start_percentage = scroll_bar.scroll_position / scroll_bar.scrollable_height
+        if not scroll_bar.has_moved_recently:
+            scroll_bar.has_moved_recently = True
+        #print(scroll_bar.scroll_position)
+
 def textBoxJoystickName():
     global joystickName
     global textBoxJoystickNames
@@ -583,7 +595,7 @@ def readSerial():
                 #textOUTPUT.see(END)                                    # code for tkinter
                 #serialText += serBuffer                                # code for tkinter
                 textBoxSerial.kill()
-                serialText = serBuffer + serialText
+                serialText = serialText + serBuffer
                 serialPortTextBox()
                 serBuffer = ''                                          # empty the buffer
             else:
@@ -592,10 +604,11 @@ def readSerial():
 def sendSerial(sendValue):
     global ser
     global serialText
+
     if (ser == ''):                                                     # Checks to see if com port has been selected
         serialNotSel = 'Serial port not selected!<br>'
         textBoxSerial.kill()
-        serialText = serialNotSel + serialText
+        serialText = serialText + serialNotSel
         serialPortTextBox()
         #textOUTPUT.insert(END, 'Serial port not selected!\n')          # code for tkinter
         #textOUTPUT.see(END)                                            # code for tkinter
@@ -743,6 +756,9 @@ rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports'
 rel_button_FAST = UIButton(pygame.Rect((480, 100), (60, 60)), 'FAST', ui_manager, object_id='#everything_button')
 rel_button_SLOW = UIButton(pygame.Rect((480, 160), (60, 60)), 'SLOW', ui_manager, object_id='#everything_button')
 
+rel_button_ZOOMin = UIButton(pygame.Rect((480, 260), (60, 60)), 'IN', ui_manager, object_id='#everything_button')
+rel_button_ZOOMout = UIButton(pygame.Rect((480, 320), (60, 60)), 'OUT', ui_manager, object_id='#everything_button')
+
 rel_button_REPORT = UIButton(pygame.Rect((510, 470), (100, 60)), 'Report All', ui_manager, object_id='#everything_button')
 rel_button_REPORTPOS = UIButton(pygame.Rect((510, 530), (100, 60)), 'Report Pos', ui_manager, object_id='#everything_button')
 rel_button_CLEARtext = UIButton(pygame.Rect((510, 600), (100, 40)), 'Clear Text', ui_manager, object_id='#everything_button')
@@ -880,6 +896,7 @@ def process_events():
         if event.type == pygame.QUIT:
             running = False
 
+        """
         if event.type == pygame.MOUSEBUTTONDOWN:
             if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56:
                 isZooming = True
@@ -893,6 +910,7 @@ def process_events():
         if event.type == pygame.MOUSEBUTTONUP and isZooming:
             isZooming = False
             sendZOOMstop()
+        """
 
         ui_manager.process_events(event)
         deadRangeLow = -0.2
@@ -1535,7 +1553,8 @@ def process_events():
             if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
                 sendCLEARALLpos()
 
-            if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.user_type == pygame_gui.UI_BUTTON_START_PRESS:
+            #if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == rel_button_L1:
                     sendLEFT1()
                 elif event.ui_element == rel_button_L10:
@@ -1606,6 +1625,12 @@ def process_events():
                     sendSPEEDslow()
                 elif event.ui_element == rel_button_FAST:
                     sendSPEEDfast()
+                elif event.ui_element == rel_button_ZOOMin:
+                    isZooming = True
+                    sendZOOMin()
+                elif event.ui_element == rel_button_ZOOMout:
+                    isZooming = True
+                    sendZOOMout()
                 elif event.ui_element == rel_button_REPORT:
                     sendREPORTall()
                 elif event.ui_element == rel_button_REPORTPOS:
@@ -1650,6 +1675,7 @@ def process_events():
             if isZooming:
                 sendZOOMstop()
                 isZooming = False
+                #print("STOP zooming")
 
         if event.type == pygame.MOUSEMOTION:
             if joyCircle_draging:
@@ -1746,7 +1772,7 @@ while running:
         current_serialPort = [' - ']
         serialNotSel = 'Serial port disconnected.<br>'
         textBoxSerial.kill()
-        serialText = serialNotSel + serialText
+        serialText = serialText + serialNotSel
         serialPortTextBox()
         
         speedRec = False
@@ -1873,7 +1899,7 @@ while running:
         pygame.draw.circle(window_surface, GREEN, (460, 190), radius/2)
 
     ui_manager.draw_ui(window_surface)                                          # draw UI
-
+    
     window_surface.blit(textsurfaceW,(198,28))                                  # W
     window_surface.blit(textsurfaceA,(35,190))                                  # A
     window_surface.blit(textsurfaceS,(205,355))                                 # S
@@ -1884,12 +1910,13 @@ while running:
     pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
     pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)
     
-    
+
     pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
     pygame.draw.rect(window_surface, [125,0,0], [30,400,360,60],width=3)
 
     mouse = pygame.mouse.get_pos()
 
+    """
     if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56: 
         pygame.draw.rect(window_surface,colour_light,[482,262,56,56]) 
     else: 
@@ -1902,6 +1929,7 @@ while running:
 
     window_surface.blit(zoomINtext, (500, 278))
     window_surface.blit(zoomOUTtext, (491, 338))
+    """
 
     pygame.display.update()
 

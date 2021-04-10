@@ -97,8 +97,8 @@
             "border_width": "1",
             "padding": "1,1",
             "link_normal_underline": "0",
-            "link_hover_underline": "0"
-
+            "link_hover_underline": "0",
+            "text_vert_alignment": "top"
         }
     },
     "text_box.vertical_scroll_bar":

@@ -24,10 +24,12 @@ RotateControl rotate_stepperS;
 
 IRsend irsend;
 
-KeyframeElement keyframe_array[6];
+//KeyframeElement keyframe_array[6];
+KeyframeElement keyframe_array[7];
 
 bool DEBUG1 = false;
 
+int zoomCounter = 0;
 int keyframe_elements = 0;
 int current_keyframe_index = -1;
 char stringText[MAX_STRING_LENGTH + 1];
@@ -387,6 +389,7 @@ void printKeyframeElements(void) {
   do {
     Serial1.println(String("Keyframe index: ") + (row + 1) + String("\t"));
     //delay(500);
+    Serial1.print(String("Zoom  : ") + keyframe_array[row].zoomCount + String("\t"));
     Serial1.print(String("Pan   : ") + panStepsToDegrees(keyframe_array[row].panStepCount) + String("°\t"));
     Serial1.print(String("Tilt  : ") + tiltStepsToDegrees(keyframe_array[row].tiltStepCount) + String("°\t"));
     Serial1.println(String("Slider: ") + sliderStepsToMillimetres(keyframe_array[row].sliderStepCount) + String("mm\t"));
@@ -420,6 +423,7 @@ void debugReport(void) {
   Serial1.println(String("Pan Accel         : ") + pan_accel_increment_us + String(" steps/s²"));
   Serial1.println(String("Tilt Accel        : ") + tilt_accel_increment_us + String(" steps/s²"));
   Serial1.println(String("Slider Accel      : ") + slider_accel_increment_us + String(" steps/s²"));
+  Serial1.println(String("Zoom Counter      : ") + zoomCounter);
 
   printEEPROM();
   printKeyframeElements();
@@ -431,6 +435,7 @@ void debugReport(void) {
 
 void positionReport(void) {
   Serial1.println(String("\nPosition Report   : "));
+  Serial1.println(String("Zoom Counter      : ") + zoomCounter);
   Serial1.println(String("Pan angle         : ") + panStepsToDegrees(stepper_pan.getPosition()) + String("°"));
   Serial1.println(String("Tilt angle        : ") + tiltStepsToDegrees(stepper_tilt.getPosition()) + String("°"));
   Serial1.println(String("Slider position   : ") + sliderStepsToMillimetres(stepper_slider.getPosition()) + String("mm"));
@@ -504,6 +509,7 @@ void moveToIndex(int index) {
 
   Serial1.println(String("\nMove to Index: ") + (index + 1));
   //delay(200);
+  Serial1.println(String("Zoom  : ") + zoomCounter);
   Serial1.println(String("Pan   : ") + panStepsToDegrees(keyframe_array[index].panStepCount) + String("°"));
   Serial1.println(String("Tilt  : ") + tiltStepsToDegrees(keyframe_array[index].tiltStepCount) + String("°"));
   Serial1.println(String("Slider: ") + sliderStepsToMillimetres(keyframe_array[index].sliderStepCount) + String("mm"));
@@ -564,6 +570,20 @@ void moveToIndex(int index) {
     atPos4 = false;
     atPos5 = false;
   }
+
+  while (zoomCounter != keyframe_array[index].zoomCount) {
+    unsigned long currentMillis = millis();
+    if ((zoomCounter < keyframe_array[index].zoomCount) && (currentMillis - previousMillis >= interval)) {
+      previousMillis = currentMillis;
+      irsend.sendSony(0x2C9B, 15);      // was 12bit
+      zoomCounter++;
+    }
+    if ((zoomCounter > keyframe_array[index].zoomCount) && (currentMillis - previousMillis >= interval)) {
+      previousMillis = currentMillis;
+      irsend.sendSony(0x6C9B, 15);      // was 12bit
+      zoomCounter--;
+    }
+  }
   
   Serial1.print(atIndex);
   //Serial.print(atIndex);
@@ -591,6 +611,7 @@ void editKeyframe(int keyframeEdit) {
   keyframe_array[keyframeEdit].panSpeed = panDegreesToSteps(pan_set_speed);
   keyframe_array[keyframeEdit].tiltSpeed = tiltDegreesToSteps(tilt_set_speed);
   keyframe_array[keyframeEdit].sliderSpeed = sliderMillimetresToSteps(slider_set_speed);
+  keyframe_array[keyframeEdit].zoomCount = zoomCounter;
 
   Serial1.println(String("Edited index: ") + (keyframeEdit + 1));
 }
@@ -1430,11 +1451,13 @@ void mainLoop(void) {
     if (zoomIN && !zoomOUT && (currentMillis - previousMillis >= interval)) {
       previousMillis = currentMillis;
       irsend.sendSony(0x2C9B, 15);      // was 12bit
+      zoomCounter++;
     }
 
     if (zoomOUT && !zoomIN && (currentMillis - previousMillis >= interval)) {
       previousMillis = currentMillis;
       irsend.sendSony(0x6C9B, 15);   // test with hi-fi 0x481  // camera zoom out 0x6C9B
+      zoomCounter--;
     }
   }
 }

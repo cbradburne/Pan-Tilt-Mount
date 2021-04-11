@@ -4,6 +4,7 @@ import pygame_gui
 import time
 import serial.tools.list_ports
 import os, sys
+import math
 
 from collections import deque
 from pygame_gui import UIManager
@@ -325,7 +326,7 @@ def serialPort_changed():
         ser = ''
         serialNotSel = 'Serial port not available!<br>'
         textBoxSerial.kill()
-        serialText = serialText + serialNotSel
+        serialText = serialNotSel + serialText
         serialPortTextBox()
         drop_down_serial.kill()
         drop_down_serial = UIDropDownMenu(available_ports,                      # Recreate serial port drop down list
@@ -385,29 +386,11 @@ def sendJoystick(arr):
 
 def serialPortTextBox():
     global textBoxSerial
-    textBoxSerial = UITextBox('<font face=roboto size=4 color=#F0F0F0>' + serialText + '</font>',
+    textBoxSerial = UITextBox('<font face=roboto size=5 color=#F0F0F0>' + serialText + '</font>',
                                         pygame.Rect((620, 130), (560, 510)),
                                         ui_manager)
-<<<<<<< Updated upstream
                                         #wrap_to_height=False)
-=======
->>>>>>> Stashed changes
-    if textBoxSerial.scroll_bar:
-        scroll_bar = textBoxSerial.scroll_bar
-        scroll_bar.scroll_position = (scroll_bar.bottom_limit - scroll_bar.sliding_button.rect.height)
-        x_pos = scroll_bar.rect.x + scroll_bar.shadow_width + scroll_bar.border_width
-        y_pos = scroll_bar.scroll_position + scroll_bar.rect.y + scroll_bar.shadow_width + \
-                scroll_bar.border_width + scroll_bar.button_height
-        scroll_bar.sliding_button.set_position(pygame.math.Vector2(x_pos, y_pos))
-
-        scroll_bar.start_percentage = scroll_bar.scroll_position / scroll_bar.scrollable_height
-        if not scroll_bar.has_moved_recently:
-            scroll_bar.has_moved_recently = True
-<<<<<<< Updated upstream
-        #print(scroll_bar.scroll_position)
-=======
->>>>>>> Stashed changes
-
+    
 def textBoxJoystickName():
     global joystickName
     global textBoxJoystickNames
@@ -601,7 +584,7 @@ def readSerial():
                 #textOUTPUT.see(END)                                    # code for tkinter
                 #serialText += serBuffer                                # code for tkinter
                 textBoxSerial.kill()
-                serialText = serialText + serBuffer
+                serialText = serBuffer + serialText
                 serialPortTextBox()
                 serBuffer = ''                                          # empty the buffer
             else:
@@ -610,11 +593,10 @@ def readSerial():
 def sendSerial(sendValue):
     global ser
     global serialText
-
     if (ser == ''):                                                     # Checks to see if com port has been selected
         serialNotSel = 'Serial port not selected!<br>'
         textBoxSerial.kill()
-        serialText = serialText + serialNotSel
+        serialText = serialNotSel + serialText
         serialPortTextBox()
         #textOUTPUT.insert(END, 'Serial port not selected!\n')          # code for tkinter
         #textOUTPUT.see(END)                                            # code for tkinter
@@ -762,9 +744,6 @@ rel_button_Refresh = UIButton(pygame.Rect((430, 35), (160, 35)), 'Refresh Ports'
 rel_button_FAST = UIButton(pygame.Rect((480, 100), (60, 60)), 'FAST', ui_manager, object_id='#everything_button')
 rel_button_SLOW = UIButton(pygame.Rect((480, 160), (60, 60)), 'SLOW', ui_manager, object_id='#everything_button')
 
-rel_button_ZOOMin = UIButton(pygame.Rect((480, 260), (60, 60)), 'IN', ui_manager, object_id='#everything_button')
-rel_button_ZOOMout = UIButton(pygame.Rect((480, 320), (60, 60)), 'OUT', ui_manager, object_id='#everything_button')
-
 rel_button_REPORT = UIButton(pygame.Rect((510, 470), (100, 60)), 'Report All', ui_manager, object_id='#everything_button')
 rel_button_REPORTPOS = UIButton(pygame.Rect((510, 530), (100, 60)), 'Report Pos', ui_manager, object_id='#everything_button')
 rel_button_CLEARtext = UIButton(pygame.Rect((510, 600), (100, 40)), 'Clear Text', ui_manager, object_id='#everything_button')
@@ -902,7 +881,6 @@ def process_events():
         if event.type == pygame.QUIT:
             running = False
 
-        """
         if event.type == pygame.MOUSEBUTTONDOWN:
             if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56:
                 isZooming = True
@@ -916,7 +894,6 @@ def process_events():
         if event.type == pygame.MOUSEBUTTONUP and isZooming:
             isZooming = False
             sendZOOMstop()
-        """
 
         ui_manager.process_events(event)
         deadRangeLow = -0.2
@@ -1559,8 +1536,7 @@ def process_events():
             if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
                 sendCLEARALLpos()
 
-            if event.user_type == pygame_gui.UI_BUTTON_START_PRESS:
-            #if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == rel_button_L1:
                     sendLEFT1()
                 elif event.ui_element == rel_button_L10:
@@ -1631,12 +1607,6 @@ def process_events():
                     sendSPEEDslow()
                 elif event.ui_element == rel_button_FAST:
                     sendSPEEDfast()
-                elif event.ui_element == rel_button_ZOOMin:
-                    isZooming = True
-                    sendZOOMin()
-                elif event.ui_element == rel_button_ZOOMout:
-                    isZooming = True
-                    sendZOOMout()
                 elif event.ui_element == rel_button_REPORT:
                     sendREPORTall()
                 elif event.ui_element == rel_button_REPORTPOS:
@@ -1681,7 +1651,6 @@ def process_events():
             if isZooming:
                 sendZOOMstop()
                 isZooming = False
-                #print("STOP zooming")
 
         if event.type == pygame.MOUSEMOTION:
             if joyCircle_draging:
@@ -1689,6 +1658,7 @@ def process_events():
                 mouse_x, mouse_y = event.pos
                 joyCircle.x = mouse_x
                 joyCircle.y = mouse_y
+                """
                 if ((mouse_x + offset_x) > mouseBorder) and ((mouse_y + offset_y) > mouseBorder):           # XY Dot out of box: right & bottom
                     joyCircle.x = mouseBorder
                     joyCircle.y = mouseBorder
@@ -1722,11 +1692,24 @@ def process_events():
                     joyCircle.x = mouse_x + offset_x
 
                 else:
-                    joyCircle.x = mouse_x + offset_x                                                        # XY Dot inside box
-                    joyCircle.y = mouse_y + offset_y
+                    """
+                joyCircle.x = mouse_x + offset_x                                                        # XY Dot inside box
+                joyCircle.y = mouse_y + offset_y
 
                 axisX = int(scale((joyCircle.x), (30,mouseBorder), (-255,255)))
                 axisY = int(scale((joyCircle.y), (30,mouseBorder), (-255,255)))
+
+                if axisX > 255:
+                    axisX = 255
+
+                if axisY > 255:
+                    axisY = 255
+
+                if axisX < -255:
+                    axisX = -255
+
+                if axisY < -255:
+                    axisY = -255
 
             if sliderCircle_draging:
                 mouseMoving = True
@@ -1744,13 +1727,13 @@ def process_events():
 
                 axisZ = int(scale((sliderCircle.x), (30,mouseBorder), (-255,255)))
 
-        axisXDOT = scale(axisX, (-255,255), (-1.0,1.0))
-        axisYDOT = scale(axisY, (-255,255), (-1.0,1.0))
-        axisZDOT = scale(axisZ, (-255,255), (-1.0,1.0))
+        #axisXDOT = scale(axisX, (-255,255), (-1.0,1.0))
+        #axisYDOT = scale(axisY, (-255,255), (-1.0,1.0))
+        #axisZDOT = scale(axisZ, (-255,255), (-1.0,1.0))
 
-        joyCircle.x = (axisXDOT*165)+210-radius                                                             # Draw Dots
-        joyCircle.y = (axisYDOT*165)+210-radius
-        sliderCircle.x = (axisZDOT*165)+210-radius
+        #joyCircle.x = (axisXDOT*165)+210-radius
+        #joyCircle.y = (axisYDOT*165)+210-radius
+        #sliderCircle.x = (axisZDOT*165)+210-radius
 
 while running:
     time_delta = clock.tick() / 1000.0
@@ -1771,6 +1754,8 @@ while running:
         sendJoystick(arr)
         #print(4,' - ', axisZh, ' - ', axisXh, ' - ', axisYh)
 
+        
+
     try:
         readSerial()
     except:
@@ -1778,7 +1763,7 @@ while running:
         current_serialPort = [' - ']
         serialNotSel = 'Serial port disconnected.<br>'
         textBoxSerial.kill()
-        serialText = serialText + serialNotSel
+        serialText = serialNotSel + serialText
         serialPortTextBox()
         
         speedRec = False
@@ -1815,9 +1800,12 @@ while running:
 
     ui_manager.update(time_delta)                                               # respond to input
 
+    # Clear screen
     window_surface.blit(background_surface, (0, 0))                             # draw graphics
 
-    if pos1set and not pos1run and not atPos1:                                  # Position LEDs
+
+    # Draw position LEDs
+    if pos1set and not pos1run and not atPos1:
         pygame.draw.circle(window_surface, RED, (60, 480), radius/2)
     elif pos1set and not pos1run and atPos1:
         pygame.draw.circle(window_surface, GREEN, (60, 480), radius/2)
@@ -1889,23 +1877,29 @@ while running:
     elif not pos6set:
         pygame.draw.circle(window_surface, OFF, (360, 480), radius/2)
 
-
+    # Blink timer for position LEDs
     if previousTicks <= pygame.time.get_ticks():
         blinkSet = not blinkSet       
         previousTicks = pygame.time.get_ticks() + interval
 
+
+    # Only enable sending of Report after delay
     if canSendReport and (previousTicksReport <= pygame.time.get_ticks()):
         canSendReport = False
         temp='^r'
         sendSerial(temp)
 
+
+    # Speed LEDs
     if speedRec and speedIsFast:
         pygame.draw.circle(window_surface, GREEN, (460, 130), radius/2)
     elif speedRec and not speedIsFast:
         pygame.draw.circle(window_surface, GREEN, (460, 190), radius/2)
 
+
     ui_manager.draw_ui(window_surface)                                          # draw UI
-    
+
+    # Draw W A S D Letters
     window_surface.blit(textsurfaceW,(198,28))                                  # W
     window_surface.blit(textsurfaceA,(35,190))                                  # A
     window_surface.blit(textsurfaceS,(205,355))                                 # S
@@ -1913,16 +1907,37 @@ while running:
     window_surface.blit(textsurfaceLeft,(35,415))                               # ,
     window_surface.blit(textsurfaceRight,(375,415))                             # .
     
-    pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
-    pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)
-    
+    axisXDOT = scale(axisX, (-255,255), (-1.0,1.0))
+    axisYDOT = scale(axisY, (-255,255), (-1.0,1.0))
+    axisZDOT = scale(axisZ, (-255,255), (-1.0,1.0))
 
-    pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
+    axisTestDot = pygame.math.Vector2((axisXDOT*10), (axisYDOT*10))
+
+    xCircle = axisXDOT * math.sqrt(1 - 0.5*axisYDOT**2)
+    yCircle = axisYDOT * math.sqrt(1 - 0.5*axisXDOT**2)
+
+    #joyCircle.x = (axisXDOT*165)+210-radius
+    #joyCircle.y = (axisYDOT*165)+210-radius
+    sliderCircle.x = (axisZDOT*165)+210-radius
+
+    joyCircle.x = (xCircle*165)+210-radius
+    joyCircle.y = (yCircle*165)+210-radius
+
+    # Draw draggable red dots
+    #pygame.draw.circle(window_surface, RED, (joyCircle.x+radius,joyCircle.y+radius), radius)
+    pygame.draw.circle(window_surface, RED, (axisTestDot), radius)
+    pygame.draw.circle(window_surface, RED, (sliderCircle.x+radius,430), radius)
+    # TEST
+    #pygame.draw.circle(window_surface, GREEN, (axisX+radius,axisY+radius), radius)
+    
+    # Draw boxes that bound red dots
+    #pygame.draw.rect(window_surface, [125,0,0], [30,30,360,360],width=3)
     pygame.draw.rect(window_surface, [125,0,0], [30,400,360,60],width=3)
+    pygame.draw.circle(window_surface, [125,0,0], (210,210),180+(radius/2),width=3)
 
     mouse = pygame.mouse.get_pos()
 
-    """
+    # Zoom In & Out button highlights
     if 482 <= mouse[0] <= 482+56 and 262 <= mouse[1] <= 262+56: 
         pygame.draw.rect(window_surface,colour_light,[482,262,56,56]) 
     else: 
@@ -1933,9 +1948,9 @@ while running:
     else: 
         pygame.draw.rect(window_surface,colour_dark,[482,322,56,56])
 
+    # Display Zoom In & Zoom Out text inside their buttons
     window_surface.blit(zoomINtext, (500, 278))
     window_surface.blit(zoomOUTtext, (491, 338))
-    """
 
     pygame.display.update()
 

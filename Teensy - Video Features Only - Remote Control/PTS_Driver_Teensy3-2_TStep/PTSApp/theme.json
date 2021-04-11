@@ -56,6 +56,13 @@
     "dummy_load_roboto14": {
         "font": {
             "name": "roboto",
+            "size": "14",
+            "regular_path": "./Roboto-Regular.ttf"
+        }
+    },
+    "dummy_load_roboto18": {
+        "font": {
+            "name": "roboto",
             "size": "18",
             "regular_path": "./Roboto-Regular.ttf"
         }

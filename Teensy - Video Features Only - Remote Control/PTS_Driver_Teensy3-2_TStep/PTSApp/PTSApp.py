@@ -388,10 +388,7 @@ def serialPortTextBox():
     textBoxSerial = UITextBox('<font face=roboto size=4 color=#F0F0F0>' + serialText + '</font>',
                                         pygame.Rect((620, 130), (560, 510)),
                                         ui_manager)
-<<<<<<< Updated upstream
-                                        #wrap_to_height=False)
-=======
->>>>>>> Stashed changes
+                                        
     if textBoxSerial.scroll_bar:
         scroll_bar = textBoxSerial.scroll_bar
         scroll_bar.scroll_position = (scroll_bar.bottom_limit - scroll_bar.sliding_button.rect.height)
@@ -403,10 +400,6 @@ def serialPortTextBox():
         scroll_bar.start_percentage = scroll_bar.scroll_position / scroll_bar.scrollable_height
         if not scroll_bar.has_moved_recently:
             scroll_bar.has_moved_recently = True
-<<<<<<< Updated upstream
-        #print(scroll_bar.scroll_position)
-=======
->>>>>>> Stashed changes
 
 def textBoxJoystickName():
     global joystickName

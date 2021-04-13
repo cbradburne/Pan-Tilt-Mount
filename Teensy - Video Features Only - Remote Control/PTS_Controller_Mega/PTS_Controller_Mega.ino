@@ -1,6 +1,7 @@
 #define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
 
 bool DEBUG = false;
+bool DEBUGSLIDER = false;
 
 unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
@@ -10,8 +11,16 @@ const int XdeadRangeLow  = 512 - 60;
 const int XdeadRangeHigh = 512 + 60;
 const int YdeadRangeLow  = 512 - 60;
 const int YdeadRangeHigh = 512 + 60;
-const int ZdeadRangeLow  = 508 - 60;          // 466
-const int ZdeadRangeHigh = 508 + 60;          // 547  
+const int ZdeadRangeLow  = 490; // lowest rest - 25
+const int ZdeadRangeHigh = 560; // highest rest + 25
+
+int X_max = 1023;
+int Y_max = 1023;
+int Z_min = 260;
+int Z_max = 785;
+
+int out_min = -254;
+int out_max = 254;
 
 const int ledPin1r = 27;
 const int ledPin1g = 25;
@@ -187,14 +196,6 @@ short oldShortVal0 = 0;
 short oldShortVal1 = 0;
 short oldShortVal2 = 0;
 
-int X_max = 1023;
-int Y_max = 1023;
-int Z_min = 239; // 130 914       OLD 258 793
-int Z_max = 783; // 258 794           240 782
-
-int out_min = -254;
-int out_max = 254;
-
 int joyXread;
 int joyX;
 int joyYread;
@@ -282,12 +283,12 @@ void loop() {
   //  firstConnect = true;
   //}
 
-  if (Serial3.available()) {
+  if (Serial3.available()) {    // Serial3
     
-    char instruction = Serial3.read();
+    char instruction = Serial3.read();    // Serial3
     if (instruction == '#') {
       int count = 0;
-      while (Serial3.available() < 1) {                       //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
+      while (Serial3.available() < 1) {   // Serial3          //  Wait for 6 bytes to be available. Breaks after ~20ms if bytes are not received.
         delayMicroseconds(200);
         count++;
         if (count > 100) {
@@ -295,7 +296,7 @@ void loop() {
           break;
         }
       }
-      instruction = Serial3.read();
+      instruction = Serial3.read();     // Serial3
       Serial.write(hash);                                     // So app through remote commands get passed.
       Serial.write(instruction);
       switch (instruction) {
@@ -504,9 +505,11 @@ void loop() {
     ZShort = 0;                                               // deadzone around center value
   }
 
-  //Serial.print(joyZread);
-  //Serial.print(" - ");
-  //Serial.println(ZShort);
+  if (DEBUGSLIDER) {
+    Serial.print(joyZread);
+    Serial.print(" - ");
+    Serial.println(ZShort);
+  }
   
   /* ------------------------------------------------- Buttons ------------------------------------------------- */
 

@@ -57,14 +57,14 @@ int rT = 150;                 // Colours when 'Tangent' complete
 int gT = 150;
 int bT = 0;
 
-float in_min = -127;          // PS4 DualShock analogue stick Far Left
-float in_max = 127;           // PS4 DualShock analogue stick Far Right
+float in_min = -128;          // PS4 DualShock analogue stick Far Left
+float in_max = 128;           // PS4 DualShock analogue stick Far Right
 float out_min = -255;
 float out_max = 255;
 
-float scaleSpeed = 1;
-const float scaleSpeedFast = 1;
-const float scaleSpeedSlow = 0.02;
+int Xspeed = 10;                                                            // Initial speed
+int minXspeed = 10;                                                         // Set to minimum X speed
+int maxXspeed = 60;                                                        // Set to maximum X speed
 
 short shortVals[3] = {0, 0, 0};
 short LXShort = 0;
@@ -148,11 +148,11 @@ void loop() {
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeRX > INPUT_DEADZONE) {                                   // check if the controller is outside of the axis dead zone
-        if (RX > 0 && (scaleSpeed == scaleSpeedSlow)) {                     // Scale output
-          RXShort = map(RX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));
+        if (RX > 0) {
+          RXShort = map(RX, INPUT_DEADZONE, out_max, 0, out_max);
         }
-        else if (RX <= 0 || (scaleSpeed == scaleSpeedFast)) {
-          RXShort = scaleSpeed * RX;
+        else if (RX < 0) {
+          RXShort = map(RX, -INPUT_DEADZONE, out_min, 0, out_min);
         }
       }
       else {
@@ -162,11 +162,11 @@ void loop() {
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeRY > INPUT_DEADZONE) {
-        if (RY > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          RYShort = map(RY, 0, in_max, 15, (out_max * (scaleSpeed * 4)));   // Compensate for no movement between 00 & 0F
+        if (RY > 0) {
+          RYShort = map(RY, INPUT_DEADZONE, out_max, 0, out_max);
         }
-        else if (RY <= 0 || (scaleSpeed == scaleSpeedFast)) {
-          RYShort = scaleSpeed * RY;
+        else if (RY < 0) {
+          RYShort = map(RY, -INPUT_DEADZONE, out_min, 0, out_min);
         }
       }
       else {
@@ -176,11 +176,11 @@ void loop() {
       /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
       if (magnitudeLX > INPUT_DEADZONE) {
-        if (LX > 0 && (scaleSpeed == scaleSpeedSlow)) {
-          LXShort = map(LX, 0, in_max, 15, (out_max * (scaleSpeed * 4)));   // Compensate for no movement between 00 & 0F
+        if (LX > 0) {
+          LXShort = map(LX, INPUT_DEADZONE, out_max, 0, out_max);
         }
-        else if (LX <= 0 || (scaleSpeed == scaleSpeedFast)) {
-          LXShort = scaleSpeed * LX;
+        else if (LX < 0) {
+          LXShort = map(LX, -INPUT_DEADZONE, out_min, 0, out_min);
         }
       }
       else {
@@ -240,14 +240,20 @@ void loop() {
       }
 
       if ( PS4.data.button.l1 && !buttonL1) {         // L1 - Set slow speed
-        scaleSpeed = scaleSpeedSlow;
+        Xspeed = minXspeed;
+        char a[24] = "X";
+        char tmp[6];
+        sendCharArray((char *)(strcat(a, itoa(Xspeed, tmp, 10))));
         if ( DEBUG ) {
           Serial.println("L1");
         }
         buttonL1 = true;
       }
       if ( PS4.data.button.r1 && !buttonR1) {         // R1 - Set fast speed
-        scaleSpeed = scaleSpeedFast;
+        Xspeed = maxXspeed;  
+        char a[24] = "X";
+        char tmp[6];
+        sendCharArray((char *)(strcat(a, itoa(Xspeed, tmp, 10))));
         if ( DEBUG ) {
           Serial.println("R1");
         }
